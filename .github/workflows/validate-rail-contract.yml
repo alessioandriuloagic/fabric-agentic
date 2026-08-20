@@ -1,0 +1,26 @@
+name: Validate rail contract
+
+on:
+  pull_request:
+    paths:
+      - "schemas/**"
+      - "scripts/validate_rail_result_schema.py"
+      - ".github/workflows/validate-rail-contract.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "schemas/**"
+      - "scripts/validate_rail_result_schema.py"
+      - ".github/workflows/validate-rail-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Validate rail-result schema
+        run: python scripts/validate_rail_result_schema.py

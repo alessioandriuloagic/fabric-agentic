@@ -90,12 +90,15 @@ runbook e non un criterio bloccante di review.
 ### 4b. Artefatto `rail-result.json` — schema versionato
 
 Ogni pipeline agentica produce questo artefatto: è il **canale primario** con cui l'agente riceve
-l'esito. Mai dai log della pipeline, sempre da questo artefatto.
+l'esito. Mai dai log della pipeline, sempre da questo artefatto. Lo schema normativo è
+[`schemas/rail-result-v1.0.json`](../../schemas/rail-result-v1.0.json).
 
 ```json
 {
-  "version": "1.0",
-  "pipeline_run_id": "...",
+  "schema_version": "1.0",
+  "rail": "run_load",
+  "run_id": "...",
+  "workspace_id": "...",
   "outcome": "success|technical_failure|quality_failure",
   "datasets": [
     {
@@ -103,12 +106,12 @@ l'esito. Mai dai log della pipeline, sempre da questo artefatto.
       "status": "loaded|skipped|failed",
       "source_count": 1000,
       "destination_count": 1000,
-      "reconciliation": "passed|failed",
+      "reconciliation": "passed|failed|not_applicable",
       "supports_source_count": true,
-      "error": null
+      "pk_check": "passed|failed|not_applicable"
     }
   ],
-  "error_message": null,
+  "messages": [],
   "diagnostics": {
     "schema_drift": false,
     "null_count": 0,
