@@ -1,0 +1,198 @@
+# 03 — Rail script
+
+> Contratti degli script deterministici che il Dev Agent invoca al posto di ragionare
+> sull'API plumbing.
+
+Decisione applicata: [ADR-0007](../adr/ADR-0007-pipeline-cicd-come-rail.md).
+
+---
+
+## 1. Cosa qualifica un rail
+
+Un'operazione diventa un rail quando soddisfa **tutte** queste condizioni:
+
+| # | Condizione |
+|---|---|
+| 1 | È identica a ogni esecuzione, a meno dei parametri |
+| 2 | Non richiede giudizio: non ci sono decisioni da prendere |
+| 3 | Il suo esito è verificabile in modo binario |
+| 4 | Sbagliarla è costoso o difficile da diagnosticare |
+
+Se un'operazione richiede giudizio, **non** è un rail: incapsularla in uno script significherebbe
+nascondere una decisione dentro codice non tracciato.
+
+### Regole comuni a tutti i rail
+
+| Regola | Motivo |
+|---|---|
+| **Idempotenza** | Una sessione interrotta va rilanciata senza effetti collaterali |
+| **Esito binario esplicito** | L'agente deve poter distinguere successo e fallimento senza interpretare testo libero |
+| **Output strutturato** | Ciò che l'agente deve allegare alla PR va restituito in forma leggibile da programma |
+| **Nessun segreto in output** | I rail girano con l'identità applicativa e non devono mai stampare credenziali |
+| **Fallimento esplicito** | Un rail non "prova un'alternativa": fallisce e riporta il motivo |
+
+> L'ultima regola è la più importante. Un rail che tenta strade alternative reintroduce
+> esattamente l'imprevedibilità che i rail esistono per eliminare.
+
+---
+
+## 2. Rail previsti
+
+### 4 rail agentici per l'MVP
+
+| Rail | Responsabilità |
+|---|---|
+| **Branch out** | Predispone l'isolamento: branch, feature workspace, collegamento a Git |
+| **Run load** | Invoca pipeline agentica di carico, restituisce artefatto `rail-result.json` |
+| **Sync workspace** | Materializza nel workspace le modifiche presenti sul branch |
+| **Diagnose data** | Esegue controlli su sorgente, Bronze o Silver e restituisce evidenze aggregate/mascherate |
+
+> Ogni rail è implementato come una pipeline CI/CD. Il contatto fra agente e pipeline è il
+> contratto (input/output). La pipeline è deterministica e ancorata a `main`.
+
+---
+
+## 3. Contratto — Branch out
+
+**Scopo**: creare in un'unica operazione tutto ciò che serve a isolare il lavoro su un work item.
+
+| Aspetto | Contratto |
+|---|---|
+| **Input** | Identificativo del work item, descrizione breve per lo slug |
+| **Passi** | 1. Crea il branch dal ramo principale, con nome derivato dall'ID<br>2. Crea il feature workspace, con nome derivato dall'ID<br>3. Assegna il workspace alla capacity<br>4. Aggiunge l'owner come amministratore<br>5. Collega il workspace al branch<br>6. Sincronizza il contenuto dal branch al workspace |
+| **Output** | Nome del branch, nome e identificativo del workspace, esito della sincronizzazione |
+| **Successo** | Workspace esistente, collegato al branch, con gli item attesi presenti |
+| **Idempotenza** | Se branch e workspace esistono già per quell'ID, si riconnette invece di duplicare |
+| **Fallimento tipico** | Capacity non disponibile, permessi insufficienti, nome già in uso con collegamento diverso |
+
+> **Il passo 4 non è cortesia**: se qualcosa va storto, l'owner deve poter guardare dentro il
+> workspace senza chiedere permessi a nessuno. È il presupposto pratico della supervisione umana.
+
+**DA VERIFICARE** — copertura via API/CLI della creazione delle **cartelle** del workspace e del
+**task flow** (collegato a Q-9). Se non coperti, restano un passo manuale documentato nel
+runbook e non un criterio bloccante di review.
+
+---
+
+## 4. Contratto — Run load
+
+**Scopo**: eseguire il carico via pipeline CI/CD e restituire l'evidenza strutturata per il Review Agent.
+
+| Aspetto | Contratto |
+|---|---|
+| **Input** | Workspace, source system, elenco dataset |
+| **Innesco** | Pipeline CI/CD agentica (ancorata a `main`, branch come parametro) |
+| **Output** | Artefatto `rail-result.json` a schema versionato |
+| **Successo** | Esito = `success` e controlli unicità superati e conteggi riconciliati |
+| **Idempotenza** | Rilanciabile: carico ripetibile sullo stesso workspace |
+| **Fallimento tipico** | Configurazione invalida, controllo unicità fallito, sorgente irraggiungibile |
+
+### 4b. Artefatto `rail-result.json` — schema versionato
+
+Ogni pipeline agentica produce questo artefatto: è il **canale primario** con cui l'agente riceve
+l'esito. Mai dai log della pipeline, sempre da questo artefatto.
+
+```json
+{
+  "version": "1.0",
+  "pipeline_run_id": "...",
+  "outcome": "success|technical_failure|quality_failure",
+  "datasets": [
+    {
+      "name": "dataset_name",
+      "status": "loaded|skipped|failed",
+      "source_count": 1000,
+      "destination_count": 1000,
+      "reconciliation": "passed|failed",
+      "supports_source_count": true,
+      "error": null
+    }
+  ],
+  "error_message": null,
+  "diagnostics": {
+    "schema_drift": false,
+    "null_count": 0,
+    "masked_key_samples": []
+  },
+  "timestamp": "2026-08-20T10:30:00Z"
+}
+```
+
+**Campi critici:**
+- **`outcome`**: categorizzazione semantica, non codice di uscita. `success` se tutto verde, `technical_failure` se errore esecuzione, `quality_failure` se controlli falliscono.
+- **`supports_source_count`**: booleano. Se `false`, il Review Agent non deve forzare la riconciliazione dei conteggi per questo dataset.
+- **`diagnostics`**: opzionale per i carichi, obbligatorio per `diagnose_data`; può contenere solo
+  statistiche, indicatori e identificativi mascherati conformi alla policy dati dell'istanza.
+
+### Nota critica sulla condizione di successo
+
+Il rail **non** restituisce `success` se la pipeline termina senza errori ma i controlli di
+qualità falliscono.
+
+> Differenza fra "il codice ha girato" e "il risultato è corretto". Un rail che restituisse
+> `success` sulla sola terminazione porterebbe l'agente ad aprire una PR su un carico sbagliato.
+
+L'esito distingue tre casi per una reazione diversa dell'agente:
+
+| Esito | Significato | Reazione |
+|---|---|---|
+| **`success`** | Tutto verde | Procedi con documentazione e PR |
+| **`technical_failure`** | Errore di esecuzione | Diagnostica e correggi (blocco B1) |
+| **`quality_failure`** | Esecuzione riuscita, controlli falliti | **Escala** (blocco B2) — specifica probabilmente errata |
+
+---
+
+## 5. Contratto — Diagnose data
+
+**Scopo**: analizzare un'anomalia dati senza esporre al modello righe grezze né credenziali.
+
+| Aspetto | Contratto |
+|---|---|
+| **Input** | Work item, perimetro (`source`, `bronze`, `silver`), dataset, tipo controllo e filtri consentiti |
+| **Innesco** | Pipeline CI/CD `pipe_agent_diagnose_data`, ancorata a `main` |
+| **Esecuzione** | La pipeline usa la `ExecutionCredential` del cliente, custodita nel secret store e mai disponibile all'agente |
+| **Output** | `rail-result.json` con statistiche, riconciliazioni, watermark, drift schema, null/duplicati e chiavi mascherate |
+| **Successo** | Evidenze prodotte entro i limiti della policy dati; non implica che l'anomalia sia risolta |
+| **Escalation** | Se per decidere servono righe grezze, PII o un segreto: blocco B4 e intervento umano autorizzato |
+
+> Il rail esegue la query; l'agente interpreta l'evidenza e decide il prossimo passo. Questa
+> separazione consente assistenza quotidiana senza trasformare il modello in un utente dati.
+
+---
+
+## 6. Contratto — Sync workspace
+
+**Scopo**: portare nel workspace lo stato del branch dopo una modifica.
+
+| Aspetto | Contratto |
+|---|---|
+| **Input** | Workspace, branch |
+| **Passi** | 1. Verifica il collegamento Git<br>2. Applica gli aggiornamenti dal branch<br>3. Attende il completamento<br>4. Verifica che gli item risultino allineati |
+| **Output** | Elenco degli item aggiornati, stato di sincronizzazione |
+| **Successo** | Nessun item in stato divergente |
+| **Idempotenza** | Sì: se non ci sono differenze, non fa nulla |
+| **Fallimento tipico** | Conflitti, collegamento assente, item in stato non sincronizzabile |
+
+---
+
+## 7. Evoluzione dei rail
+
+| Situazione | Azione |
+|---|---|
+| L'agente riscopre ripetutamente la stessa procedura | Candidata a diventare un rail |
+| Un rail richiede sempre più parametri condizionali | Segnale che sta assorbendo giudizio: va spezzato |
+| Un rail fallisce in modo non diagnosticabile | Migliorare l'output prima di aggiungere logica |
+
+> **Antipattern da evitare**: il rail che "gestisce i casi particolari". Un rail con rami
+> decisionali è un agente scritto male — senza la capacità di giudizio di un agente e senza la
+> prevedibilità di uno script.
+
+---
+
+## 8. Chi può usarli
+
+| Attore | Accesso ai rail |
+|---|---|
+| Dev Agent | Sì |
+| Review Agent | **No** — non deve poter produrre le evidenze che giudica |
+| Owner | Sì, per diagnosi e intervento manuale |

@@ -1,0 +1,2917 @@
+In this video, two AI agents are going
+
+
+to run a full development cycle on a
+
+
+Microsoft Fabric data platform. One
+
+
+agent picks up a ticket from Azure
+
+
+DevOps, builds the solution in its own
+
+
+feature workspace, tests it against the
+
+
+source system, updates the
+
+
+documentation, and then opens up a pull
+
+
+request. Then a second AI agent from a
+
+
+completely different vendor reviews that
+
+
+pull request before anything gets
+
+
+approved. My only job in this whole
+
+
+process is to write the ticket and press
+
+
+the merge button after agents have done
+
+
+their work. Oh, and at one point one
+
+
+agent catches a mistake that I made.
+
+
+Stay tuned. Welcome to the video. My
+
+
+name is Alexy and on this channel I
+
+
+cover all things Microsoft Fabric. Today
+
+
+we are going to see what it actually
+
+
+looks like when AI agents join your data
+
+
+team. I have built a small Fabric data
+
+
+platform for this, a metadata-driven
+
+
+ingestion framework, an Azure SQL source
+
+
+system, and Azure DevOps project with a
+
+
+backlog, branch policies, and a project
+
+
+wiki. And on this platform two AI agents
+
+
+work as a data engineers. And I really
+
+
+mean that they work like data engineers
+
+
+on the team. Both agents run under their
+
+
+own service principal identities, so
+
+
+nothing in this video runs as me. And
+
+
+there is no human sitting at the
+
+
+keyboard prompting these agents either.
+
+
+They get triggered by work appearing in
+
+
+Azure DevOps, they wake up on their own,
+
+
+they do their work, and the only way I
+
+
+communicate with them is through
+
+
+tickets, comments, and pull requests.
+
+
+The developer agent runs on Cloud, and
+
+
+the reviewer agent runs on OpenAI's
+
+
+Codex, and that is very much on purpose.
+
+
+The code gets written by one AI vendor
+
+
+and then reviewed by completely
+
+
+different one. So nobody here is grading
+
+
+their own homework. First I will show
+
+
+you the platform we're working on, the
+
+
+architecture, the project wiki that both
+
+
+agents use as their shared knowledge
+
+
+base, and the source system. Then we
+
+
+will follow one ticket through the
+
+
+entire cycle, from the backlog to a
+
+
+feature workspace through testing and
+
+
+documentation into a pull request
+
+
+through AI code review and finally to
+
+
+the merge button, which is the one thing
+
+
+that stays firmly in human hands. And
+
+
+after the run, I will break down how
+
+
+these agents are actually built and what
+
+
+is their overall blueprint. And my goal
+
+
+here is not just to show you a cool
+
+
+demo. Along the way, I will point out
+
+
+patterns that you can steal for your own
+
+
+platform, like how to give agents a
+
+
+ready-made toolbox so they don't burn
+
+
+tokens reinventing things. And how to
+
+
+scope their permissions so that autonomy
+
+
+is actually safe and where human has to
+
+
+stay in the loop. But now, let's get
+
+
+started. All right, first I will walk
+
+
+you through quickly what is actually
+
+
+going to happen in the demo. So, in this
+
+
+demo, first I'm going to create a ticket
+
+
+to Azure DevOps board and then that's
+
+
+going to trigger our first agent that is
+
+
+going to be the developer agent that
+
+
+runs cloud code. And that agent will
+
+
+pick that ticket up and then it will
+
+
+start the development process. And
+
+
+before it starts, it will actually fetch
+
+
+the Azure DevOps wiki where that shared
+
+
+knowledge base lives for these agents.
+
+
+And after it has the information how to
+
+
+do the development work and what kind of
+
+
+patterns and architecture we're
+
+
+following here, it will actually then
+
+
+create a new feature workspace and new
+
+
+feature branch and start the development
+
+
+work there. And then the AI agent will
+
+
+iterate the development work there. And
+
+
+when it is done, it will then open up a
+
+
+pull request to Azure DevOps and that
+
+
+will then trigger the review agent that
+
+
+is running in Codex. Then this review
+
+
+agent will also fetch the wiki and check
+
+
+the architecture patterns and things
+
+
+from there and then start to review the
+
+
+pull request. And once the review agent
+
+
+is happy with the pull request, it will
+
+
+approve it and then I will get notified
+
+
+and I will do the final merge back to
+
+
+the main branch and then I would be able
+
+
+to take that development work to the dev
+
+
+dev workspace and deploy it forward.
+
+
+Next, let's take a quick look at what
+
+
+kind of architecture we have on that
+
+
+platform there. So, we have there this
+
+
+kind of a like a lightweight
+
+
+metadata-driven framework that is kind
+
+
+of similar that I have used in other
+
+
+videos. But basically, we have Azure SQL
+
+
+database as our source system and from
+
+
+there we are fetching data from
+
+
+different schemas that are representing
+
+
+basically different source system
+
+
+systems in this case.
+
+
+So, from there we are using pipeline
+
+
+copy activity and copying that data to
+
+
+lakehouse raw layer there where we have
+
+
+parquet files files for that raw data.
+
+
+And then we have a notebook that will
+
+
+actually do this kind of a like a SCD2
+
+
+type processing for the data and process
+
+
+it to the delta tables there. And this
+
+
+whole metadata-driven framework is being
+
+
+controlled from this LH configuration
+
+
+lakehouse where we have these JSON
+
+
+configuration files that tell for
+
+
+example which tables we are fetching
+
+
+from the source system and what are the
+
+
+primary keys there etc. So, then the
+
+
+pipeline and the notebook will use that
+
+
+same configuration file and do the logic
+
+
+and in the notebook we have some checks
+
+
+for the data like we check that the
+
+
+primary keys are unique and then enrich
+
+
+the data with some metadata. But uh this
+
+
+metadata-driven framework is not really
+
+
+the focus of this video. I just want to
+
+
+give you this like brief introduction so
+
+
+you know what kind of solution those
+
+
+agents are going to build. And we are
+
+
+actually going to onboard a new source
+
+
+system to this metadata-driven
+
+
+framework. And next, let's check out
+
+
+this project wiki that we have in the
+
+
+devops because this is very important
+
+
+for the solution, because this is
+
+
+basically the shared context and
+
+
+information that those AI agents will
+
+
+have about this platform. So, here we
+
+
+have documented how the platform works
+
+
+and what kind of ingestion systems we
+
+
+use and how those configuration files
+
+
+will work. So, here we have some
+
+
+examples how those configuration files
+
+
+should work and what are those different
+
+
+properties for and what are the naming
+
+
+conventions on this platform and how to
+
+
+run the load and etc. And here we have
+
+
+already two source systems that have
+
+
+been onboarded to this platform. So, we
+
+
+have this retail op source system and
+
+
+then we have this BMS source system. So,
+
+
+both of these represent like existing
+
+
+source systems where we already have
+
+
+those data pipelines.
+
+
+And by the way, this like company that
+
+
+I'm presenting here, this is like a
+
+
+Alexi Enterprise data platform. So, it
+
+
+is this like a made-up company called
+
+
+Alexi Enterprise and for Alexi
+
+
+Enterprise we are now adding a new
+
+
+source to the platform using those AI
+
+
+agents. Then quickly, let's check out
+
+
+the source system that we have here that
+
+
+is this Azure SQL database and here we
+
+
+have just some different schemas that
+
+
+represent different source systems. And
+
+
+in this demo we are going to onboard
+
+
+this loyalty system. So, in that loyalty
+
+
+schema we have three different tables:
+
+
+members, point point events and then we
+
+
+have tiers. And here we can see sample
+
+
+data for each of those.
+
+
+So, this is the system that we are going
+
+
+to add to the platform. So, basically we
+
+
+have already onboarded things from the
+
+
+DBO schema previously and from that BMS
+
+
+schema there, but now we are onboarding
+
+
+this loyalty system. So, those three
+
+
+tables there. And let's quickly also
+
+
+check out things in fabric. So, here we
+
+
+can see like things in the development
+
+
+workspace where we have those two data
+
+
+pipelines that are more or less
+
+
+identical. So, this one for example is
+
+
+ingesting that retail ops data. So, it
+
+
+has this like metadata driven pipeline
+
+
+structure where we have a lookup
+
+
+activity that fetches the configuration
+
+
+and then we have a for each loop that
+
+
+will copy data from the SQL database and
+
+
+then we run this load bronze layer
+
+
+notebook that will actually then load
+
+
+those delta tables. But, this is
+
+
+basically the structure that we're going
+
+
+to follow in the demo and ask the agent
+
+
+to follow as well when it's onboarding a
+
+
+new source system. But, there we need a
+
+
+new pipeline here. But, now let's get
+
+
+into the exciting part of the video. So,
+
+
+the actual demo where we are going to
+
+
+use those AI agents to do the
+
+
+development work for us.
+
+
+So, here we can see these two terminal
+
+
+windows open and let's start from this
+
+
+one. Basically, this is the developer
+
+
+agent running in Windows and here we are
+
+
+going to use Claude code for the
+
+
+development work.
+
+
+And I'm going to actually start this
+
+
+like dispatcher script and this is not
+
+
+yet triggering the agent. It will start
+
+
+just start to poll Azure DevOps and see
+
+
+if there are any new tickets or any new
+
+
+tasks for this developer agent agent to
+
+
+handle.
+
+
+And then we have the reviewer agent that
+
+
+I'm running in WSL here. So, basically
+
+
+this is running in like Linux here so
+
+
+that these two agents will stay separate
+
+
+and do not cross contaminate each other.
+
+
+And I will also start a dispatcher
+
+
+script for this agent as well. So, it
+
+
+will also start to poll Azure DevOps and
+
+
+see if there are any new tasks. And only
+
+
+way these two agents are going to
+
+
+communicate with each other is through
+
+
+like Azure DevOps like via the pull
+
+
+request etc. So, they are not
+
+
+communicating directly on my machine and
+
+
+basically you could host these agents
+
+
+somewhere else than you on your machine.
+
+
+For the convenience sake, I'm just
+
+
+running them them on my machine on this
+
+
+headless session one day once once there
+
+
+is something to do for them.
+
+
+But now, let's go to Azure DevOps and
+
+
+let's create that ticket that will
+
+
+actually then trigger that developer
+
+
+agent. So, here we have the Azure DevOps
+
+
+board and to this board we are actually
+
+
+now going to create a new ticket. So, we
+
+
+create a new item here and we're going
+
+
+to add it there. This will not trigger
+
+
+the agent yet.
+
+
+And I will add a description for this
+
+
+ticket that will basically describe what
+
+
+we want want to do. So, we are
+
+
+onboarding our customer loyalty program
+
+
+loyal loyalty as a new source system in
+
+
+the bronze bronze ingestion and it is
+
+
+telling that it lives in the same SQL
+
+
+database as retail ops and etc. And then
+
+
+it's giving some information about the
+
+
+source tables we have there and what are
+
+
+their primary keys and what are mark
+
+
+columns etc. Because that is the
+
+
+information that is needed for our
+
+
+bronze layer load.
+
+
+And then we're giving some instruction
+
+
+instruction for the agent to run a full
+
+
+load in your feature workspace and check
+
+
+the audit before opening the PR.
+
+
+But now,
+
+
+uh I'm going to actually assign this
+
+
+ticket to myself because in Azure DevOps
+
+
+we cannot assign tickets to service
+
+
+principal since that agent developer
+
+
+agent is actually running as a service
+
+
+principal, but I will assign it to
+
+
+myself and then I will add a tag here
+
+
+that is
+
+
+dev agent and basically this dev agent
+
+
+tag will be the indicator for the dev
+
+
+agent that you need to pick up this
+
+
+task. And now, when I click save and
+
+
+close,
+
+
+Uh, this developer agent should trigger
+
+
+very soon. It is basically polling the
+
+
+Azure DevOps every 30 seconds. So, in
+
+
+the next loop, it should notice that
+
+
+there is a new task for it to handle.
+
+
+And now, the developer agent is
+
+
+triggering and we can see that it is now
+
+
+launching this like headless cloud code
+
+
+session there running Fable 5 model. And
+
+
+now, it will actually start to check out
+
+
+the instructions for the agent that are
+
+
+in this like agents.md file there.
+
+
+And now, it will start to pull the
+
+
+latest solution clone and pull the
+
+
+latest wiki clone. So, basically, it is
+
+
+going to pull the current current
+
+
+version of the main main branch where we
+
+
+have this basically the data platform
+
+
+that I just showed you there. And then,
+
+
+that agent will start to utilize the
+
+
+Azure DevOps MCP server and also start
+
+
+to read the docu- documentation from the
+
+
+wiki.
+
+
+And also, we can see that the agent has
+
+
+moved the ticket from to do to doing.
+
+
+So, we know that this is now ongoing.
+
+
+And now, we can see that the agent is
+
+
+creating a feature branch and feature
+
+
+workspace for this work item 16. And we
+
+
+can actually go here and check out
+
+
+branches here and we should have a new
+
+
+branch here. And here, we can see that
+
+
+we have a new feature branch. And soon
+
+
+in Fabric, we should also have like a
+
+
+new feature workspace there as well that
+
+
+the agent will create. So, let's go to
+
+
+Fabric and maybe let's refresh this
+
+
+page. And in the workspace, probably we
+
+
+can already find a new
+
+
+new feature workspace. And here, the Git
+
+
+sync is actually going on. And now, the
+
+
+agent has been syncing all these items
+
+
+from the Git. And we can see that the
+
+
+owner of these items is the dev agent
+
+
+service principal. And one thing that I
+
+
+have instructed the agent to actually do
+
+
+is to give me always admin rights to
+
+
+this workspace or this is the part of
+
+
+the script that agent uses to create
+
+
+this feature workspaces. So, I get
+
+
+always admin rights to these workspaces.
+
+
+And next, I think the agent will start
+
+
+the development work and
+
+
+this agent will actually do the
+
+
+development work in Git and then sync
+
+
+things here in the workspace and then
+
+
+run them here. And now it is actually
+
+
+doing already some Git operations there.
+
+
+Okay, and now the agent has already
+
+
+created a new pipeline to this workspace
+
+
+and we can check that out.
+
+
+So, basically this should be very
+
+
+similar to those pipelines that we
+
+
+already saw previously and it is almost
+
+
+like like a exact copy of those, but the
+
+
+agent created this independently here.
+
+
+And now it is actually running already a
+
+
+full load for that pipeline. So, if we
+
+
+go to the monitor tab, we should see
+
+
+that the agent is actually now running a
+
+
+pipeline here. And running this pipeline
+
+
+will actually take a little while. So,
+
+
+maybe we will just skip a little bit
+
+
+forward and see what is the outcome of
+
+
+this testing once the agent is done.
+
+
+Just a quick question before we
+
+
+continue. Are you planning to get
+
+
+Microsoft Fabric certified? If you are,
+
+
+then you should check out my CertiAs
+
+
+platform where I have hundreds of
+
+
+top-tier practice questions for
+
+
+different Microsoft certification exams.
+
+
+On the platform, you will also find case
+
+
+study questions, a very realistic timed
+
+
+practice exam, and when you run out of
+
+
+custom-made questions, you can generate
+
+
+even more with our state-of-the-art AI
+
+
+question generator. So, after watching
+
+
+this video, go to certias.com to
+
+
+supercharge your exam preparation
+
+
+journey. Link to the CertiAs can be also
+
+
+found in the video description. Now,
+
+
+back to the video. And now the run is
+
+
+actually done and we can see that the
+
+
+run failed. So, I would assume that this
+
+
+notebook here failed, and
+
+
+we can quickly check out the item
+
+
+snapshot of that notebook, like what
+
+
+happened there. But, the agent is also
+
+
+also like investigating what is the
+
+
+problem problem there. And we can see
+
+
+that there should be some failure here.
+
+
+And we can see that PK check, so primary
+
+
+key check, failed there. And also, here
+
+
+in the agent output, we can see
+
+
+information about the failed PK check
+
+
+there. And now, we can also see that the
+
+
+agent session has now ended, and it is
+
+
+back to polling. So, it is waiting to
+
+
+have more things to do. And what I have
+
+
+actually instructed the developer agent
+
+
+to do when it runs into issues is that
+
+
+it will comment those issues and the
+
+
+findings to the ticket that is currently
+
+
+doing. So, if we go to the DevOps, we
+
+
+should have the feature here. And here,
+
+
+we should have a comment from the
+
+
+developer agent. It is saying here that
+
+
+the status is blocked. And here, it is
+
+
+giving us the information that the PK
+
+
+check failed for loyalty points events.
+
+
+And then, it it is giving us some
+
+
+information about the issue, like that
+
+
+the member ID primary key is not unique
+
+
+there. And actually, this is an
+
+
+intentional mistake that I made with the
+
+
+specification, so that we would have
+
+
+this like a loop in this development
+
+
+process, where the primary key is
+
+
+incorrect.
+
+
+So, now I will add here comment that
+
+
+will actually respecify what is the
+
+
+correct primary key. So, I will write
+
+
+here, "My mistake, point events are not
+
+
+unique by member ID. The key is member
+
+
+ID plus event seg. Please use primary
+
+
+key columns member ID and event seg for
+
+
+points events." And we can also check
+
+
+weekly the data that we have in the
+
+
+database. And here, we can indeed see
+
+
+that the member ID is not unique, and we
+
+
+would need to add that even seek to make
+
+
+those rows unique. But now, let's add
+
+
+that comment to this ticket, and after
+
+
+this, this will re-trigger the developer
+
+
+agent, and it will then now start to do
+
+
+changes based on my comment there.
+
+
+So, it notified that new reply from
+
+
+Alexi Partanen there, and it will now
+
+
+start a new agent session there that
+
+
+will like adjust the development work
+
+
+based on this information that I gave
+
+
+it. So, if we go to this feature
+
+
+workspace,
+
+
+what I assume that the agent will now do
+
+
+is go to this LH configuration lakehouse
+
+
+and modify that configuration file. So,
+
+
+here we have that
+
+
+configuration file where we have that
+
+
+loyalty configuration JSON, where those
+
+
+primary key columns are specified. And
+
+
+here, with the point events, we can see
+
+
+that the primary key column is only
+
+
+member ID. And next,
+
+
+the agent will modify this, and soon we
+
+
+should see see this file being modified
+
+
+modified there, and then we would have
+
+
+that correct primary key there. And I
+
+
+think the agent has now modified this
+
+
+file, and if we recheck the file file
+
+
+here,
+
+
+uh
+
+
+like refresh that one more time, I think
+
+
+it should be modified, and
+
+
+there we would have the correct primary
+
+
+key like now. We can see that there are
+
+
+two columns. So, the agent modified and
+
+
+is now re-running the full load in this
+
+
+feature feature workspace. So, if we go
+
+
+back to the monitor tab, we should see
+
+
+that the agent is now re-running that
+
+
+bronze pipeline for that loyalty. And
+
+
+now, again, let's skip a little bit
+
+
+forward, because again, this pipeline
+
+
+takes a little while to run. And now, we
+
+
+can see that the run has succeeded and
+
+
+the developer agent should soon have the
+
+
+information that its full load run has
+
+
+succeeded and there
+
+
+it has it and now it will basically
+
+
+update the wiki documentation about this
+
+
+solution before doing the PR so that the
+
+
+review agent can check that okay the
+
+
+wiki documentation has has been updated.
+
+
+And now that wiki documentation update
+
+
+it's happening there. So if we start to
+
+
+refresh this wiki, we should have
+
+
+new documentation here shortly.
+
+
+Basically now it is just writing those
+
+
+like documentation pages about the
+
+
+loyalty source system and there we can
+
+
+see that it's writing that like those
+
+
+different documentation about those
+
+
+different tables there.
+
+
+And I think very shortly we should have
+
+
+that
+
+
+here and it is now pushing pushing those
+
+
+changes to the wiki
+
+
+wiki. So there is the loyalty
+
+
+documentation. Here we can see that the
+
+
+dev agent has done done this
+
+
+documentation about this source system
+
+
+and those different tables that are
+
+
+there.
+
+
+And next we can see that it is opening
+
+
+this pull request. So
+
+
+if if we go here and open the pull
+
+
+requests, we have a new pull request
+
+
+open. And this new pull request should
+
+
+be a trigger for this like a reviewer
+
+
+agent to go through the solution. So we
+
+
+can see that the review agent has been
+
+
+added to this pull request as as a
+
+
+reviewer and it should trigger this
+
+
+review agent shortly. So we should have
+
+
+some output there that the review agent
+
+
+will start its work. And now we can see
+
+
+that the review agent has been triggered
+
+
+and awakened by the script that is
+
+
+monitoring basically
+
+
+if there are like pull requests that the
+
+
+review agent needs to look at.
+
+
+And now it will start the review process
+
+
+and start to look at the solution like
+
+
+does it like meet the quality standards
+
+
+etc. And also like I said in the
+
+
+beginning that the reviewer agent will
+
+
+also fetch the wiki so it can check that
+
+
+is the documentation up to up to
+
+
+standards that we are expecting and also
+
+
+that it can get the information about
+
+
+the platform and what kind of things
+
+
+should be expected with those like new
+
+
+solutions there.
+
+
+But I have actually added one extra
+
+
+thing for the review agent to pay
+
+
+attention to that I have not instructed
+
+
+the developer agent to do so. Basically
+
+
+if everything goes as planned the review
+
+
+agent should spot one issue with the
+
+
+solution and ask the developer agent to
+
+
+fix that before the PR gets approved so
+
+
+we can see some communication via the PR
+
+
+between these two agents.
+
+
+So now the review reviewer agent is
+
+
+there running things and checking
+
+
+checking that are things correct with
+
+
+the solution and maybe we skip a little
+
+
+bit forward and wait it to be done with
+
+
+its evaluation. And by the way now we
+
+
+can see that the reviewer agent is
+
+
+actually using Microsoft Learn MCP
+
+
+server to verify things and that is one
+
+
+of the basic instructions that I have
+
+
+given to both of these agents that try
+
+
+to check everything and confirm
+
+
+everything from Microsoft Learn
+
+
+documentation before like claiming that
+
+
+something can or cannot be done with
+
+
+Fabric. And now we can see that the
+
+
+reviewer agent is done and it actually
+
+
+find the thing that I added to its
+
+
+instructions so it added a comment here
+
+
+to this PR, which will then again
+
+
+trigger a new session for the developer
+
+
+agent because it needs to fix things.
+
+
+So, this is a trigger for the developer
+
+
+agent to activate. And now actually
+
+
+at the same time now the reviewer agent
+
+
+will stop the session because it has
+
+
+done its work and now the things are
+
+
+again at the hand of the developer agent
+
+
+there. But the thing that it commented
+
+
+on is about like the pipeline itself.
+
+
+The new pipeline in the solution. So,
+
+
+it commented about these like properties
+
+
+that the developer agent hasn't defined
+
+
+a concurrency setting for the pipeline.
+
+
+So, basically there is now a possibility
+
+
+that the pipeline could be running
+
+
+multiple times in parallel at the same
+
+
+time that could be problematic. And
+
+
+if we check out the pipeline quickly so
+
+
+that you know which thing I'm talking
+
+
+about. So, if we open up the loyalty
+
+
+pipeline,
+
+
+we have this concurrency setting here
+
+
+the pipeline that is typically defined
+
+
+as one for the pipeline. So, there is no
+
+
+like possibility to pipeline to run two
+
+
+times in parallel. So, then when you
+
+
+have defined one there, if the pipeline
+
+
+is already running and a new iteration
+
+
+of that pipeline would trigger,
+
+
+basically that new iteration would wait
+
+
+until that
+
+
+first iteration of that pipeline is done
+
+
+and start to run after that. So, that is
+
+
+something that I have instructed the
+
+
+reviewer agent to pay attention to and I
+
+
+have not given any instructions about
+
+
+that for the developer agent. So,
+
+
+now
+
+
+the developer agent will actually start
+
+
+to modify the work and
+
+
+and modify these based on the reviewer
+
+
+agent's instructions. And now we can
+
+
+actually see that the dev agent added a
+
+
+comment here that it is not adding that
+
+
+setting because it cannot find that in
+
+
+the platform standards, which is kind of
+
+
+correct because that's not found in the
+
+
+wiki and that's a specific instruction
+
+
+for the review agent. But now I will
+
+
+comment here that add that one
+
+
+concurrency one there. So, let's see if
+
+
+it will now comply and do that since I
+
+
+will give some input for that issue. And
+
+
+now we can see that that actually
+
+
+triggered a new session for that
+
+
+developer agent and let's see if my
+
+
+comment is now like a changing factor
+
+
+there that it will it will actually do
+
+
+that change there and then also the
+
+
+reviewer agent will be happy. And also
+
+
+the funny thing is that I have been
+
+
+running this demo for multiple times and
+
+
+this is actually the first time that I
+
+
+have this dialogue here that the dev
+
+
+agent is not doing that change even
+
+
+though the review agent is saying it it
+
+
+should do that. Of course, I could also
+
+
+change the agent instructions so that it
+
+
+would always like comply with the things
+
+
+that are coming from the review reviewer
+
+
+agent.
+
+
+But let's see what happens when I added
+
+
+that comment there and let's see if it
+
+
+will now actually do that change there.
+
+
+And now we can see that
+
+
+it now did that change and actually
+
+
+pushed some new changes there and this
+
+
+will actually now trigger the review
+
+
+agent once more so it will trigger a new
+
+
+session
+
+
+for the review agent and it will recheck
+
+
+that
+
+
+are everything now all right with the
+
+
+solution and are we ready to approve it?
+
+
+And now we can see also that the agent
+
+
+session has ended again for the
+
+
+developer agent because there were no
+
+
+more things for that agent to do and it
+
+
+is back to polling there. And while the
+
+
+reviewer agent is doing its job there,
+
+
+we can see that the dev agent also added
+
+
+a comment there that it did that change
+
+
+and would aligning the template and
+
+
+onboarding run book if this is going to
+
+
+be standard going forward. So, maybe
+
+
+that should be already in the agent
+
+
+instructions, but I like I said, I added
+
+
+there to have this like a little
+
+
+dialogue between these agents and so
+
+
+that the pull request wouldn't go
+
+
+through on the first right there. But,
+
+
+like we can see that when dealing with
+
+
+LLMs, things can be a little bit
+
+
+unpredictable and before we end this
+
+
+video, I will also talk about how to
+
+
+like limit this these things and limit
+
+
+the creativity of these agents so that
+
+
+they wouldn't have to like think too
+
+
+much or be too creative and we can just
+
+
+point that creativity to places where we
+
+
+really need that. And now we can see
+
+
+that the review agent is done and it
+
+
+gave us this like a checklist what kind
+
+
+of things it checked and that all of
+
+
+them have now passed its review and we
+
+
+can see that the pipeline concurrency
+
+
+setting has the status of fixed because
+
+
+that was the only issue in the first
+
+
+round that the reviewer agent noticed
+
+
+and everything now should look good. So,
+
+
+here we have all of those things that
+
+
+are going now into the into the main and
+
+
+of course, now I would do the final
+
+
+approval here and then complete this
+
+
+pull request so that things would go
+
+
+into the main.
+
+
+Hey, by the way, are you looking to
+
+
+learn Microsoft Fabric hands-on with the
+
+
+super helpful community? If you are,
+
+
+then Fabric Forge is the place to go. It
+
+
+is a free to join learning platform
+
+
+founded by me with few other Microsoft
+
+
+Fabric experts. Inside Fabric Forge, you
+
+
+will find plenty of video lectures and
+
+
+hands-on exercises along with
+
+
+step-by-step video walkthroughs covering
+
+
+everything from basics to advanced
+
+
+solutions. For premium members, we also
+
+
+offer a weekly call where you can join a
+
+
+live call with me and other experts to
+
+
+ask your Marks Fabric questions directly
+
+
+from us. So, after watching this video,
+
+
+go to school.com/fabricforge
+
+
+and sign up. Link can be also found in
+
+
+video description. Now, let's get back
+
+
+to the video. But, before we end this
+
+
+video, let's talk a little bit about the
+
+
+agent anatomy and their blueprint and
+
+
+what kind of philosophy I have taken
+
+
+with these agents and their permissions,
+
+
+etc. And then also like how you could
+
+
+get started with these agents as well.
+
+
+And here in this table/diagram,
+
+
+we can see more information about these
+
+
+agents and their anatomy. But yeah,
+
+
+let's start with the dev agent here. So,
+
+
+like I said, that dev agent was running
+
+
+their Claude code and the model it was
+
+
+running was Fable 5, so the latest and
+
+
+greatest from Anthropic at this stage.
+
+
+And here we can see the toolbox of the
+
+
+agent and what kind of permissions it
+
+
+had. So, let's start from here. So,
+
+
+basically like I explained, that agent
+
+
+actually clones the solution repo and
+
+
+the wiki repo because it basically needs
+
+
+both of them for doing its work.
+
+
+Then, here is one thing that is very
+
+
+specific for the developer agent.
+
+
+And this is one thing that will actually
+
+
+help you to one, save tokens and also
+
+
+limit the creativity of the LLM. But
+
+
+basically, what I have done here is that
+
+
+I have given some deterministic scripts
+
+
+for agent to use. For example, for
+
+
+branch out operations, it has this
+
+
+pre-made branch out script that it can
+
+
+run so that the agent wouldn't have to
+
+
+reinvent the branch out process on the
+
+
+fly because this branch out process is
+
+
+more or less the same every time. So, it
+
+
+will create a new branch, then it will
+
+
+create a new feature workspace following
+
+
+a set naming convention and also add me
+
+
+as admin there.
+
+
+Then also running those pipelines I have
+
+
+made script for that. So it can just run
+
+
+this like Python script and doesn't have
+
+
+to figure out via API calls how to run
+
+
+that pipeline and I have actually
+
+
+limited the API calls that that agent
+
+
+can do directly the fabric.
+
+
+And then we also also have this sync
+
+
+workspace script that we will help with
+
+
+the Git operation. So again, the agent
+
+
+don't have to reinvent that thing and
+
+
+investigated investigate how to do that.
+
+
+So it will save a lot of tokens when you
+
+
+have this pre-made toolbox for the agent
+
+
+to use.
+
+
+And then for some things the agent will
+
+
+actually utilize the fabric CLI
+
+
+for example getting some information
+
+
+about the fabric workspace etc. And then
+
+
+another important tool there is the
+
+
+Azure DevOps MCPs MCP server that the
+
+
+agent will use to like interact with
+
+
+Azure DevOps. And then we have the
+
+
+Microsoft learn that is pretty much
+
+
+always needed when dealing with AI
+
+
+agents and Microsoft fabric because from
+
+
+Microsoft learn documentation via this
+
+
+MCP server it can get the latest
+
+
+information about fabric since typically
+
+
+those agents do not know latest fabric
+
+
+features that well and of course if it
+
+
+would do a standard web search about
+
+
+those it would burn so many more tokens
+
+
+compared to this MCP server. And then we
+
+
+had that dispatcher script there for the
+
+
+developer agent and the idea was there
+
+
+that we just run this Python script that
+
+
+will then wake up those LLM sessions
+
+
+when they are really needed. So
+
+
+basically we don't burn any tokens when
+
+
+the LLM is not needed and we don't need
+
+
+to poll things using the LLM. We rather
+
+
+use this script to check is there
+
+
+anything to do that we need that agent
+
+
+for.
+
+
+And for this developer agent, we had few
+
+
+different triggers defined there. So,
+
+
+basically that we had that work item
+
+
+there in to do with that dev agent tag
+
+
+or like
+
+
+reply waiting on a ticket or something
+
+
+on that PR when it had that deal
+
+
+dialogue with between me and that
+
+
+reviewer agent there.
+
+
+So, basically like we saw that the
+
+
+developer agent will go sleep after the
+
+
+task is done and that session is ended
+
+
+and then the script will again start to
+
+
+run and
+
+
+try to poll is there anything to do so
+
+
+that it would trigger a new session for
+
+
+that developer agent. And then we can
+
+
+see some permissions that were granted
+
+
+for that developer agent there. So, it
+
+
+had access to some places in Azure
+
+
+DevOps like the data platform repo there
+
+
+and also the wiki and then also the work
+
+
+items it needed access as well. And then
+
+
+to the fabric side, it was allowed to
+
+
+create workspaces and also add them to
+
+
+that F4 capacity that I had running
+
+
+there. And also I had granted user
+
+
+access to the connection that was used
+
+
+for that SQL database on Azure. And then
+
+
+some things were explicitly denied from
+
+
+that developer agent like it was not
+
+
+allowed to push anything to main and I
+
+
+have blocked that via like branch policy
+
+
+so that I have added that the developer
+
+
+agent cannot actually push anything to
+
+
+main and also cannot do like merges
+
+
+merges to the main as well. And also
+
+
+then there were some
+
+
+deny accesses to the agent environment
+
+
+variables as well so that it couldn't
+
+
+like print its tokens or anything like
+
+
+that. But otherwise, like it was running
+
+
+this permission mode bypass permissions
+
+
+because it was running in a headless
+
+
+session where it cannot like ask human
+
+
+to do like approve things. So, because I
+
+
+wanted to run that agent like as this
+
+
+like autonomous developer, so it
+
+
+wouldn't like ask permissions to do
+
+
+things because otherwise, there wouldn't
+
+
+be really point doing it this way. Then,
+
+
+if we quickly check out the reviewer
+
+
+agent, it was running there Codex like I
+
+
+explained to you, and it was running
+
+
+there GPT 5.6 solved, which is also the
+
+
+greatest and latest now from OpenAI at
+
+
+this point. And some of the things with
+
+
+this reviewer agent were quite similar
+
+
+when we compare it to the developer
+
+
+agent. But, basically, here are subset
+
+
+of things because this agent doesn't
+
+
+need those scripts that much like that
+
+
+were built for the developer agent, and
+
+
+it doesn't really need the Fabric CLI
+
+
+there. But, it had access to the Azure
+
+
+DevOps MCP server, also Microsoft Learn
+
+
+MCP server to
+
+
+check things. Also,
+
+
+it had its own like dispatcher script,
+
+
+but in that case, it got only triggered
+
+
+by that like PR actions there. So, like
+
+
+new PRs and things happening on those
+
+
+PRs like new pushes and commits were
+
+
+like things that only triggered the
+
+
+reviewer agent there. And then, what
+
+
+comes to the permissions of this
+
+
+reviewer agent, they were kind of like a
+
+
+subset of permissions from the developer
+
+
+agent because the
+
+
+reviewer agent didn't really need any
+
+
+access to the Fabric side of things. So,
+
+
+it didn't have any access to Fabric, but
+
+
+it had access to DevOps, of course, and
+
+
+then also many things were denied from
+
+
+this reviewer agent as well. And like we
+
+
+saw, both of these agents were running
+
+
+using those service principal
+
+
+identities, so they have their own
+
+
+identities there. And when building
+
+
+these agents, it's always very good to
+
+
+think about like what are the
+
+
+permissions that are given for that
+
+
+specific service principal that the
+
+
+agent is using. So, even though you
+
+
+would give agents some instructions that
+
+
+do not touch this and do not do that and
+
+
+etc.,
+
+
+those are like just instructions, but
+
+
+you really want to also limit that on
+
+
+the permission side of things so that
+
+
+the agent cannot really do the actions
+
+
+that you don't really want it to do.
+
+
+Also, it is always the good to have
+
+
+those instructions in place, but you
+
+
+also want to limit limit the scope of
+
+
+things that the agent could do because
+
+
+then I think with agents you want to
+
+
+have this kind of like mindset that if
+
+
+the agent has like technically
+
+
+permissions to do something or
+
+
+permissions to see something, you can
+
+
+expect to see and do those things
+
+
+eventually. Also, one important thing
+
+
+that I want to highlight with these
+
+
+agents is that the context is always
+
+
+very important. So,
+
+
+as as I showed you in the beginning that
+
+
+we have this wiki here where everything
+
+
+is documented properly.
+
+
+That is basically the shared context for
+
+
+those agents to use so that they know
+
+
+what what type of platform they are
+
+
+dealing with etc. And if you're planning
+
+
+or considering using these type of
+
+
+agents in the future as part of your
+
+
+like development and data engineering
+
+
+team, then maybe right now start to
+
+
+already check that is your like project
+
+
+documentation up-to-date and is it like
+
+
+structured well etc. Of course, that is
+
+
+something that LLMs are really good at
+
+
+like restructuring and helping you to
+
+
+get that documentation in shape, but I
+
+
+think that's one of the prerequisites
+
+
+that you really need to have in place if
+
+
+you're considering using these agents
+
+
+because like said this like context is
+
+
+really really important when using these
+
+
+agents and that context wiki or project
+
+
+documentation is that context that those
+
+
+agents really need to operate in your
+
+
+environment and know what that
+
+
+environment is all about. And if you're
+
+
+looking to get started with this type of
+
+
+like agents as part of your team, I
+
+
+would probably start with that type of
+
+
+like a code review agent because you can
+
+
+limit its access access to only to that
+
+
+specific code so that it cannot see for
+
+
+example data in many cases so it can
+
+
+only see code and check that code that
+
+
+it is up to your standards etc. I think
+
+
+things get way more complex and
+
+
+problematic when you start to think
+
+
+about like those like proper developer
+
+
+agents that can actually technically see
+
+
+your data there and then you really want
+
+
+to think about how you would host those
+
+
+because probably in many cases you don't
+
+
+want your data to go to for example to
+
+
+open AI or Anthropic via those API calls
+
+
+that those agents are doing. But there
+
+
+are of course many many ways to handle
+
+
+those agents in another way than just
+
+
+using those like subscriptions that I'm
+
+
+using and there are like proper ways to
+
+
+host them. Okay, I hope this gave you a
+
+
+concrete picture what AI agents can
+
+
+already do on a fabric data platform and
+
+
+more importantly the patterns that make
+
+
+it safer. I would really like to hear
+
+
+which AI workflows you would want me to
+
+
+cover next. So leave a comment below and
+
+
+let me know. And if you want to learn
+
+
+more about these fabric AI workflows,
+
+
+remember to join fabric forge and the
+
+
+link can be found in the description.
+
+
+But now, thanks for watching and see you
+
+
+in the next video.
