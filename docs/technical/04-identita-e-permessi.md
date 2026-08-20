@@ -41,6 +41,7 @@ Ne discendono due regole operative:
 | Credenziali solo nel secret store | Mai in file di configurazione, mai nel repo |
 | Le identità sono raccolte in un **gruppo di sicurezza dedicato** | Gli switch di tenant si applicano al gruppo, non al mondo |
 | La `ExecutionCredential` non è un'identità dell'agente | L'agente può accodare una pipeline ma non leggere, esportare o impersonare il segreto cliente |
+| L'organizzazione Azure DevOps è associata al tenant Fabric | I service principal del Dev Agent e Review Agent sono nel tenant Agic Dev e devono poter accedere a Boards senza identità duplicate cross-tenant |
 
 > L'ultimo punto è spesso trascurato: abilitare la creazione di workspace via identità applicativa
 > a livello di tenant senza restringerla a un gruppo significa concederla a **tutte** le

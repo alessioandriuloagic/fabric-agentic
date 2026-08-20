@@ -63,6 +63,7 @@ Solo il **Livello 1** richiede presenza umana. Ed è l'unico che si paga una vol
 |---|---|
 | Tenant con capacity Fabric attiva | Dimensionata sul carico previsto |
 | Organizzazione Azure DevOps (o GitHub) | Il tracker su cui girerà il flusso |
+| Tenant dell'organizzazione Azure DevOps | Coincide con il tenant Fabric delle identità agentiche, oppure la migrazione di directory è completata prima di aggiungere gli SP |
 | Credenziale tecnica per il cliente | SP OIDC, SP con secret oppure utenza di servizio; scelta e autorizzazione sono umane |
 | Nome progetto | Diventa il segmento variabile del naming (`ws_<progetto>_<ambiente>`) |
 | Sottoscrizioni ai runtime degli agenti | Due vendor diversi, uno per ruolo |
@@ -72,6 +73,7 @@ Solo il **Livello 1** richiede presenza umana. Ed è l'unico che si paga una vol
 **Identità e permessi** *(richiede un amministratore del tenant)*
 
 - [ ] Predisporre le identità del Dev Agent e del Review Agent nell'organizzazione AGIC, distinte dalla credenziale del cliente
+- [ ] Associare l'organizzazione Azure DevOps al tenant Fabric che ospita le identità agentiche; per la sandbox è Agic Dev (`1cf6db06-3e00-48b6-a65c-be932526610e`)
 - [ ] Scegliere una sola `ExecutionCredential` per il cliente: SP OIDC, SP con secret o utenza di servizio
 - [ ] Se si usa utenza di servizio: verificare che MFA e Conditional Access permettano un uso non interattivo
 - [ ] Custodire la credenziale o il suo riferimento in Azure Key Vault / secret store; l'agente non deve poterla leggere
@@ -88,6 +90,7 @@ Solo il **Livello 1** richiede presenza umana. Ed è l'unico che si paga una vol
 - Dev Agent: `fabric-agentic-dev-agent` (app ID `e74ca724-e306-4ff3-ae02-77ef7368e673`)
 - Review Agent: `fabric-agentic-review-agent` (app ID `a6d3e2af-92e5-447a-bb1e-9a466e1bdaed`)
 - Nessun secret, ruolo Fabric o credenziale tecnica sorgente è stato ancora assegnato.
+- L'organizzazione Azure DevOps `alessioandriulo` deve ancora essere associata al tenant Agic Dev prima di aggiungere gli SP al tracker.
 
 **Tracker**
 

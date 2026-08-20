@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Scelta l'associazione dell'organizzazione Azure DevOps al tenant Agic Dev prima di aggiungere
+  i service principal agentici a Boards; evita identità duplicate o configurazioni multi-tenant.
 - Provisionate nel tenant Agic Dev le identità `fabric-agentic-dev-agent` e
   `fabric-agentic-review-agent`, senza secret o privilegi Fabric. Tenant, sottoscrizione,
   capacity e app ID non sensibili sono registrati in `CONTEXT.md` e nel runbook di onboarding.
