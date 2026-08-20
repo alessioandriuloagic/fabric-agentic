@@ -219,10 +219,13 @@ Altro Lakehouse Fabric (shortcut) · Database / DWH · CRM (Dataverse) · ShareP
 
 | Aspetto | Valore |
 |---|---|
-| Tenant | **AGIC** — il tenant del cliente non dispone di Azure DevOps |
-| Capacity | **F32** |
+| Tenant Fabric | **Agic Dev** — `1cf6db06-3e00-48b6-a65c-be932526610e` |
+| Sottoscrizione Azure | `898b6a78-11dd-4e23-bf53-9e17f541d955` |
+| Capacity | **`fabricalessiodev`** |
 | Nome progetto nel naming | **`agentic`** |
-| Identità | Un service principal per agente, già disponibili |
+| Dev Agent app ID | `e74ca724-e306-4ff3-ae02-77ef7368e673` (`fabric-agentic-dev-agent`) |
+| Review Agent app ID | `a6d3e2af-92e5-447a-bb1e-9a466e1bdaed` (`fabric-agentic-review-agent`) |
+| Identità | Un service principal per agente; nessun secret creato. L'ExecutionCredential è un work item separato |
 | Dati | Esclusivamente sintetici o open data. **Nessun dato di cliente entra nel perimetro** |
 
 ---

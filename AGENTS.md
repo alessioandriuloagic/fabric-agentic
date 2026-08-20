@@ -142,4 +142,8 @@ discipline used for release version bumps above.
 
 <!-- Project-specific notes: add anything unique to this project below this line, inside the markers, and it will survive future /init-dai-project re-runs only if you keep it between them. -->
 
+## Kaizen Learnings
+
+- **[2026-08-20] Tenant di esecuzione** → [kaizen/20260820-tenant-selection.md](kaizen/20260820-tenant-selection.md)
+
 <!-- init-dai-project:end -->

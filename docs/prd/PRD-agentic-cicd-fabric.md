@@ -125,10 +125,10 @@ Espliciti, per proteggere lo scope:
 - Refactoring / debito tecnico
 
 **Piattaforma**
-- Tenant: **AGIC** (il tenant del cliente non dispone di Azure DevOps)
+- Tenant Fabric: **Agic Dev** (`1cf6db06-3e00-48b6-a65c-be932526610e`)
 - Tracker: Azure DevOps Boards
 - Repository, pull request e CI/CD: GitHub (`alessioandriuloagic/fabric-agentic`) e GitHub Actions
-- Capacity Fabric: **F32**
+- Capacity Fabric: **`fabricalessiodev`** (SKU da verificare prima del capacity test)
 - Nome progetto per il naming: **`agentic`** → `ws_agentic_dev`, `ws_agentic_prod`, `ws_agentic_feature_wi<id>`
 - Service principal: **già disponibili** (uno per agente)
 - Workspace: **creati da zero dal sistema stesso**, come primo caso d'uso reale
@@ -366,7 +366,7 @@ flowchart LR
         RAILS[Script deterministici]
     end
 
-    subgraph FABRIC["Microsoft Fabric — capacity F32"]
+    subgraph FABRIC["Microsoft Fabric — capacity fabricalessiodev"]
         WSF[Feature workspace]
         WSD[Workspace DEV]
         WSP[Workspace PROD]
@@ -416,7 +416,7 @@ Il Dev Agent ha una cassetta degli attrezzi ampia (Git, script, CLI Fabric, trac
 | Push su `main` | **NEGATO** — deny esplicito + branch policy | **NEGATO** |
 | Merge | **NEGATO** — revisore umano obbligatorio | **NEGATO** |
 | Creazione workspace Fabric | **Negata**: avviene tramite identità di deploy della pipeline | **Nessun accesso a Fabric** |
-| Capacity F32 | Contributor | Nessun accesso |
+| Capacity `fabricalessiodev` | Contributor | Nessun accesso |
 | Connessione alla sorgente dati | Utente | Nessun accesso |
 | Variabili d'ambiente / token cache | **NEGATO** | **NEGATO** |
 | Deploy verso test/prod | **NEGATO** | **NEGATO** |
@@ -429,7 +429,7 @@ Il Dev Agent ha una cassetta degli attrezzi ampia (Git, script, CLI Fabric, trac
 
 | ID | Vincolo |
 |---|---|
-| V-1 | Capacity Fabric F32 già disponibile sul tenant AGIC |
+| V-1 | Capacity Fabric `fabricalessiodev` già disponibile nel tenant Agic Dev; lo SKU va verificato prima del capacity test |
 | V-2 | I dispatcher girano sulla macchina locale dell'owner in fase 1; i due agenti sono isolati tra loro a livello di ambiente di esecuzione |
 | V-3 | Service principal già disponibili; il tracker non consente l'assegnazione diretta di work item a un service principal — serve un marcatore alternativo (tag) |
 | V-4 | Gli agenti girano in sessione non interattiva: non possono chiedere conferme a runtime, quindi il perimetro deve essere garantito dai permessi |
@@ -437,14 +437,14 @@ Il Dev Agent ha una cassetta degli attrezzi ampia (Git, script, CLI Fabric, trac
 | V-6 | Sorgenti dati eterogenee: REST API (Open-Meteo) e File (dataset sintetico). La soluzione non deve assumere alcuna tipologia di sorgente specifica |
 | V-7 | Workflow Git: GitHub Flow, branch feature a vita breve, `main` sempre rilasciabile |
 | V-8 | Naming convention, struttura a cartelle del workspace e task flow sono definiti in `CONTEXT.md` e sono vincolanti per gli agenti |
-| V-9 | Tutto vive sul **tenant AGIC**: il tenant del cliente non dispone di Azure DevOps. Nessun dato di cliente entra nel perimetro |
+| V-9 | Fabric e identità vivono nel tenant **Agic Dev**; Azure Boards e GitHub sono servizi esterni. Nessun dato di cliente entra nel perimetro |
 
 ### 12.2 Assunzioni da validare
 
 | ID | Assunzione | Come validarla |
 |---|---|---|
 | A-1 | Il framework metadata-driven esistente accoglie un secondo connettore senza modifiche strutturali all'orchestrazione | Slice 4 — è il test dell'astrazione |
-| A-2 | Il volume dei feature workspace è sostenibile sulla F32 senza impatto sui carichi esistenti | Monitoraggio consumo in Slice 0-1 |
+| A-2 | Il volume dei feature workspace è sostenibile sulla capacity `fabricalessiodev` senza impatto sui carichi esistenti | Monitoraggio consumo in Slice 0-1 |
 | A-3 | Open-Meteo espone volume, paginazione e granularità temporale sufficienti a esercitare full e incremental load | Discovery tecnica in Slice 2 |
 | A-4 | La validazione automatica di TMDL/PBIR è realizzabile con il tooling disponibile senza Power BI Desktop interattivo | Spike dedicato prima dello Slice 6 |
 | A-5 | Le cartelle sono creabili via API; il task flow è un passo manuale documentato e non blocca la review | Deciso in ADR-0003 |
@@ -511,7 +511,7 @@ L'MVP è accettato quando, **senza alcun intervento tecnico dell'owner oltre all
 | ~~Q-11~~ | ~~Quale dominio e quale volume per il dataset sintetico?~~ | — | **Chiusa 2026-08-20**: anagrafica città con coordinate, ~1.000 righe, correlata a Open-Meteo |
 | ~~Q-3~~ | ~~Con quale tooling validiamo TMDL/PBIR in modo non interattivo?~~ | — | **Chiusa 2026-08-20**: `fabric-cicd==1.3.0` supporta `SemanticModel` TMDL e `Report` PBIR; S1-01 valida binding e deploy reale |
 | Q-4 | Qual è la definizione operativa di "regression suite DAX" e quali misure sono critiche? | @marco / @kent | Aperta — blocca S6 |
-| ~~Q-5~~ | ~~Quale strategia di cleanup dei feature workspace e quale soglia F32?~~ | — | **Chiusa 2026-08-20**: Sweep pipeline schedulata (ADR-0004), capacity monitorata per F32 |
+| ~~Q-5~~ | ~~Quale strategia di cleanup dei feature workspace e quale soglia capacity?~~ | — | **Chiusa 2026-08-20**: Sweep pipeline schedulata (ADR-0004), capacity `fabricalessiodev` monitorata |
 | Q-6 | La checklist di review va versionata nel repo soluzione o nella knowledge base? | @joseph | Aperta — blocca S3 |
 | ~~Q-7~~ | ~~Quale opzione di hosting degli agenti prima dell'uso su dati cliente?~~ | — | **Chiusa 2026-08-20**: Viewer solo per dati sintetici/open data; con dati cliente Viewer revocato e diagnostica via artefatto (ADR-0008) |
 | ~~Q-9~~ | ~~Cartelle del workspace e task flow sono creabili via API/CLI?~~ | — | **Chiusa 2026-08-20**: cartelle via API; task flow rimane un passo manuale (ADR-0003) |

@@ -81,6 +81,14 @@ Solo il **Livello 1** richiede presenza umana. Ed è l'unico che si paga una vol
 - [ ] Verificare che il Review Agent **non** abbia alcun accesso a Fabric
 - [ ] Registrare solo riferimenti al secret store — mai credenziali in file di configurazione
 
+**Esito sandbox Agentic (2026-08-20)**
+
+- Tenant Fabric: Agic Dev (`1cf6db06-3e00-48b6-a65c-be932526610e`)
+- Sottoscrizione: `898b6a78-11dd-4e23-bf53-9e17f541d955`; capacity: `fabricalessiodev`
+- Dev Agent: `fabric-agentic-dev-agent` (app ID `e74ca724-e306-4ff3-ae02-77ef7368e673`)
+- Review Agent: `fabric-agentic-review-agent` (app ID `a6d3e2af-92e5-447a-bb1e-9a466e1bdaed`)
+- Nessun secret, ruolo Fabric o credenziale tecnica sorgente è stato ancora assegnato.
+
 **Tracker**
 
 - [ ] Creare il progetto e il repository della soluzione

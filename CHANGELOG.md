@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Provisionate nel tenant Agic Dev le identità `fabric-agentic-dev-agent` e
+  `fabric-agentic-review-agent`, senza secret o privilegi Fabric. Tenant, sottoscrizione,
+  capacity e app ID non sensibili sono registrati in `CONTEXT.md` e nel runbook di onboarding.
 - Primo controllo GitHub Actions: valida a ogni pull request e push su `main` lo schema
   `schemas/rail-result-v1.0.json`, contratto versionato fra workflow CI/CD e Dev Agent.
 - Configurato il progetto Azure Boards `fabric-agentic` come tracker e verificato il ciclo
