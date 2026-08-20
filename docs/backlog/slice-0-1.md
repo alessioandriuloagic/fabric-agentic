@@ -110,12 +110,17 @@ knowledge base.
 | **Dipendenze** | S0-01 |
 | **RF** | RF-01, RF-12 |
 
-**Obiettivo**: la board riflette il ciclo di vita definito in `docs/functional/01`.
+**Obiettivo**: la board Basic riflette il ciclo di vita definito in `docs/functional/01`.
 
 **Criteri di accettazione**
-- Stati configurati: *To Do*, *Doing*, *Waiting input*, *Done*
-- Tag `dev-agent` creato
-- Un work item di prova percorre tutti gli stati
+- Stati disponibili e verificati: *To Do*, *Doing*, *Done*
+- Tag `dev-agent` e `waiting-input` creati
+- Un work item di prova percorre *To Do* → *Doing* → *Done*
+- Un blocco è rappresentato da *Doing* + `waiting-input`; un commento umano rimuove il tag e riattiva l'agente
+
+**Esito 2026-08-20**: work item Azure Boards `#19` ha verificato il flusso *To Do* → *Doing* →
+*Done*. I tag non sono ancora creati: l'identità dell'owner deve ricevere il permesso Azure DevOps
+**Create tag** nel progetto `fabric-agentic`.
 
 ---
 
@@ -360,7 +365,7 @@ knowledge base.
 **Criteri di accettazione**
 - Polling a ~30 secondi, **senza consumo di token**
 - Trigger A: work item in *To Do* con tag `dev-agent`
-- Trigger B: nuovo commento **umano** su work item in *Waiting input*
+- Trigger B: nuovo commento **umano** su work item in *Doing* con tag `waiting-input`
 - Trigger C: thread **non risolti** sulla PR dell'agente
 - Una sola sessione attiva per volta
 - Token rinnovato a ogni ciclo e a ogni avvio
@@ -594,9 +599,9 @@ convenzioni, creati da un ticket.
 > convenzioni, connessi a Git.
 >
 > **Criteri di accettazione**
-> - I due workspace esistono, assegnati alla capacity, con l'owner amministratore
-> - Le cartelle previste esistono in entrambi: Bronze Layer, Full and Incremental Load,
->   Silver Layer, Semantic Layer, Report, Test Items
+- Trigger A: work item in *To Do* con tag `dev-agent`
+- Trigger B: nuovo commento **umano** su work item in *Doing* con tag `waiting-input`
+- Trigger C: thread **non risolti** sulla PR dell'agente
 > - Il task flow è documentato come passo manuale, secondo ADR-0003
 > - `ws_agentic_dev` è connesso a `main` con sincronizzazione attiva
 > - La documentazione dell'ambiente è aggiornata

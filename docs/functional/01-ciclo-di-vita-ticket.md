@@ -35,10 +35,10 @@ silenziosa.
 |---|---|---|
 | **To Do** | Ticket scritto. Con il tag dell'agente, è pronto per la presa in carico | Owner |
 | **Doing** | Sessione dell'agente in corso o PR aperta e in review | Dev Agent |
-| **Waiting input** | L'agente è bloccato e ha posto una domanda sul ticket | Dev Agent |
+| **Doing** + tag `waiting-input` | L'agente è bloccato e ha posto una domanda sul ticket | Dev Agent |
 | **Done** | PR mergiata su `main` | Owner (al merge) |
 
-**Regola**: un ticket in *Waiting input* non viene ripreso finché non arriva una risposta umana.
+**Regola**: un ticket con tag `waiting-input` non viene ripreso finché non arriva una risposta umana.
 L'agente non "riprova più tardi" e non tira a indovinare.
 
 ---
@@ -85,7 +85,7 @@ L'agente non "riprova più tardi" e non tira a indovinare.
 | Causa | Comportamento |
 |---|---|
 | Errore proprio (implementazione sbagliata) | Corregge e ripete, entro un numero limitato di tentativi |
-| Specifica ambigua, errata o incompleta | **Si ferma**, sposta il ticket in *Waiting input*, commenta il blocco con l'evidenza, termina la sessione |
+| Specifica ambigua, errata o incompleta | **Si ferma**, aggiunge il tag `waiting-input`, commenta il blocco con l'evidenza, termina la sessione |
 
 Vedi [05 — Protocollo di escalation](05-protocollo-escalation.md).
 

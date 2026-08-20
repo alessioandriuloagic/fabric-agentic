@@ -50,7 +50,7 @@ Non stiamo replicando il video. Tre scostamenti strutturali:
 |---|---|---|---|
 | D1 | Sorgente unica Azure SQL, copy activity SQL-only | **Multi-sorgente fin dall'MVP**: REST API e File, con il framework che deve adattarsi anche a DWH, CRM e altri Lakehouse | Alto — serve un contratto di connettore, non un clone di pipeline |
 | D2 | Solo data engineering | Anche **Power BI**: semantic model (TMDL/PBIP, DAX) e report (PBIR) | Alto — serve una seconda "corsia" di validazione, non riusabile da quella dati |
-| D3 | Solo Azure DevOps | Azure DevOps in fase 1, **GitHub in fase 2** | Medio — il livello tracker va isolato dietro un'astrazione fin da subito |
+| D3 | Solo Azure DevOps | Azure Boards per ticket + GitHub per codice, PR e GitHub Actions | Medio — il livello tracker e il repository restano disaccoppiati |
 
 ---
 
@@ -126,12 +126,13 @@ Espliciti, per proteggere lo scope:
 
 **Piattaforma**
 - Tenant: **AGIC** (il tenant del cliente non dispone di Azure DevOps)
-- Tracker: Azure DevOps (Boards, Repos, Pull Request, Wiki)
+- Tracker: Azure DevOps Boards
+- Repository, pull request e CI/CD: GitHub (`alessioandriuloagic/fabric-agentic`) e GitHub Actions
 - Capacity Fabric: **F32**
 - Nome progetto per il naming: **`agentic`** → `ws_agentic_dev`, `ws_agentic_prod`, `ws_agentic_feature_wi<id>`
 - Service principal: **già disponibili** (uno per agente)
 - Workspace: **creati da zero dal sistema stesso**, come primo caso d'uso reale
-- Git integration Fabric ↔ Azure DevOps: da configurare da zero
+- Git integration Fabric ↔ GitHub: da configurare da zero
 - Pubblicazione DEV: automatica via pipeline CI/CD dopo merge umano su `main`; test e produzione restano protetti da pipeline umane
 
 **Sorgenti dati (multi-sorgente fin dall'MVP)**

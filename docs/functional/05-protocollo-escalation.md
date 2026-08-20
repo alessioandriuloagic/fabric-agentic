@@ -36,7 +36,7 @@ di aggirare un controllo di sicurezza. Si ferma e lo dichiara.
 
 Quando un agente escala:
 
-1. Sposta il work item in **Waiting input**.
+1. Mantiene il work item in **Doing** e aggiunge il tag `waiting-input`.
 2. Pubblica **un solo** commento strutturato sul ticket.
 3. **Termina la sessione.** Non resta in attesa, non ritenta più tardi.
 
@@ -109,7 +109,7 @@ individuata. L'ha proposta e ha aspettato.
 | 1 | Il Dev Agent **deve** rispondere a ogni rilievo: correggendolo, oppure motivando perché lo ritiene infondato |
 | 2 | Un rilievo si contesta **solo** citando la knowledge base o la documentazione ufficiale. Mai per opinione |
 | 3 | Se un rilievo non è riconducibile ad alcuna voce della checklist, il Dev Agent lo segnala come tale e **non è tenuto ad applicarlo** |
-| 4 | **Dopo due iterazioni senza convergenza, il caso escala all'owner.** Il ticket va in *Waiting input* |
+| 4 | **Dopo due iterazioni senza convergenza, il caso escala all'owner.** Il ticket riceve il tag `waiting-input` |
 | 5 | La decisione dell'owner è definitiva e, se ha valore generale, **va recepita nella knowledge base o nella checklist** |
 
 > La regola 3 è deliberata e va compresa bene. Un Review Agent che solleva requisiti non

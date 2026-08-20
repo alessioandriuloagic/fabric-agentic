@@ -53,7 +53,7 @@ Fatti di piattaforma verificati (fonti in `07-architecture-review.md` §13.7):
 
 ## Decisione
 
-**1. I rail sono pipeline CI/CD.** I cinque rail dell'MVP diventano pipeline parametriche:
+**1. I rail sono workflow GitHub Actions.** I cinque rail dell'MVP diventano workflow parametrici:
 `pipe_agent_branch_out`, `pipe_agent_run_load`, `pipe_agent_sync`, `pipe_agent_diagnose_data`,
 `pipe_sched_sweep`. Il rail
 lato agente si riduce a: invocare la pipeline, attenderne il termine, leggerne l'artefatto.
@@ -70,7 +70,7 @@ da approvazione. Le **Fabric Deployment Pipelines non sono usate** — il rifiut
 valido e si rafforza. **Git resta la sorgente di verità**: ciò che è in produzione è un commit
 identificabile; cambia solo chi applica quel commit al workspace.
 
-**2-bis. Il merge umano su `main` attiva `pipe_ci_publish_dev`.** Questa pipeline legge il commit
+**2-bis. Il merge umano su `main` attiva `pipe_ci_publish_dev`. Questo workflow GitHub Actions legge il commit
 mergiato da `main` e lo pubblica su DEV senza ulteriore intervento umano. Non è una pipeline
 accodabile dal Dev Agent e non promuove verso test o produzione, che restano `pipe_human_*`.
 

@@ -56,7 +56,7 @@ Tre condizioni, valutate a ogni ciclo:
 | # | Trigger | Condizione |
 |---|---|---|
 | **A** | Nuovo lavoro | Work item in stato *To Do* con il tag riservato al Dev Agent |
-| **B** | Risposta umana | Nuovo commento su un work item in stato *Waiting input* assegnato al flusso agentico |
+| **B** | Risposta umana | Nuovo commento su un work item in *Doing* con tag `waiting-input` e `dev-agent` |
 | **C** | Rilievo di review | Thread attivi non risolti sulla PR aperta dall'agente |
 
 ### Note di progettazione
@@ -64,7 +64,8 @@ Tre condizioni, valutate a ogni ciclo:
 - Il **tag** è il meccanismo di delega esplicita: senza tag, il ticket è invisibile al sistema.
   Serve anche a compensare il fatto che il tracker non consente di assegnare un work item a
   un'identità applicativa.
-- Il trigger B si attiva solo su commenti **umani**: i commenti prodotti dall'agente stesso non
+- Il trigger B si attiva solo su commenti **umani**: al risveglio il dispatcher rimuove il tag
+  `waiting-input`; i commenti prodotti dall'agente stesso non
   devono risvegliarlo, altrimenti si innesca un ciclo infinito.
 - Il trigger C richiede di distinguere i thread **risolti** da quelli aperti, altrimenti l'agente
   riprocessa all'infinito rilievi già gestiti.

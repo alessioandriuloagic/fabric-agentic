@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Configurato il progetto Azure Boards `fabric-agentic` come tracker e verificato il ciclo
+  *To Do* → *Doing* → *Done* sul work item `#19`. Il blocco agentico è standardizzato come tag
+  `waiting-input`; la creazione dei tag attende il permesso Azure DevOps `Create tag`.
+- GitHub Actions scelto come motore CI/CD per il repository GitHub `alessioandriuloagic/fabric-agentic`.
 - Dev Agent formalizzato come data engineer Fabric end-to-end: sviluppa gli item in Git e li
   valida nel feature workspace; dopo merge umano una pipeline CI/CD ancorata a `main` pubblica
   automaticamente su DEV. Coperti data pipeline, notebook, SJD, Dataflow, lakehouse/warehouse,
