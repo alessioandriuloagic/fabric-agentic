@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/alessioandriuloagic/fabric-agentic/schemas/rail-result-v1.0.json",
+  "title": "Rail result v1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "rail",
+    "outcome",
+    "run_id",
+    "workspace_id",
+    "datasets",
+    "messages",
+    "timestamp"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "rail": {
+      "type": "string",
+      "enum": ["branch_out", "run_load", "sync_workspace", "diagnose_data", "sweep"]
+    },
+    "outcome": {
+      "type": "string",
+      "enum": ["success", "technical_failure", "quality_failure"]
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workspace_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "datasets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "status",
+          "source_count",
+          "destination_count",
+          "supports_source_count",
+          "reconciliation",
+          "pk_check"
+        ],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "status": {"type": "string", "enum": ["loaded", "skipped", "failed"]},
+          "source_count": {"type": ["integer", "null"], "minimum": 0},
+          "destination_count": {"type": ["integer", "null"], "minimum": 0},
+          "supports_source_count": {"type": "boolean"},
+          "reconciliation": {"type": "string", "enum": ["passed", "failed", "not_applicable"]},
+          "pk_check": {"type": "string", "enum": ["passed", "failed", "not_applicable"]}
+        }
+      }
+    },
+    "messages": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "diagnostics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_drift": {"type": "boolean"},
+        "null_count": {"type": "integer", "minimum": 0},
+        "masked_key_samples": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

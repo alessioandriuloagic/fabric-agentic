@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Primo controllo GitHub Actions: valida a ogni pull request e push su `main` lo schema
+  `schemas/rail-result-v1.0.json`, contratto versionato fra workflow CI/CD e Dev Agent.
 - Configurato il progetto Azure Boards `fabric-agentic` come tracker e verificato il ciclo
   *To Do* → *Doing* → *Done* sul work item `#19`. Il blocco agentico è standardizzato come tag
   `waiting-input`; la creazione dei tag attende il permesso Azure DevOps `Create tag`.
