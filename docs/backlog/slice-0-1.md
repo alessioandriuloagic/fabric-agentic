@@ -562,6 +562,10 @@ convenzioni, creati da un ticket.
 - Esito binario esplicito e output strutturato
 - Nessun segreto in output
 
+**Esito 2026-08-21**: verificato con successo dal run GitHub Actions `32487821272` sul work
+item `6`. Il rail ha riusato branch e workspace deterministici, confermato l'assegnazione alla
+capacity, collegato Git e sincronizzato; l'artefatto `rail-result.json` ha `outcome: success`.
+
 ---
 
 ### S1-03 · Rail: sync workspace
