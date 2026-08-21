@@ -81,6 +81,9 @@ L'artefatto è `rail-result.json` conforme a
 contratto per `branch_out`: `workspace_id` può essere `null` in un fallimento prima della
 creazione e `branch_out` restituisce work item, nomi deterministici e stati di branch, workspace,
 connessione Git e sincronizzazione. `datasets` è intenzionalmente vuoto.
+In caso di fallimento, `failure_stage` identifica in modo sicuro il passo (`configuration`,
+`branch`, `workspace`, `owner`, `git_connection`, `folders` o `sync`) senza serializzare
+risposte API, token o credenziali.
 
 L'idempotenza è conservativa: al rilancio il rail riusa il branch e il workspace con lo stesso
 nome, non riassegna un owner già `Admin` e verifica che una connessione Git esistente punti allo

@@ -149,5 +149,6 @@ discipline used for release version bumps above.
 - **[2026-08-21] Account VS Code per Fabric** → [kaizen/20260821-vscode-fabric-account.md](kaizen/20260821-vscode-fabric-account.md)
 - **[2026-08-21] Identita' di deploy per i rail** → [kaizen/20260821-rail-deploy-identity.md](kaizen/20260821-rail-deploy-identity.md)
 - **[2026-08-21] PAT della connessione Git Fabric** → [kaizen/20260821-fabric-git-pat.md](kaizen/20260821-fabric-git-pat.md)
+- **[2026-08-21] Fermarsi sui conflitti Git** → [kaizen/20260821-git-conflict-stop.md](kaizen/20260821-git-conflict-stop.md)
 
 <!-- init-dai-project:end -->

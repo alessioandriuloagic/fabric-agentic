@@ -25,7 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `fabricalessiodev`; i workflow OIDC ora usano il nuovo ID del workspace.
 - Contratto `rail-result` v1.1 specializzato per `branch_out`, con stato strutturato di branch,
   workspace, connessione Git e sincronizzazione; consente `workspace_id: null` nei fallimenti
-  precedenti alla creazione. Aggiunti test locali e validazione CI del runner.
+  precedenti alla creazione e identifica in modo sicuro lo step fallito. Aggiunti test locali e
+  validazione CI del runner.
 - Scelta l'associazione dell'organizzazione Azure DevOps al tenant Agic Dev prima di aggiungere
   i service principal agentici a Boards; evita identità duplicate o configurazioni multi-tenant.
 - Provisionate nel tenant Agic Dev le identità `fabric-agentic-dev-agent` e
