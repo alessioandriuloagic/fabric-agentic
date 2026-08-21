@@ -114,6 +114,14 @@ Il body `Git Connect` è specifico del provider: per GitHub usa `ownerName`,
 la radice). I campi `organizationName` e `projectName` appartengono invece al provider Azure
 DevOps e non devono comparire nel rail GitHub.
 
+### Verifica sul campo
+
+Il run GitHub Actions `32487821272` del 2026-08-21 ha validato il rail sul work item `6`:
+ha riusato `feature/wi-6-smoke-branch-out` e `ws_agentic_feature_wi6`
+(`c3465ab0-210b-4b31-86fd-03d9611fc037`), ha confermato la capacity, collegato Git e
+sincronizzato il workspace. L'artefatto `rail-result.json` v1.1 riporta `outcome: success` e
+stati `existing`, `existing`, `connected`, `synchronized`.
+
 ---
 
 ## 4. Contratto — Run load
