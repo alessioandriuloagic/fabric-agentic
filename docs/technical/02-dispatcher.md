@@ -76,6 +76,12 @@ del Dev SP. In questo smoke non sono consentiti Git, scritture file, Fabric, tok
 `01-ciclo-di-vita-ticket.md` e `02-come-scrivere-un-ticket.md`; il commento è stato pubblicato
 da `fabric-agentic-dev-agent`. Il log locale contiene solo work item e documenti letti, senza
 token o credenziali.
+
+### Compatibilità Windows
+
+Lo stato locale del dispatcher accetta UTF-8 con o senza BOM. Questo consente di inizializzare o
+ispezionare lo state file con PowerShell senza far fallire il ciclo; lo state resta fuori dal repo
+e contiene solo identificativi di work item, commenti e thread già osservati.
 ---
 
 ## 3. Trigger del Dev Agent

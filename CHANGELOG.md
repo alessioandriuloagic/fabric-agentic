@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   transizioni di stato e log senza token completati senza toccare Fabric.
   Corretto inoltre il client Azure Boards: i body JSON Patch usano `application/json-patch+json`
   anche nella creazione `POST` dei work item.
+- S0-15: misurato il costo idle del dispatcher (due cicli senza task, 0 sessioni Claude e $0/0
+  token LLM) e documentato il metodo per i KPI restanti. Il dispatcher accetta anche state file
+  UTF-8 con BOM prodotti da PowerShell.
 - S0-11: istruzioni versionate del Dev Agent e contratto JSON fra dispatcher e sessione in
   `agents/dev/`; vincolano lettura del contesto, uso dei rail, escalation, sicurezza,
   documentazione e divieto di merge o modifiche dirette a Fabric.

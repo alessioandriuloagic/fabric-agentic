@@ -140,7 +140,7 @@ def load_state(state_path: Path) -> dict:
     if not state_path.exists():
         return {"dispatched_work_items": [], "seen_comment_ids": [], "seen_review_thread_ids": []}
     try:
-        return json.loads(state_path.read_text(encoding="utf-8"))
+        return json.loads(state_path.read_text(encoding="utf-8-sig"))
     except (OSError, ValueError) as error:
         raise DispatcherError("dispatcher state is invalid") from error
 
