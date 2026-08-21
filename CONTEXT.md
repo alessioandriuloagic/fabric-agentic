@@ -8,7 +8,7 @@
 
 | Campo | Valore |
 |---|---|
-| Versione | 0.6 |
+| Versione | 0.7 |
 | Ultimo aggiornamento | 2026-08-21 |
 | Documenti collegati | `docs/prd/PRD-agentic-cicd-fabric.md`, `docs/adr/` |
 
@@ -231,11 +231,15 @@ Altro Lakehouse Fabric (shortcut) · Database / DWH · CRM (Dataverse) · ShareP
 | Nome progetto nel naming | **`agentic`** |
 | Dev Agent app ID | `e74ca724-e306-4ff3-ae02-77ef7368e673` (`fabric-agentic-dev-agent`) |
 | Review Agent app ID | `a6d3e2af-92e5-447a-bb1e-9a466e1bdaed` (`fabric-agentic-review-agent`) |
-| Workspace DEV | `ws_agentic_dev` — `b829fa8e-71c9-4f7f-b136-5b3c3a64d8ee` |
+| Deploy app ID | `33e53b67-3872-4bc0-8d20-ed76a3c85ae7` (`fabric-agentic-deploy`); service principal creato senza secret. Federated credential, ruoli Fabric minimi e Configured Connection Git sono ancora da completare |
+| Workspace DEV | `ws_agentic_dev` — `abb3a689-6a8a-4a98-88da-b3f7c6de05c5`; ricreato il 2026-08-21 e assegnato a `fabricalessiodev` |
 | Ruolo Dev Agent nel workspace DEV | `Contributor`; nessun ruolo sulla capacity |
 | Federated credential OIDC | GitHub environment `dev`, subject con Organization ID `218064009` e Repository ID `1340835193`; test riuscito senza ruolo subscription |
 | GitHub environments | `dev`, `test`, `prod` presenti; protection rules non disponibili sul piano GitHub Free |
 | Governance Git | Branch dedicato obbligatorio, PR verso `main`, review e merge umano; vedi ADR-0010 |
+| Rail `branch_out` | Workflow manuale `.github/workflows/branch-out.yml`, avviato da `main`; accetta solo work item e slug, deriva `feature/wi-<id>-<slug>` e `ws_agentic_feature_wi<id>`, e pubblica l'artefatto `rail-result.json` v1.1 |
+| Configurazione rail DEV | Configurate nell'environment `dev`: `FABRIC_DEPLOY_CLIENT_ID`, `FABRIC_DEPLOY_TENANT_ID`, `FABRIC_CAPACITY_ID`, `FABRIC_OWNER_OBJECT_ID`, `FABRIC_GIT_CONNECTION_ID` (`GitHubRepo`: `b0dc937b-99fa-46a2-9dd4-93940d57f075`), `FABRIC_GIT_ORGANIZATION`, `FABRIC_GIT_REPOSITORY`; sono tutti identificativi/configurazione, mai credenziali o segreti |
+| Identita' rail | L'OIDC del rail usa un service principal di deploy distinto dal Dev Agent; ha i soli privilegi necessari per feature workspace e capacity, mentre il Dev Agent puo' solo accodare il workflow e leggere l'artefatto |
 | Identità | Un service principal per agente; nessun secret creato. Il workflow OIDC di test usa la `ExecutionCredential` configurata nell'environment GitHub `dev` |
 | Dati | Esclusivamente sintetici o open data. **Nessun dato di cliente entra nel perimetro** |
 

@@ -1,0 +1,61 @@
+name: Branch out
+
+on:
+  workflow_dispatch:
+    inputs:
+      work_item_id:
+        description: Azure Boards work item ID
+        required: true
+        type: number
+      slug:
+        description: Lowercase kebab-case work item slug
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  branch-out:
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - name: Check out main
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Sign in to Azure with GitHub OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.FABRIC_DEPLOY_CLIENT_ID }}
+          tenant-id: ${{ vars.FABRIC_DEPLOY_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Provision feature branch and workspace
+        id: provision
+        continue-on-error: true
+        env:
+          FABRIC_CAPACITY_ID: ${{ vars.FABRIC_CAPACITY_ID }}
+          FABRIC_OWNER_OBJECT_ID: ${{ vars.FABRIC_OWNER_OBJECT_ID }}
+          FABRIC_GIT_CONNECTION_ID: ${{ vars.FABRIC_GIT_CONNECTION_ID }}
+          FABRIC_GIT_ORGANIZATION: ${{ vars.FABRIC_GIT_ORGANIZATION }}
+          FABRIC_GIT_REPOSITORY: ${{ vars.FABRIC_GIT_REPOSITORY }}
+        run: >-
+          python scripts/branch_out.py
+          --work-item-id "${{ inputs.work_item_id }}"
+          --slug "${{ inputs.slug }}"
+
+      - name: Publish rail result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rail-result
+          path: rail-result.json
+          if-no-files-found: error
+
+      - name: Fail after publishing the rail result
+        if: steps.provision.outcome == 'failure'
+        run: exit 1

@@ -68,9 +68,33 @@ nascondere una decisione dentro codice non tracciato.
 > **Il passo 4 non è cortesia**: se qualcosa va storto, l'owner deve poter guardare dentro il
 > workspace senza chiedere permessi a nessuno. È il presupposto pratico della supervisione umana.
 
-**DA VERIFICARE** — copertura via API/CLI della creazione delle **cartelle** del workspace e del
-**task flow** (collegato a Q-9). Se non coperti, restano un passo manuale documentato nel
-runbook e non un criterio bloccante di review.
+### Implementazione iniziale
+
+Il workflow `.github/workflows/branch-out.yml` e il runner `scripts/branch_out.py` implementano
+il primo rail reale. Il workflow viene avviato dalla definizione su `main`, usa esclusivamente
+l'environment GitHub `dev` e accetta soltanto `work_item_id` e `slug`; non accetta un ambiente di
+destinazione. L'owner, capacity e connessione Git sono configurazione dell'environment `dev`, non
+input del chiamante e non segreti nel repository.
+
+L'artefatto è `rail-result.json` conforme a
+[`schemas/rail-result-v1.1.json`](../../schemas/rail-result-v1.1.json). La v1.1 specializza il
+contratto per `branch_out`: `workspace_id` può essere `null` in un fallimento prima della
+creazione e `branch_out` restituisce work item, nomi deterministici e stati di branch, workspace,
+connessione Git e sincronizzazione. `datasets` è intenzionalmente vuoto.
+
+L'idempotenza è conservativa: al rilancio il rail riusa il branch e il workspace con lo stesso
+nome, non riassegna un owner già `Admin` e verifica che una connessione Git esistente punti allo
+stesso repository e branch. Un'associazione diversa, un nome duplicato o configurazione DEV
+mancante terminano con `technical_failure`; il rail non adotta risorse ambigue né genera suffissi.
+
+Precondizione operativa: la `ConfiguredConnection` Git deve essere creata e gestita fuori dal
+workflow. Per il connettore GitHub selezionato in Fabric, la Account key e' un fine-grained PAT
+GitHub limitato al repository, con `Metadata: Read` e `Contents: Read and write`; il valore viene
+inserito direttamente in Fabric, mai nel repository, nelle GitHub variables o nei log. L'OIDC del
+rail identifica un service principal di deploy, distinto dal Dev Agent: il primo ha i privilegi
+minimi per il solo perimetro feature/capacity, il secondo puo' accodare il workflow ma non
+impersonarlo. Le cartelle richieste sono create con la Folders API; il task flow non viene creato
+nei feature workspace, secondo ADR-0003.
 
 ---
 
