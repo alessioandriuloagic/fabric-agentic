@@ -86,6 +86,8 @@ In caso di fallimento, `failure_stage` identifica in modo sicuro il passo (`conf
 serializzare risposte API, token o credenziali. Un endpoint Git che risponde senza
 `gitProviderDetails` viene trattato come workspace ancora non collegato e il rail esegue la
 connessione, non lo considera un collegamento incompatibile.
+`failure_code` espone soltanto la classe tecnica sicura della richiesta rifiutata (`forbidden`,
+`unauthorized`, `bad_request`, `api_request_failed` o `unexpected`), mai il messaggio dell'API.
 
 L'idempotenza è conservativa: al rilancio il rail riusa il branch e il workspace con lo stesso
 nome, completa un'assegnazione capacity mancante, non riassegna un owner già `Admin` e verifica

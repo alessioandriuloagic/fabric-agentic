@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from scripts.branch_out import (
     RailError,
+    classify_failure_code,
     derive_names,
     ensure_git_connection,
     ensure_owner,
@@ -38,6 +39,10 @@ class BranchOutTests(unittest.TestCase):
         self.assertEqual(result["datasets"], [])
         self.assertEqual(result["branch_out"]["sync_status"], "not_synchronized")
         self.assertIsNone(result["branch_out"]["failure_stage"])
+        self.assertIsNone(result["branch_out"]["failure_code"])
+
+    def test_classifies_forbidden_api_error_without_exposing_its_message(self) -> None:
+        self.assertEqual(classify_failure_code("ERROR: (Forbidden) Request denied"), "forbidden")
 
     @patch("scripts.branch_out.fabric")
     def test_existing_owner_is_not_added_twice(self, fabric_mock) -> None:
