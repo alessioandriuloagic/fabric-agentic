@@ -10,6 +10,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -144,6 +145,13 @@ def save_state(state_path: Path, state: dict) -> None:
     temporary_path.replace(state_path)
 
 
+def log_event(log_path: Path, event: str, **fields: object) -> None:
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {"timestamp": datetime.now(UTC).isoformat(), "event": event, **fields}
+    with log_path.open("a", encoding="utf-8") as log_file:
+        log_file.write(json.dumps(payload) + "\n")
+
+
 def task_record(config: DispatcherConfig, work_item_id: int, trigger: str = "new_work", pull_request_url: str | None = None) -> dict:
     return {
         "work_item_id": work_item_id,
@@ -264,6 +272,10 @@ def run_once(config: DispatcherConfig, state_path: Path, task_directory: Path, d
     review_threads, seen_threads = review_thread_tasks(config, review_payload, set(state.get("seen_review_thread_ids", [])))
     tasks = [*new_work, *human_replies, *review_threads]
     if not tasks or dry_run:
+        if not dry_run:
+            state["seen_comment_ids"] = sorted(seen_comments)
+            state["seen_review_thread_ids"] = sorted(seen_threads)
+            save_state(state_path, state)
         return tasks
 
     task = tasks[0]
@@ -279,13 +291,44 @@ def run_once(config: DispatcherConfig, state_path: Path, task_directory: Path, d
     return [task]
 
 
+def run_polling(
+    config: DispatcherConfig,
+    state_path: Path,
+    task_directory: Path,
+    log_path: Path,
+    cycles: int | None = None,
+    sleep: Callable[[float], None] = time.sleep,
+) -> None:
+    completed_cycles = 0
+    while cycles is None or completed_cycles < cycles:
+        started_at = time.monotonic()
+        try:
+            tasks = run_once(config, state_path, task_directory, dry_run=False)
+            log_event(
+                log_path,
+                "poll_completed",
+                task_count=len(tasks),
+                work_item_ids=[task["work_item_id"] for task in tasks],
+                triggers=[task["trigger"] for task in tasks],
+                duration_ms=round((time.monotonic() - started_at) * 1000),
+            )
+        except DispatcherError as error:
+            log_event(log_path, "poll_failed", reason=str(error))
+        completed_cycles += 1
+        if cycles is None or completed_cycles < cycles:
+            sleep(config.poll_seconds)
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--state", type=Path, required=True)
     parser.add_argument("--tasks", type=Path, required=True)
     parser.add_argument("--once", action="store_true")
+    parser.add_argument("--poll", action="store_true")
+    parser.add_argument("--cycles", type=int)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--log", type=Path, required=True)
     return parser.parse_args()
 
 
@@ -293,11 +336,17 @@ def main() -> int:
     args = parse_args()
     try:
         config = load_config(args.config)
-        if not args.once:
-            raise DispatcherError("only --once is supported until continuous polling is added")
-        tasks = run_once(config, args.state, args.tasks, args.dry_run)
-        if args.dry_run:
-            print(json.dumps({"tasks": tasks}))
+        if args.once == args.poll:
+            raise DispatcherError("choose exactly one of --once or --poll")
+        if args.poll and args.dry_run:
+            raise DispatcherError("--poll cannot be combined with --dry-run")
+        if args.poll:
+            run_polling(config, args.state, args.tasks, args.log, args.cycles)
+        else:
+            tasks = run_once(config, args.state, args.tasks, args.dry_run)
+            log_event(args.log, "dry_run_completed" if args.dry_run else "once_completed", task_count=len(tasks), work_item_ids=[task["work_item_id"] for task in tasks], triggers=[task["trigger"] for task in tasks])
+            if args.dry_run:
+                print(json.dumps({"tasks": tasks}))
     except DispatcherError as error:
         print(json.dumps({"error": str(error)}))
         return 1

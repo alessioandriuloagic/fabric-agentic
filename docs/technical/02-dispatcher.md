@@ -58,8 +58,10 @@ anti-duplicazione vivono nella stessa directory locale, mai nel repository.
 I trigger A, B e C sono implementati e il comando `--once --dry-run` è stato verificato il
 2026-08-21: ha rilevato il work item `#6` senza creare task, avviare Claude o modificare Azure
 Boards/GitHub. Trigger B ignora commenti dell'agente e già osservati; Trigger C ignora thread
-risolti e già osservati. Loop a 30 secondi e il lancio operativo della sessione restano parte del
-completamento di S0-09/S0-14.
+risolti e già osservati. Il comando `--poll` esegue il ciclo alla frequenza configurata e scrive
+metadati JSONL sicuri (ID work item, trigger, esito, durata) nel perimetro locale; non registra
+token, credenziali o output della sessione. Resta da verificare il lancio operativo controllato
+con lo smoke S0-14.
 
 ---
 
