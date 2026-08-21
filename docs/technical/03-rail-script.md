@@ -243,6 +243,13 @@ L'artefatto `rail-result.json` conforme a
 [`schemas/rail-result-v1.2.json`](../../schemas/rail-result-v1.2.json) restituisce stato,
 elenco degli item aggiornati e failure stage/code privi di log, righe dati o credenziali.
 
+### Verifica sul campo
+
+Il run GitHub Actions `32488530726` del 2026-08-21 ha validato il rail sul work item `6` e sul
+workspace `ws_agentic_feature_wi6` (`c3465ab0-210b-4b31-86fd-03d9611fc037`). L'artefatto
+`rail-result.json` v1.2 riporta `outcome: success`, `status: already_aligned` e nessun item
+aggiornato: il rail non ha eseguito scritture quando il workspace era già allineato.
+
 ---
 
 ## 7. Evoluzione dei rail

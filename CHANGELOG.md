@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sincronizza il feature workspace deterministico soltanto per modifiche remote e pubblica un
   artefatto `rail-result.json` v1.2. Conflitti e divergenze locali falliscono esplicitamente
   senza sovrascrittura.
+- Smoke test reale `sync_workspace` completato con successo (run `32488530726`): il feature
+  workspace del work item `6` era già allineato, senza item aggiornati o scritture superflue.
 - Primo rail reale `branch_out`: workflow GitHub Actions ancorato a `main`, limitato
   all'environment `dev`, con creazione/riuso deterministico di branch e feature workspace,
   assegnazione owner, capacity, connessione Git, cartelle e artefatto `rail-result.json`; usa
