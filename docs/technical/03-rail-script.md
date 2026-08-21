@@ -226,6 +226,23 @@ L'esito distingue tre casi per una reazione diversa dell'agente:
 | **Idempotenza** | Sì: se non ci sono differenze, non fa nulla |
 | **Fallimento tipico** | Conflitti, collegamento assente, item in stato non sincronizzabile |
 
+### Implementazione iniziale
+
+Il workflow `.github/workflows/sync-workspace.yml` e il runner
+`scripts/sync_workspace.py` implementano S1-03. Come `branch_out`, il workflow viene eseguito
+da `main`, usa solo l'environment `dev` e riceve work item e slug, da cui deriva branch e
+workspace. Non accetta un target environment né un workspace arbitrario.
+
+Il rail verifica il collegamento Git verso il repository e branch deterministici, quindi legge
+`Git Status`. Se non ci sono differenze restituisce `already_aligned`. Applica `Update From Git`
+solo quando le differenze sono esclusivamente remote; modifiche locali e conflitti restituiscono
+un `technical_failure` strutturato senza sovrascrivere il workspace. Il polling bounded attende
+l'allineamento prima di restituire `synchronized`.
+
+L'artefatto `rail-result.json` conforme a
+[`schemas/rail-result-v1.2.json`](../../schemas/rail-result-v1.2.json) restituisce stato,
+elenco degli item aggiornati e failure stage/code privi di log, righe dati o credenziali.
+
 ---
 
 ## 7. Evoluzione dei rail

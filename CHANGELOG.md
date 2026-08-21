@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Rail `sync_workspace` (S1-03): workflow GitHub Actions DEV-only, ancorato a `main`, che
+  sincronizza il feature workspace deterministico soltanto per modifiche remote e pubblica un
+  artefatto `rail-result.json` v1.2. Conflitti e divergenze locali falliscono esplicitamente
+  senza sovrascrittura.
 - Primo rail reale `branch_out`: workflow GitHub Actions ancorato a `main`, limitato
   all'environment `dev`, con creazione/riuso deterministico di branch e feature workspace,
   assegnazione owner, capacity, connessione Git, cartelle e artefatto `rail-result.json`; usa
