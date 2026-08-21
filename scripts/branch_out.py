@@ -30,8 +30,9 @@ UUID_PATTERN = re.compile(
 class RailError(Exception):
     """Raised when a deterministic rail step cannot be completed safely."""
 
-    def __init__(self, stage: str) -> None:
+    def __init__(self, stage: str, failure_code: str | None = None) -> None:
         self.stage = stage
+        self.failure_code = failure_code
         super().__init__(stage)
 
 
@@ -71,6 +72,7 @@ def new_result(work_item_id: int, branch_name: str, workspace_name: str) -> dict
             "git_connection_status": "not_connected",
             "sync_status": "not_synchronized",
             "failure_stage": None,
+            "failure_code": None,
         },
         "timestamp": timestamp(),
     }
@@ -78,6 +80,17 @@ def new_result(work_item_id: int, branch_name: str, workspace_name: str) -> dict
 
 def write_result(result: dict, output_path: Path) -> None:
     output_path.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+
+
+def classify_failure_code(error_output: str) -> str:
+    normalized = error_output.lower()
+    if "forbidden" in normalized or "403" in normalized:
+        return "forbidden"
+    if "unauthorized" in normalized or "401" in normalized:
+        return "unauthorized"
+    if "bad request" in normalized or "400" in normalized:
+        return "bad_request"
+    return "api_request_failed"
 
 
 def run(command: list[str], input_data: str | None = None) -> str:
@@ -90,7 +103,7 @@ def run(command: list[str], input_data: str | None = None) -> str:
         check=False,
     )
     if completed.returncode != 0:
-        raise RailError("unknown")
+        raise RailError("unknown", classify_failure_code(completed.stderr))
     return completed.stdout
 
 
@@ -106,7 +119,7 @@ def run_optional(command: list[str]) -> str | None:
         return completed.stdout
     if "404" in completed.stderr or "NotFound" in completed.stderr:
         return None
-    raise RailError("unknown")
+    raise RailError("unknown", classify_failure_code(completed.stderr))
 
 
 def fabric(method: str, path: str, body: dict | None = None) -> dict:
@@ -261,35 +274,35 @@ def execute(work_item_id: int, slug: str) -> dict:
         capacity_id = require_uuid("FABRIC_CAPACITY_ID", configured_value("FABRIC_CAPACITY_ID"))
         owner_object_id = require_uuid("FABRIC_OWNER_OBJECT_ID", configured_value("FABRIC_OWNER_OBJECT_ID"))
     except (RailError, ValueError) as error:
-        raise RailError("configuration") from error
+        raise RailError("configuration", error.failure_code if isinstance(error, RailError) else None) from error
 
     try:
         result["branch_out"]["branch_status"] = ensure_branch(branch_name)
     except RailError as error:
-        raise RailError("branch") from error
+        raise RailError("branch", error.failure_code) from error
     try:
         workspace_id, workspace_status = ensure_workspace(workspace_name, capacity_id)
     except RailError as error:
-        raise RailError("workspace") from error
+        raise RailError("workspace", error.failure_code) from error
     result["workspace_id"] = workspace_id
     result["branch_out"]["workspace_status"] = workspace_status
     try:
         ensure_owner(workspace_id, owner_object_id)
     except RailError as error:
-        raise RailError("owner") from error
+        raise RailError("owner", error.failure_code) from error
     try:
         connection_created = ensure_git_connection(workspace_id, branch_name)
     except RailError as error:
-        raise RailError("git_connection") from error
+        raise RailError("git_connection", error.failure_code) from error
     result["branch_out"]["git_connection_status"] = "connected"
     try:
         ensure_folders(workspace_id)
     except RailError as error:
-        raise RailError("folders") from error
+        raise RailError("folders", error.failure_code) from error
     try:
         sync_workspace(workspace_id, connection_created)
     except RailError as error:
-        raise RailError("sync") from error
+        raise RailError("sync", error.failure_code) from error
     result["branch_out"]["sync_status"] = "synchronized"
     result["outcome"] = "success"
     result["messages"].append("Feature branch and workspace are ready.")
@@ -313,12 +326,14 @@ def main() -> int:
         workspace_name = f"ws_agentic_feature_wi{args.work_item_id}"
         result = new_result(args.work_item_id, branch_name, workspace_name)
         result["branch_out"]["failure_stage"] = error.stage if isinstance(error, RailError) else "configuration"
+        result["branch_out"]["failure_code"] = error.failure_code if isinstance(error, RailError) else None
         result["messages"].append("Branch-out provisioning failed; inspect the structured failure stage.")
     except Exception:
         branch_name = f"feature/wi-{args.work_item_id}-{args.slug}"
         workspace_name = f"ws_agentic_feature_wi{args.work_item_id}"
         result = new_result(args.work_item_id, branch_name, workspace_name)
         result["branch_out"]["failure_stage"] = "unknown"
+        result["branch_out"]["failure_code"] = "unexpected"
         result["messages"].append("Branch-out provisioning failed; inspect the structured failure stage.")
     write_result(result, args.output)
     return 0 if result["outcome"] == "success" else 1

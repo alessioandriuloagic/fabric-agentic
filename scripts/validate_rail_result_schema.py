@@ -50,6 +50,7 @@ def main() -> None:
         "git_connection_status",
         "sync_status",
         "failure_stage",
+        "failure_code",
     }
 
     print("rail-result v1.0 and v1.1 contracts are valid")

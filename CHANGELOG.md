@@ -33,6 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corretto il rerun di `branch_out` dopo una creazione workspace interrotta: se il feature
   workspace esiste senza capacity, il rail assegna quella configurata; una capacity esistente
   diversa resta un fallimento tecnico esplicito.
+- Aggiunto al risultato `branch_out` il `failure_code` sanitizzato per classificare rifiuti API
+  senza pubblicare messaggi: consente di distinguere permessi insufficienti da errori di input.
 - Scelta l'associazione dell'organizzazione Azure DevOps al tenant Agic Dev prima di aggiungere
   i service principal agentici a Boards; evita identità duplicate o configurazioni multi-tenant.
 - Provisionate nel tenant Agic Dev le identità `fabric-agentic-dev-agent` e

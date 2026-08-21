@@ -52,7 +52,8 @@
         "workspace_status",
         "git_connection_status",
         "sync_status",
-        "failure_stage"
+        "failure_stage",
+        "failure_code"
       ],
       "properties": {
         "work_item_id": {"type": "integer", "minimum": 1},
@@ -65,6 +66,10 @@
         "failure_stage": {
           "type": ["string", "null"],
           "enum": ["configuration", "branch", "workspace", "owner", "git_connection", "folders", "sync", "unknown", null]
+        },
+        "failure_code": {
+          "type": ["string", "null"],
+          "enum": ["forbidden", "unauthorized", "bad_request", "api_request_failed", "unexpected", null]
         }
       }
     },
