@@ -88,9 +88,10 @@ serializzare risposte API, token o credenziali. Un endpoint Git che risponde sen
 connessione, non lo considera un collegamento incompatibile.
 
 L'idempotenza è conservativa: al rilancio il rail riusa il branch e il workspace con lo stesso
-nome, non riassegna un owner già `Admin` e verifica che una connessione Git esistente punti allo
-stesso repository e branch. Un'associazione diversa, un nome duplicato o configurazione DEV
-mancante terminano con `technical_failure`; il rail non adotta risorse ambigue né genera suffissi.
+nome, completa un'assegnazione capacity mancante, non riassegna un owner già `Admin` e verifica
+che una connessione Git esistente punti allo stesso repository e branch. Una capacity diversa,
+un'associazione Git diversa, un nome duplicato o configurazione DEV mancante terminano con
+`technical_failure`; il rail non adotta risorse ambigue né genera suffissi.
 
 Precondizione operativa: la `ConfiguredConnection` Git deve essere creata e gestita fuori dal
 workflow. Per il connettore GitHub selezionato in Fabric, la Account key e' un fine-grained PAT

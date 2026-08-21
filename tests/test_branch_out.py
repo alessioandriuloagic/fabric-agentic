@@ -8,6 +8,7 @@ from scripts.branch_out import (
     derive_names,
     ensure_git_connection,
     ensure_owner,
+    ensure_workspace,
     main,
     new_result,
     require_uuid,
@@ -87,6 +88,18 @@ class BranchOutTests(unittest.TestCase):
 
         self.assertTrue(connection_created)
         self.assertEqual(fabric_mock.call_args.args[:2], ("POST", "/workspaces/workspace-id/git/connect"))
+
+    @patch("scripts.branch_out.find_workspace", return_value={"id": "workspace-id", "capacityId": None})
+    @patch("scripts.branch_out.fabric")
+    def test_existing_workspace_without_capacity_is_assigned(self, fabric_mock, _) -> None:
+        workspace_id, status = ensure_workspace("ws_agentic_feature_wi6", "capacity-id")
+
+        self.assertEqual((workspace_id, status), ("workspace-id", "existing"))
+        fabric_mock.assert_called_once_with(
+            "POST",
+            "/workspaces/workspace-id/assignToCapacity",
+            {"capacityId": "capacity-id"},
+        )
 
 
 if __name__ == "__main__":
