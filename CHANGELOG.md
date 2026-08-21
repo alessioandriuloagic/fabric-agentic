@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   tramite OData `$top=0` e restituisce solo evidenze aggregate, senza record o credenziali.
 - Aggiunto workflow OIDC `crm-preflight`: crea/riusa Lakehouse e notebook nel feature workspace,
   esegue `RunNotebook` e pubblica un artifact strutturato senza token o dati CRM.
+- Corretto l'avvio del deployer `crm-preflight` come modulo Python e garantita la pubblicazione
+  di un risultato tecnico strutturato anche per errori di bootstrap.
 - ADR-0011: il primo ticket agentico reale diventa il tracer bullet CRM `accounts` in feature
   workspace. `ws_agentic_dev` è già predisposto; `test` e `prod` restano non
   provisionati/configurati fino a disponibilità di workspace e credenziali dedicate.
