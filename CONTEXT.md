@@ -8,8 +8,8 @@
 
 | Campo | Valore |
 |---|---|
-| Versione | 0.2 |
-| Ultimo aggiornamento | 2026-08-20 |
+| Versione | 0.4 |
+| Ultimo aggiornamento | 2026-08-21 |
 | Documenti collegati | `docs/prd/PRD-agentic-cicd-fabric.md`, `docs/adr/` |
 
 ---
@@ -153,6 +153,12 @@ Get data from Source → Bronze Layer → Full & Incremental Load → Silver Lay
 
 ## 5. Convenzioni di naming — Git e tracker
 
+Azure Boards operativo: organizzazione `AlessioAndriuloDev`, progetto `fabric-agentic`.
+Le work item storiche #19-#23 dell'organizzazione `alessioandriulo` sono state migrate come
+Issue #1-#5 nel nuovo progetto, mantenendo stati e tag. Il nuovo progetto e' la sorgente operativa.
+Nel progetto sono stati aggiunti i service principal del Dev Agent con access level `Basic` e del
+Review Agent con access level `Stakeholder`; Azure DevOps li mostra in provisioning `pending`.
+
 | Elemento | Pattern | Esempio |
 |---|---|---|
 | Branch feature | `feature/wi-<id>-<slug>` | `feature/wi-42-onboard-open-meteo-daily` |
@@ -219,10 +225,16 @@ Altro Lakehouse Fabric (shortcut) · Database / DWH · CRM (Dataverse) · ShareP
 
 | Aspetto | Valore |
 |---|---|
-| Tenant | **AGIC** — il tenant del cliente non dispone di Azure DevOps |
-| Capacity | **F32** |
+| Tenant Fabric | **Agic Dev** — `1cf6db06-3e00-48b6-a65c-be932526610e` |
+| Sottoscrizione Azure | `898b6a78-11dd-4e23-bf53-9e17f541d955` |
+| Capacity | **`fabricalessiodev`** |
 | Nome progetto nel naming | **`agentic`** |
-| Identità | Un service principal per agente, già disponibili |
+| Dev Agent app ID | `e74ca724-e306-4ff3-ae02-77ef7368e673` (`fabric-agentic-dev-agent`) |
+| Review Agent app ID | `a6d3e2af-92e5-447a-bb1e-9a466e1bdaed` (`fabric-agentic-review-agent`) |
+| Workspace DEV | `ws_agentic_dev` — `b829fa8e-71c9-4f7f-b136-5b3c3a64d8ee` |
+| Ruolo Dev Agent nel workspace DEV | `Contributor`; nessun ruolo sulla capacity |
+| Federated credential OIDC | GitHub environment `dev`, subject con Organization ID `218064009` e Repository ID `1340835193` |
+| Identità | Un service principal per agente; nessun secret creato. Il workflow OIDC di test usa la `ExecutionCredential` configurata nell'environment GitHub `dev` |
 | Dati | Esclusivamente sintetici o open data. **Nessun dato di cliente entra nel perimetro** |
 
 ---

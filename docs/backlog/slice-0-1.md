@@ -68,7 +68,7 @@ contesto e scrivere sul tracker — e **non** può raggiungere `main`.
 knowledge base.
 
 **Criteri di accettazione**
-- Progetto creato sul tenant AGIC
+- Progetto Azure Boards `fabric-agentic` creato nell'organizzazione `alessioandriulo`
 - Repository della soluzione creato, con `main` inizializzato
 - Spazio della knowledge base disponibile
 - L'owner ha i permessi amministrativi

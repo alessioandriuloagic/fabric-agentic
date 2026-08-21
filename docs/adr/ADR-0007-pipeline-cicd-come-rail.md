@@ -65,6 +65,12 @@ dell'istanza; il contratto dei rail non cambia. Non è richiesto che il cliente 
 principal. La credenziale non è riusata tra clienti e l'agente non può leggerla, esportarla o
 impersonarla.
 
+**1-ter. Il tracker Azure Boards e le identità agentiche condividono il tenant Entra Agic Dev.**
+L'organizzazione `AlessioAndriuloDev`, progetto `fabric-agentic`, è associata al tenant
+`1cf6db06-3e00-48b6-a65c-be932526610e`; i due service principal agentici sono stati aggiunti
+al tracker. Evitiamo app multi-tenant o identità duplicate solo per soddisfare un confine
+amministrativo del tracker.
+
 **2. La promozione tra ambienti è eseguita da pipeline CI/CD**, innescate da un umano e protette
 da approvazione. Le **Fabric Deployment Pipelines non sono usate** — il rifiuto di ADR-0002 resta
 valido e si rafforza. **Git resta la sorgente di verità**: ciò che è in produzione è un commit

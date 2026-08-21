@@ -9,11 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Scelta l'associazione dell'organizzazione Azure DevOps al tenant Agic Dev prima di aggiungere
+  i service principal agentici a Boards; evita identità duplicate o configurazioni multi-tenant.
+- Provisionate nel tenant Agic Dev le identità `fabric-agentic-dev-agent` e
+  `fabric-agentic-review-agent`, senza secret o privilegi Fabric. Tenant, sottoscrizione,
+  capacity e app ID non sensibili sono registrati in `CONTEXT.md` e nel runbook di onboarding.
 - Primo controllo GitHub Actions: valida a ogni pull request e push su `main` lo schema
   `schemas/rail-result-v1.0.json`, contratto versionato fra workflow CI/CD e Dev Agent.
 - Configurato il progetto Azure Boards `fabric-agentic` come tracker e verificato il ciclo
   *To Do* → *Doing* → *Done* sul work item `#19`. Il blocco agentico è standardizzato come tag
   `waiting-input`; la creazione dei tag attende il permesso Azure DevOps `Create tag`.
+- Ricreato il progetto Azure Boards nella nuova organizzazione `AlessioAndriuloDev` e migrate le
+  work item operative: #1 (S0-03), #2 (S0-04), #3 (S0-05), #4 (S0-N5), #5 (S0-N2), preservando
+  stati e tag. La precedente organizzazione `alessioandriulo` resta solo come archivio storico.
+- Aggiunti all'organizzazione `AlessioAndriuloDev` i service principal Dev Agent (`Basic`) e Review
+  Agent (`Stakeholder`); la work item #3 e' stata chiusa. Il provisioning Azure DevOps risulta
+  `pending` e sara' verificato prima dell'uso operativo.
+- Creato `ws_agentic_dev`, assegnato il Dev Agent come `Contributor` senza permessi sulla capacity
+  e aggiunto il workflow manuale `test-azure-oidc-dev.yml` per verificare login OIDC e lettura dei
+  metadati del workspace.
 - GitHub Actions scelto come motore CI/CD per il repository GitHub `alessioandriuloagic/fabric-agentic`.
 - Dev Agent formalizzato come data engineer Fabric end-to-end: sviluppa gli item in Git e li
   valida nel feature workspace; dopo merge umano una pipeline CI/CD ancorata a `main` pubblica
