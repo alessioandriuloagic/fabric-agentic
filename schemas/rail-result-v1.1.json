@@ -51,7 +51,8 @@
         "branch_status",
         "workspace_status",
         "git_connection_status",
-        "sync_status"
+        "sync_status",
+        "failure_stage"
       ],
       "properties": {
         "work_item_id": {"type": "integer", "minimum": 1},
@@ -60,7 +61,11 @@
         "branch_status": {"type": "string", "enum": ["created", "existing", "not_created"]},
         "workspace_status": {"type": "string", "enum": ["created", "existing", "not_created"]},
         "git_connection_status": {"type": "string", "enum": ["connected", "not_connected"]},
-        "sync_status": {"type": "string", "enum": ["synchronized", "not_synchronized"]}
+        "sync_status": {"type": "string", "enum": ["synchronized", "not_synchronized"]},
+        "failure_stage": {
+          "type": ["string", "null"],
+          "enum": ["configuration", "branch", "workspace", "owner", "git_connection", "folders", "sync", null]
+        }
       }
     },
     "timestamp": {

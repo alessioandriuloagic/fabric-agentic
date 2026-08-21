@@ -1,8 +1,9 @@
 import unittest
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
-from scripts.branch_out import derive_names, ensure_owner, new_result, require_uuid
+from scripts.branch_out import RailError, derive_names, ensure_owner, main, new_result, require_uuid
 
 
 class BranchOutTests(unittest.TestCase):
@@ -27,6 +28,7 @@ class BranchOutTests(unittest.TestCase):
         self.assertIsNone(result["workspace_id"])
         self.assertEqual(result["datasets"], [])
         self.assertEqual(result["branch_out"]["sync_status"], "not_synchronized")
+        self.assertIsNone(result["branch_out"]["failure_stage"])
 
     @patch("scripts.branch_out.fabric")
     def test_existing_owner_is_not_added_twice(self, fabric_mock) -> None:
@@ -47,6 +49,20 @@ class BranchOutTests(unittest.TestCase):
         self.assertNotIn("vars.AZURE_CLIENT_ID", workflow)
         self.assertNotIn("target_environment", workflow)
         self.assertNotIn("environment:", workflow.replace("environment: dev", ""))
+
+    @patch("scripts.branch_out.execute", side_effect=RailError("workspace"))
+    @patch("scripts.branch_out.parse_args")
+    def test_workspace_failure_is_reported_in_result(self, parse_args_mock, _) -> None:
+        with TemporaryDirectory() as directory:
+            output_path = Path(directory) / "rail-result.json"
+            parse_args_mock.return_value.work_item_id = 6
+            parse_args_mock.return_value.slug = "smoke-branch-out"
+            parse_args_mock.return_value.output = output_path
+
+            self.assertEqual(main(), 1)
+            result = __import__("json").loads(output_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(result["branch_out"]["failure_stage"], "workspace")
 
 
 if __name__ == "__main__":

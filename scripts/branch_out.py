@@ -30,6 +30,10 @@ UUID_PATTERN = re.compile(
 class RailError(Exception):
     """Raised when a deterministic rail step cannot be completed safely."""
 
+    def __init__(self, stage: str) -> None:
+        self.stage = stage
+        super().__init__(stage)
+
 
 def derive_names(work_item_id: int, slug: str) -> tuple[str, str]:
     if work_item_id < 1:
@@ -66,6 +70,7 @@ def new_result(work_item_id: int, branch_name: str, workspace_name: str) -> dict
             "workspace_status": "not_created",
             "git_connection_status": "not_connected",
             "sync_status": "not_synchronized",
+            "failure_stage": None,
         },
         "timestamp": timestamp(),
     }
@@ -85,7 +90,7 @@ def run(command: list[str], input_data: str | None = None) -> str:
         check=False,
     )
     if completed.returncode != 0:
-        raise RailError("command failed")
+        raise RailError("unknown")
     return completed.stdout
 
 
@@ -101,7 +106,7 @@ def run_optional(command: list[str]) -> str | None:
         return completed.stdout
     if "404" in completed.stderr or "NotFound" in completed.stderr:
         return None
-    raise RailError("command failed")
+    raise RailError("unknown")
 
 
 def fabric(method: str, path: str, body: dict | None = None) -> dict:
@@ -143,7 +148,7 @@ def fabric_optional(method: str, path: str) -> dict | None:
 def configured_value(name: str) -> str:
     value = os.getenv(name, "")
     if not value:
-        raise RailError("required DEV rail configuration is missing")
+        raise RailError("configuration")
     return value
 
 
@@ -165,7 +170,7 @@ def find_workspace(workspace_name: str) -> dict | None:
     response = fabric("GET", "/workspaces")
     matches = [item for item in response.get("value", []) if item.get("displayName") == workspace_name]
     if len(matches) > 1:
-        raise RailError("multiple workspaces match the deterministic workspace name")
+        raise RailError("workspace")
     return matches[0] if matches else None
 
 
@@ -174,13 +179,13 @@ def ensure_workspace(workspace_name: str, capacity_id: str) -> tuple[str, str]:
     if workspace:
         workspace_id = workspace.get("id")
         if not workspace_id:
-            raise RailError("existing workspace has no identifier")
+            raise RailError("workspace")
         return workspace_id, "existing"
 
     workspace = fabric("POST", "/workspaces", {"displayName": workspace_name})
     workspace_id = workspace.get("id")
     if not workspace_id:
-        raise RailError("workspace creation returned no identifier")
+        raise RailError("workspace")
     fabric("POST", f"/workspaces/{workspace_id}/assignToCapacity", {"capacityId": capacity_id})
     return workspace_id, "created"
 
@@ -212,7 +217,7 @@ def ensure_git_connection(workspace_id: str, branch_name: str) -> bool:
             or details.get("repositoryName") != repository
             or details.get("branchName") != branch_name
         ):
-            raise RailError("existing workspace is connected to a different repository or branch")
+            raise RailError("git_connection")
         return False
     fabric(
         "POST",
@@ -246,18 +251,39 @@ def sync_workspace(workspace_id: str, connection_created: bool) -> None:
 def execute(work_item_id: int, slug: str) -> dict:
     branch_name, workspace_name = derive_names(work_item_id, slug)
     result = new_result(work_item_id, branch_name, workspace_name)
-    capacity_id = require_uuid("FABRIC_CAPACITY_ID", configured_value("FABRIC_CAPACITY_ID"))
-    owner_object_id = require_uuid("FABRIC_OWNER_OBJECT_ID", configured_value("FABRIC_OWNER_OBJECT_ID"))
+    try:
+        capacity_id = require_uuid("FABRIC_CAPACITY_ID", configured_value("FABRIC_CAPACITY_ID"))
+        owner_object_id = require_uuid("FABRIC_OWNER_OBJECT_ID", configured_value("FABRIC_OWNER_OBJECT_ID"))
+    except (RailError, ValueError) as error:
+        raise RailError("configuration") from error
 
-    result["branch_out"]["branch_status"] = ensure_branch(branch_name)
-    workspace_id, workspace_status = ensure_workspace(workspace_name, capacity_id)
+    try:
+        result["branch_out"]["branch_status"] = ensure_branch(branch_name)
+    except RailError as error:
+        raise RailError("branch") from error
+    try:
+        workspace_id, workspace_status = ensure_workspace(workspace_name, capacity_id)
+    except RailError as error:
+        raise RailError("workspace") from error
     result["workspace_id"] = workspace_id
     result["branch_out"]["workspace_status"] = workspace_status
-    ensure_owner(workspace_id, owner_object_id)
-    connection_created = ensure_git_connection(workspace_id, branch_name)
+    try:
+        ensure_owner(workspace_id, owner_object_id)
+    except RailError as error:
+        raise RailError("owner") from error
+    try:
+        connection_created = ensure_git_connection(workspace_id, branch_name)
+    except RailError as error:
+        raise RailError("git_connection") from error
     result["branch_out"]["git_connection_status"] = "connected"
-    ensure_folders(workspace_id)
-    sync_workspace(workspace_id, connection_created)
+    try:
+        ensure_folders(workspace_id)
+    except RailError as error:
+        raise RailError("folders") from error
+    try:
+        sync_workspace(workspace_id, connection_created)
+    except RailError as error:
+        raise RailError("sync") from error
     result["branch_out"]["sync_status"] = "synchronized"
     result["outcome"] = "success"
     result["messages"].append("Feature branch and workspace are ready.")
@@ -276,11 +302,12 @@ def main() -> int:
     args = parse_args()
     try:
         result = execute(args.work_item_id, args.slug)
-    except (RailError, ValueError):
+    except (RailError, ValueError) as error:
         branch_name = f"feature/wi-{args.work_item_id}-{args.slug}"
         workspace_name = f"ws_agentic_feature_wi{args.work_item_id}"
         result = new_result(args.work_item_id, branch_name, workspace_name)
-        result["messages"].append("Branch-out provisioning failed; inspect the workflow step log.")
+        result["branch_out"]["failure_stage"] = error.stage if isinstance(error, RailError) else "configuration"
+        result["messages"].append("Branch-out provisioning failed; inspect the structured failure stage.")
     write_result(result, args.output)
     return 0 if result["outcome"] == "success" else 1
 
