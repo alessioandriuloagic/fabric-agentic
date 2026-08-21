@@ -230,6 +230,7 @@ Altro Lakehouse Fabric (shortcut) · Database / DWH · CRM (Dataverse) · ShareP
 | Capacity | **`fabricalessiodev`** |
 | Nome progetto nel naming | **`agentic`** |
 | Dev Agent app ID | `e74ca724-e306-4ff3-ae02-77ef7368e673` (`fabric-agentic-dev-agent`) |
+| Dev Agent Azure DevOps credential | Certificato client non esportabile nel certificate store `CurrentUser\My`, thumbprint `89AB19F6EFD3CBE4CEB931F5E02A6833DD77E0F7`, registrato sull'app fino al 2027-08-21. Verificato token Entra per `https://app.vssps.visualstudio.com/.default` e lettura del progetto `fabric-agentic`; Az.Accounts usa il tenant domain `agicdev.onmicrosoft.com` |
 | Review Agent app ID | `a6d3e2af-92e5-447a-bb1e-9a466e1bdaed` (`fabric-agentic-review-agent`) |
 | Deploy app ID | `33e53b67-3872-4bc0-8d20-ed76a3c85ae7` (`fabric-agentic-deploy`); service principal senza secret, federated credential e Configured Connection Git predisposte. Assegnazione feature workspace verificata con il pattern IP: Azure RBAC `Contributor` sulla capacity e Object ID `db9d4adb-db6a-4238-8e75-c69d21b1b37e` in `properties.administration.members` |
 | Workspace DEV | `ws_agentic_dev` — `abb3a689-6a8a-4a98-88da-b3f7c6de05c5`; ricreato il 2026-08-21 e assegnato a `fabricalessiodev` |
@@ -242,7 +243,7 @@ Altro Lakehouse Fabric (shortcut) · Database / DWH · CRM (Dataverse) · ShareP
 | Smoke rail `branch_out` | Run GitHub Actions `32487821272` del 2026-08-21: esito `success`, branch `feature/wi-6-smoke-branch-out`, workspace `ws_agentic_feature_wi6` (`c3465ab0-210b-4b31-86fd-03d9611fc037`), capacity assegnata, Git connesso e sincronizzato |
 | Smoke rail `sync_workspace` | Run GitHub Actions `32488530726` del 2026-08-21: esito `success`, stesso work item/workspace, stato `already_aligned`, nessun item aggiornato e nessuna divergenza |
 | Identita' rail | L'OIDC del rail usa un service principal di deploy distinto dal Dev Agent; ha i soli privilegi necessari per feature workspace e capacity, mentre il Dev Agent puo' solo accodare il workflow e leggere l'artefatto |
-| Runtime Dev Agent | Claude Code `2.1.228` installato nativamente su Windows, canale `stable`. Verificata sessione headless `claude -p` con esito `READY` il 2026-08-21; restano il clone isolato e la credenziale Azure DevOps non interattiva del Dev Agent prima del dispatcher |
+| Runtime Dev Agent | Claude Code `2.1.228` installato nativamente su Windows, canale `stable`. Verificata sessione headless `claude -p` con esito `READY` il 2026-08-21; Azure DevOps non interattivo è verificato. Restano il clone isolato e l'identità GitHub non umana per push/PR e trigger C prima del dispatcher completo |
 | Identità | Un service principal per agente; nessun secret creato. Il workflow OIDC di test usa la `ExecutionCredential` configurata nell'environment GitHub `dev` |
 | Dati | Esclusivamente sintetici o open data. **Nessun dato di cliente entra nel perimetro** |
 

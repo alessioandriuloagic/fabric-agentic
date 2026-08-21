@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Installato e verificato Claude Code `2.1.228` per il Dev Agent: una sessione headless minimale
   ha completato l'autenticazione locale con esito `READY`; il dispatcher attende clone isolato e
   credenziale Azure DevOps non interattiva del service principal Dev Agent.
+- Configurata e provata la credenziale Azure DevOps non interattiva del Dev Agent: certificato
+  client non esportabile nel certificate store locale e token Entra a breve durata per
+  `app.vssps.visualstudio.com`; lettura del progetto tracker verificata senza PAT o client secret.
 - Rail `sync_workspace` (S1-03): workflow GitHub Actions DEV-only, ancorato a `main`, che
   sincronizza il feature workspace deterministico soltanto per modifiche remote e pubblica un
   artefatto `rail-result.json` v1.2. Conflitti e divergenze locali falliscono esplicitamente
