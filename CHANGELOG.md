@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Primo vertical slice S0-09: dispatcher locale del Dev Agent con token Azure DevOps a breve
+  durata via certificato, stato anti-duplicazione fuori dal repo e Trigger A verificato in
+  modalità read-only sul work item `#6`. Trigger B/C e loop operativo restano da completare.
 - S0-11: istruzioni versionate del Dev Agent e contratto JSON fra dispatcher e sessione in
   `agents/dev/`; vincolano lettura del contesto, uso dei rail, escalation, sicurezza,
   documentazione e divieto di merge o modifiche dirette a Fabric.
