@@ -63,6 +63,13 @@ metadati JSONL sicuri (ID work item, trigger, esito, durata) nel perimetro local
 token, credenziali o output della sessione. Resta da verificare il lancio operativo controllato
 con lo smoke S0-14.
 
+### Smoke S0-14
+
+La modalità `--smoke-work-item-id <id>` avvia una singola sessione Claude con il solo tool
+`Read`. La sessione legge il task e quattro documenti di contesto obbligatori, poi restituisce un
+JSON con l'elenco dei documenti letti. Il dispatcher, non il modello, pubblica il commento
+marcato `fabric-agentic-dev-agent` e porta il work item a `Done` tramite il token Azure DevOps
+del Dev SP. In questo smoke non sono consentiti Git, scritture file, Fabric, token o credenziali.
 ---
 
 ## 3. Trigger del Dev Agent

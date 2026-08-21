@@ -128,6 +128,12 @@ class AzureDevOpsClient:
         result = self.request("GET", f"/_apis/wit/workItems/{work_item_id}/comments?order=asc&api-version=7.1-preview.4")
         return result.get("comments", [])
 
+    def add_comment(self, work_item_id: int, text: str) -> None:
+        self.request("POST", f"/_apis/wit/workItems/{work_item_id}/comments?api-version=7.1-preview.4", {"text": text})
+
+    def mark_done(self, work_item_id: int) -> None:
+        self.request("PATCH", f"/_apis/wit/workitems/{work_item_id}?api-version=7.1", [{"op": "add", "path": "/fields/System.State", "value": "Done"}])
+
 
 def load_state(state_path: Path) -> dict:
     if not state_path.exists():
@@ -247,6 +253,68 @@ def launch_session(config: DispatcherConfig, task_path: Path) -> bool:
     return result.returncode == 0
 
 
+SMOKE_OUTPUT_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["documents_read"],
+    "properties": {"documents_read": {"type": "array", "items": {"type": "string"}, "minItems": 1}},
+}
+
+
+def launch_smoke_session(config: DispatcherConfig, task_path: Path) -> list[str]:
+    prompt = (
+        "This is the S0-14 smoke test. Read the task record at "
+        f"{task_path}, then read CONTEXT.md, AGENTS.md, "
+        "docs/functional/01-ciclo-di-vita-ticket.md, and "
+        "docs/functional/02-come-scrivere-un-ticket.md. Do not edit files, use Git, "
+        "access credentials, environment variables, certificate stores, tokens, or Fabric. "
+        "Return only the structured list of documents you actually read."
+    )
+    result = subprocess.run(
+        [
+            config.claude_command,
+            "-p",
+            prompt,
+            "--allowedTools",
+            "Read",
+            "--output-format",
+            "json",
+            "--json-schema",
+            json.dumps(SMOKE_OUTPUT_SCHEMA),
+        ],
+        cwd=config.repository_path,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise DispatcherError("smoke Claude session failed")
+    try:
+        documents = json.loads(result.stdout)["structured_output"]["documents_read"]
+    except (KeyError, TypeError, ValueError) as error:
+        raise DispatcherError("smoke Claude session returned invalid output") from error
+    if not all(isinstance(document, str) for document in documents):
+        raise DispatcherError("smoke Claude session returned invalid output")
+    return documents
+
+
+def smoke_comment(documents_read: list[str]) -> str:
+    documents = "\n".join(f"- {document}" for document in documents_read)
+    return f"[fabric-agentic-dev-agent]\nS0-14 smoke test completed.\n\nDOCUMENTI LETTI\n{documents}"
+
+
+def run_smoke(config: DispatcherConfig, work_item_id: int, task_directory: Path) -> list[str]:
+    refresh_clone(config)
+    task_directory.mkdir(parents=True, exist_ok=True)
+    task_path = task_directory / f"smoke-{uuid.uuid4()}.json"
+    task_path.write_text(json.dumps(task_record(config, work_item_id), indent=2) + "\n", encoding="utf-8")
+    documents = launch_smoke_session(config, task_path)
+    client = AzureDevOpsClient(config)
+    client.add_comment(work_item_id, smoke_comment(documents))
+    client.mark_done(work_item_id)
+    return documents
+
+
 REVIEW_THREADS_QUERY = """
 query($owner: String!, $repository: String!) {
     repository(owner: $owner, name: $repository) {
@@ -326,6 +394,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--tasks", type=Path, required=True)
     parser.add_argument("--once", action="store_true")
     parser.add_argument("--poll", action="store_true")
+    parser.add_argument("--smoke-work-item-id", type=int)
     parser.add_argument("--cycles", type=int)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--log", type=Path, required=True)
@@ -336,12 +405,18 @@ def main() -> int:
     args = parse_args()
     try:
         config = load_config(args.config)
-        if args.once == args.poll:
-            raise DispatcherError("choose exactly one of --once or --poll")
+        selected_modes = sum([args.once, args.poll, args.smoke_work_item_id is not None])
+        if selected_modes != 1:
+            raise DispatcherError("choose exactly one execution mode")
         if args.poll and args.dry_run:
             raise DispatcherError("--poll cannot be combined with --dry-run")
+        if args.smoke_work_item_id is not None and args.dry_run:
+            raise DispatcherError("smoke mode cannot be combined with --dry-run")
         if args.poll:
             run_polling(config, args.state, args.tasks, args.log, args.cycles)
+        elif args.smoke_work_item_id is not None:
+            documents = run_smoke(config, args.smoke_work_item_id, args.tasks)
+            log_event(args.log, "smoke_completed", work_item_id=args.smoke_work_item_id, documents_read=documents)
         else:
             tasks = run_once(config, args.state, args.tasks, args.dry_run)
             log_event(args.log, "dry_run_completed" if args.dry_run else "once_completed", task_count=len(tasks), work_item_ids=[task["work_item_id"] for task in tasks], triggers=[task["trigger"] for task in tasks])

@@ -503,6 +503,9 @@ in un commento quali documenti ha letto, e chiudere.
 > identità/trigger/sessione e **non** in Fabric. Diagnosticare le due cose insieme costa
 > molto di più.
 
+**Implementazione 2026-08-21**: dispatcher con modalità `--smoke-work-item-id`, sessione Claude
+read-only a output JSON strutturato e commento/chiusura del work item eseguiti dal dispatcher con
+l'identità Dev Agent. La prova sul campo resta da eseguire.
 ---
 
 ### S0-15 · Rilevare la baseline dei KPI
