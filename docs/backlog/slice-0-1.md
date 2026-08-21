@@ -572,6 +572,10 @@ framework da una fonte pulita con `PROVENANCE.md`. Vedi `docs/technical/09-frame
 CRM, schema fail-fast, builder request incremental e collocazioni target creati. Restano staged
 extraction, Bronze merge, audit, watermark, notebook/pipeline e rail `run_load`.
 
+**Avanzamento 2026-08-21 (preflight)**: notebook FabricGitSource `nb_crm_preflight` validato
+localmente. Il deploy OIDC, Lakehouse e job `RunNotebook` restano da verificare prima di leggere
+dati CRM.
+
 ---
 
 ### S1-01 · Spike: deploy e binding Power BI con `fabric-cicd`
