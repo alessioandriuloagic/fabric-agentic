@@ -17,3 +17,8 @@ Fabric; creare l'applicazione in un tenant diverso renderebbe impossibile l'esec
 Prima di creare identità, verificare esplicitamente tenant ID e subscription Agic Dev.
 Usare quel tenant per ExecutionCredential e service principal; GitHub e Azure Boards restano
 servizi esterni al perimetro Fabric.
+
+Prima di associare Azure DevOps al tenant Agic Dev, distinguere l'identita' Member `agicdev` dalla
+identita' federata `agic.it`, che resta Guest. Il cambio di directory deve essere eseguito usando
+l'account Member Agic Dev, aggiunto all'organizzazione Azure DevOps e con ruolo Organization Owner;
+non serve convertire l'identita' Guest `agic.it`.

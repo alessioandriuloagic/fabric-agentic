@@ -74,6 +74,7 @@ Solo il **Livello 1** richiede presenza umana. Ed è l'unico che si paga una vol
 
 - [ ] Predisporre le identità del Dev Agent e del Review Agent nell'organizzazione AGIC, distinte dalla credenziale del cliente
 - [ ] Associare l'organizzazione Azure DevOps al tenant Fabric che ospita le identità agentiche; per la sandbox è Agic Dev (`1cf6db06-3e00-48b6-a65c-be932526610e`)
+- [ ] Verificare prima che l'Organization Owner sia un membro **attivo** del tenant di destinazione; il portale rifiuta il cambio directory per utenti esterni o non provisionati
 - [ ] Scegliere una sola `ExecutionCredential` per il cliente: SP OIDC, SP con secret o utenza di servizio
 - [ ] Se si usa utenza di servizio: verificare che MFA e Conditional Access permettano un uso non interattivo
 - [ ] Custodire la credenziale o il suo riferimento in Azure Key Vault / secret store; l'agente non deve poterla leggere
@@ -90,7 +91,12 @@ Solo il **Livello 1** richiede presenza umana. Ed è l'unico che si paga una vol
 - Dev Agent: `fabric-agentic-dev-agent` (app ID `e74ca724-e306-4ff3-ae02-77ef7368e673`)
 - Review Agent: `fabric-agentic-review-agent` (app ID `a6d3e2af-92e5-447a-bb1e-9a466e1bdaed`)
 - Nessun secret, ruolo Fabric o credenziale tecnica sorgente è stato ancora assegnato.
-- L'organizzazione Azure DevOps `alessioandriulo` deve ancora essere associata al tenant Agic Dev prima di aggiungere gli SP al tracker.
+- Organizzazione Azure DevOps attiva: `AlessioAndriuloDev`, progetto `fabric-agentic`.
+- Work item migrate nel nuovo progetto: #1 (S0-03), #2 (S0-04), #3 (S0-05), #4 (S0-N5), #5 (S0-N2).
+- L'organizzazione precedente `alessioandriulo` resta la sorgente storica e non e' piu' il tracker operativo.
+- Service principal presenti nell'organizzazione: Dev Agent con licenza `Basic`, Review Agent con licenza `Stakeholder`; entrambi risultano in provisioning `pending`.
+- Workspace DEV creato: `ws_agentic_dev` (`b829fa8e-71c9-4f7f-b136-5b3c3a64d8ee`); Dev Agent assegnato come `Contributor`, senza permessi sulla capacity.
+- Federated credential GitHub Actions configurata per l'environment `dev`; resta da eseguire il workflow di test OIDC.
 
 **Tracker**
 
