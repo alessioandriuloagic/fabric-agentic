@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Implementato il primo runtime deterministico CRM: estrazione staged JSONL con watermark
+  inclusivo, controllo PK, merge idempotente Bronze, audit per `run_id` e persistenza del
+  watermark solo dopo l'audit. Aggiunto il rail locale `run_load` con risultato `rail-result`
+  v1.0 e test del contratto. Il deploy Fabric/OIDC del notebook di carico resta da verificare.
+- Aggiunti notebook Fabric `nb_crm_load`, deployer e workflow OIDC `crm-run-load`, limitato
+  all'environment `dev`: il notebook esegue staging CRM, merge Delta Bronze, audit e watermark;
+  la verifica end-to-end sul feature workspace resta da eseguire.
 - S1-00: il tracer dati è riallineato su CRM `accounts`, tipologia già supportata e Fabric
   Connection `CommonDataService` esistente. Resta bloccato solo dal porting riproducibile del
   framework CRM con `PROVENANCE.md`.

@@ -8,7 +8,7 @@
 
 | Campo | Valore |
 |---|---|
-| Versione | 0.7 |
+| Versione | 0.8 |
 | Ultimo aggiornamento | 2026-08-21 |
 | Documenti collegati | `docs/prd/PRD-agentic-cicd-fabric.md`, `docs/adr/` |
 

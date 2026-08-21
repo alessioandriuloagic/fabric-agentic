@@ -75,6 +75,10 @@
         }
       }
     },
+    "watermark": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
     "timestamp": {
       "type": "string",
       "format": "date-time"
