@@ -505,7 +505,11 @@ in un commento quali documenti ha letto, e chiudere.
 
 **Implementazione 2026-08-21**: dispatcher con modalità `--smoke-work-item-id`, sessione Claude
 read-only a output JSON strutturato e commento/chiusura del work item eseguiti dal dispatcher con
-l'identità Dev Agent. La prova sul campo resta da eseguire.
+l'identità Dev Agent.
+
+**Esito 2026-08-21**: verificato sul work item `#7`: rilevamento, transizione `To Do` → `Doing`
+→ `Done`, sessione Claude read-only, commento dell'identità Dev Agent e log locale senza token.
+S0-14 è verde.
 ---
 
 ### S0-15 · Rilevare la baseline dei KPI
