@@ -566,6 +566,10 @@ riproducibile.
 il tracer è stato spostato su CRM `account`, tipologia già supportata. Resta da portare il
 framework da una fonte pulita con `PROVENANCE.md`. Vedi `docs/technical/09-framework-gate.md`.
 
+**Avanzamento 2026-08-21**: commit sorgente pulito registrato in `PROVENANCE.md`; configurazione
+CRM, schema fail-fast, builder request incremental e collocazioni target creati. Restano staged
+extraction, Bronze merge, audit, watermark, notebook/pipeline e rail `run_load`.
+
 ---
 
 ### S1-01 · Spike: deploy e binding Power BI con `fabric-cicd`

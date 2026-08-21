@@ -153,5 +153,6 @@ discipline used for release version bumps above.
 - **[2026-08-21] Piano permessi capacity Fabric** → [kaizen/20260821-fabric-capacity-admin.md](kaizen/20260821-fabric-capacity-admin.md)
 - **[2026-08-21] Membership amministrativa capacity** → [kaizen/20260821-capacity-administration-membership.md](kaizen/20260821-capacity-administration-membership.md)
 - **[2026-08-21] File PEM della GitHub App** → [kaizen/20260821-github-app-pem-file.md](kaizen/20260821-github-app-pem-file.md)
+- **[2026-08-21] Contesto dei worktree Git** → [kaizen/20260821-worktree-context.md](kaizen/20260821-worktree-context.md)
 
 <!-- init-dai-project:end -->

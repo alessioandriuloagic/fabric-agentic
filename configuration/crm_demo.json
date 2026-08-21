@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "source_system": "crm_demo",
+  "connector_type": "crm_dataverse",
+  "connection_id": "b838644d-afd9-4ec3-973d-e36ed85ad167",
+  "environment_url": "https://org4009cd0e.crm4.dynamics.com",
+  "datasets": [
+    {
+      "name": "accounts",
+      "entity_set": "accounts",
+      "primary_key": ["accountid"],
+      "load_mode": "incremental",
+      "watermark_column": "modifiedon",
+      "select_columns": ["accountid", "name", "modifiedon"]
+    }
+  ]
+}
