@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/alessioandriuloagic/fabric-agentic/schemas/crm-source-v1.0.json",
+  "title": "CRM source configuration v1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "source_system",
+    "connector_type",
+    "connection_id",
+    "environment_url",
+    "datasets"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "source_system": {"const": "crm_demo"},
+    "connector_type": {"const": "crm_dataverse"},
+    "connection_id": {"type": "string", "format": "uuid"},
+    "environment_url": {"type": "string", "format": "uri", "pattern": "^https://.+\\.dynamics\\.com$"},
+    "datasets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "entity_set",
+          "primary_key",
+          "load_mode",
+          "watermark_column",
+          "select_columns"
+        ],
+        "properties": {
+          "name": {"const": "accounts"},
+          "entity_set": {"const": "accounts"},
+          "primary_key": {"const": ["accountid"]},
+          "load_mode": {"const": "incremental"},
+          "watermark_column": {"const": "modifiedon"},
+          "select_columns": {
+            "type": "array",
+            "minItems": 3,
+            "items": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+            "allOf": [
+              {"contains": {"const": "accountid"}},
+              {"contains": {"const": "modifiedon"}}
+            ]
+          }
+        }
+      }
+    }
+  }
+}
