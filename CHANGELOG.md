@@ -38,6 +38,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corretto il payload Git Connect del rail per GitHub: usa ora `ownerName`,
   `gitProviderType: GitHub` e una directory root relativa, invece dei campi Azure DevOps e del
   path assoluto rifiutati dall'API Fabric.
+- Documentata la condivisione necessaria della Configured Connection GitHub: il deploy SP deve
+  avere ruolo `User` su `GitHubRepo`; il controllo ha rilevato che la connection era assegnata
+  al solo owner umano.
 - Corretto il requisito per `assignToCapacity` dopo il confronto con il progetto IP: il deploy SP
   usa Azure RBAC `Contributor` sulla capacity e la membership del proprio Object ID in
   `properties.administration.members`; il secondo requisito era assente su `fabricalessiodev`.
