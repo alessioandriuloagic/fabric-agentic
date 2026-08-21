@@ -211,14 +211,15 @@ def ensure_git_connection(workspace_id: str, branch_name: str) -> bool:
     repository = configured_value("FABRIC_GIT_REPOSITORY")
     existing = fabric_optional("GET", f"/workspaces/{workspace_id}/git/connection")
     if existing:
-        details = existing.get("gitProviderDetails", {})
-        if (
-            details.get("organizationName") != organization
-            or details.get("repositoryName") != repository
-            or details.get("branchName") != branch_name
-        ):
-            raise RailError("git_connection")
-        return False
+        details = existing.get("gitProviderDetails")
+        if details:
+            if (
+                details.get("organizationName") != organization
+                or details.get("repositoryName") != repository
+                or details.get("branchName") != branch_name
+            ):
+                raise RailError("git_connection")
+            return False
     fabric(
         "POST",
         f"/workspaces/{workspace_id}/git/connect",
@@ -307,6 +308,12 @@ def main() -> int:
         workspace_name = f"ws_agentic_feature_wi{args.work_item_id}"
         result = new_result(args.work_item_id, branch_name, workspace_name)
         result["branch_out"]["failure_stage"] = error.stage if isinstance(error, RailError) else "configuration"
+        result["messages"].append("Branch-out provisioning failed; inspect the structured failure stage.")
+    except Exception:
+        branch_name = f"feature/wi-{args.work_item_id}-{args.slug}"
+        workspace_name = f"ws_agentic_feature_wi{args.work_item_id}"
+        result = new_result(args.work_item_id, branch_name, workspace_name)
+        result["branch_out"]["failure_stage"] = "unknown"
         result["messages"].append("Branch-out provisioning failed; inspect the structured failure stage.")
     write_result(result, args.output)
     return 0 if result["outcome"] == "success" else 1

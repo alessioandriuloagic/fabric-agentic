@@ -64,7 +64,7 @@
         "sync_status": {"type": "string", "enum": ["synchronized", "not_synchronized"]},
         "failure_stage": {
           "type": ["string", "null"],
-          "enum": ["configuration", "branch", "workspace", "owner", "git_connection", "folders", "sync", null]
+          "enum": ["configuration", "branch", "workspace", "owner", "git_connection", "folders", "sync", "unknown", null]
         }
       }
     },

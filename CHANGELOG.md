@@ -27,6 +27,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   workspace, connessione Git e sincronizzazione; consente `workspace_id: null` nei fallimenti
   precedenti alla creazione e identifica in modo sicuro lo step fallito. Aggiunti test locali e
   validazione CI del runner.
+- Corretto `branch_out` per le risposte Fabric con connessione Git priva di
+  `gitProviderDetails`: il workspace viene collegato anziché terminare con eccezione. Anche gli
+  errori imprevisti ora pubblicano un `rail-result.json` con failure stage `unknown`.
 - Scelta l'associazione dell'organizzazione Azure DevOps al tenant Agic Dev prima di aggiungere
   i service principal agentici a Boards; evita identità duplicate o configurazioni multi-tenant.
 - Provisionate nel tenant Agic Dev le identità `fabric-agentic-dev-agent` e
