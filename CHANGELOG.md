@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   avanzamento del watermark solo dopo Bronze e audit riusciti.
 - Aggiunto l'artifact `nb_crm_preflight` in formato FabricGitSource: valida la connection CRM
   tramite OData `$top=0` e restituisce solo evidenze aggregate, senza record o credenziali.
+- Aggiunto workflow OIDC `crm-preflight`: crea/riusa Lakehouse e notebook nel feature workspace,
+  esegue `RunNotebook` e pubblica un artifact strutturato senza token o dati CRM.
 - ADR-0011: il primo ticket agentico reale diventa il tracer bullet CRM `accounts` in feature
   workspace. `ws_agentic_dev` è già predisposto; `test` e `prod` restano non
   provisionati/configurati fino a disponibilità di workspace e credenziali dedicate.

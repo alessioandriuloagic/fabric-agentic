@@ -576,6 +576,10 @@ extraction, Bronze merge, audit, watermark, notebook/pipeline e rail `run_load`.
 localmente. Il deploy OIDC, Lakehouse e job `RunNotebook` restano da verificare prima di leggere
 dati CRM.
 
+**Avanzamento 2026-08-21 (deployer)**: workflow `crm-preflight` e deployer idempotente creati;
+creano/riusano Lakehouse e notebook nel feature workspace e usano `RunNotebook`. La prova OIDC
+post-merge resta aperta.
+
 ---
 
 ### S1-01 · Spike: deploy e binding Power BI con `fabric-cicd`

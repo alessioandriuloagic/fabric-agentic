@@ -60,3 +60,11 @@ artefatti.
 La semantica del watermark CRM è definita in ADR-0012: filtro inclusivo, merge su `accountid` e
 avanzamento solo dopo Bronze e audit riusciti. I notebook/pipeline futuri devono implementare
 questa sequenza senza fallback append.
+
+## 6. Preflight deployabile
+
+Il workflow manuale `.github/workflows/crm-preflight.yml` usa l'identità OIDC di deploy su
+`dev`, deriva il feature workspace dal work item e crea/riusa `lh_bronze_crm_demo` e
+`nb_crm_preflight`. Avvia il job con `RunNotebook` e pubblica `crm-preflight-result.json`.
+Il notebook esegue una richiesta CRM `$top=0`; non legge righe account e non espone credenziali.
+L'esecuzione sul workspace resta la verifica successiva al merge.
