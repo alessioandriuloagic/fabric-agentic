@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   modalità read-only sul work item `#6`. Completati anche Trigger B/C con deduplicazione di
   commenti e review thread. Aggiunti loop configurabile a 30 secondi e log JSONL locale privo di
   token/credenziali; smoke S0-14 con sessione reale resta da completare.
+- Aggiunta modalità S0-14 controllata: una sessione Claude read-only restituisce i documenti
+  letti in JSON, mentre il dispatcher Dev Agent pubblica il commento e chiude il work item.
 - S0-11: istruzioni versionate del Dev Agent e contratto JSON fra dispatcher e sessione in
   `agents/dev/`; vincolano lettura del contesto, uso dei rail, escalation, sicurezza,
   documentazione e divieto di merge o modifiche dirette a Fabric.

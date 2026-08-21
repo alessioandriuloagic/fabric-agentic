@@ -4,7 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
-from scripts.dev_dispatcher import DispatcherConfig, human_reply_tasks, review_thread_tasks, run_once, run_polling
+from scripts.dev_dispatcher import DispatcherConfig, human_reply_tasks, launch_smoke_session, review_thread_tasks, run_once, run_polling, smoke_comment
 
 
 class DevDispatcherTests(unittest.TestCase):
@@ -96,6 +96,22 @@ class DevDispatcherTests(unittest.TestCase):
 
         self.assertEqual([event["event"] for event in events], ["poll_completed", "poll_completed"])
         self.assertTrue(all("token" not in json.dumps(event).lower() for event in events))
+
+    @patch("scripts.dev_dispatcher.subprocess.run")
+    def test_smoke_session_returns_only_structured_documents(self, run_mock) -> None:
+        run_mock.return_value.returncode = 0
+        run_mock.return_value.stdout = json.dumps({"structured_output": {"documents_read": ["CONTEXT.md", "AGENTS.md"]}})
+
+        documents = launch_smoke_session(self.config, Path("task.json"))
+
+        self.assertEqual(documents, ["CONTEXT.md", "AGENTS.md"])
+        self.assertIn("Read", run_mock.call_args.args[0])
+
+    def test_smoke_comment_identifies_the_dev_agent(self) -> None:
+        comment = smoke_comment(["CONTEXT.md", "AGENTS.md"])
+
+        self.assertIn("[fabric-agentic-dev-agent]", comment)
+        self.assertIn("- CONTEXT.md", comment)
 
 
 if __name__ == "__main__":
