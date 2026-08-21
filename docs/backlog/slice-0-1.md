@@ -307,6 +307,11 @@ knowledge base.
 - Nessuna credenziale Fabric nel runtime del Dev Agent
 - Procedura di rotazione e revoca registrata nel runbook operativo
 
+**Esito 2026-08-21**: certificato client non esportabile creato nel certificate store locale e
+chiave pubblica registrata su `fabric-agentic-dev-agent`. Testata l'acquisizione di token Entra
+per Azure DevOps e la lettura del progetto `fabric-agentic`; nessun PAT, client secret o token è
+stato scritto nel repository o nei log.
+
 ---
 
 ### S0-N5 · Configurare la `ExecutionCredential` del cliente

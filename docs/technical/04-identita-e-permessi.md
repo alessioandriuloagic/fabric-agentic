@@ -45,6 +45,7 @@ Ne discendono due regole operative:
 | L'organizzazione Azure DevOps è associata al tenant Fabric | I service principal del Dev Agent e Review Agent sono nel tenant Agic Dev e devono poter accedere a Boards senza identità duplicate cross-tenant |
 | Il deploy usa un'identità distinta | `fabric-agentic-deploy` esegue i rail; Dev Agent e Review Agent non possono impersonarla |
 | Assegnazione alla capacity | Pattern verificato in `IP.dai_fabric_environments`: deploy SP con Azure RBAC `Contributor` sulla risorsa capacity **e** Object ID presente in `properties.administration.members`. Entrambi sono necessari per `assignToCapacity`; non dedurre ruoli ulteriori dal solo errore API |
+| Credenziale tracker Dev Agent | Certificato client non esportabile nell'utente Windows dell'owner. Il dispatcher acquisisce token Entra brevi per `https://app.vssps.visualstudio.com/.default`; nessun PAT o client secret nel repo o nel runtime del modello |
 
 > L'ultimo punto è spesso trascurato: abilitare la creazione di workspace via identità applicativa
 > a livello di tenant senza restringerla a un gruppo significa concederla a **tutte** le
