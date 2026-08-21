@@ -71,3 +71,19 @@ L'esecuzione sul workspace resta la verifica successiva al merge.
 
 Il workflow invoca il deployer come modulo Python e garantisce un risultato tecnico strutturato
 anche se il processo non riesce ad avviarsi, così l'artifact rimane il canale di diagnosi primario.
+
+### Esito operativo 2026-08-21
+
+Il run GitHub Actions `32499002240`, sul commit `b1d47e26efd943334184640a4dd708bfc48c3731`,
+ha completato il preflight con `outcome: success` per il work item `6`. Nel feature workspace
+`c3465ab0-210b-4b31-86fd-03d9611fc037` il deployer ha creato o riusato:
+
+- Lakehouse `lh_bronze_crm_demo`: `742c052b-6b30-4dd1-bcec-94908dc670cd`;
+- notebook `nb_crm_preflight`: `898df1af-7e9e-437e-aba3-ca8966404392`.
+
+Il notebook ha completato la verifica OData `$top=0` sull'entity set `accounts` tramite la
+connection CRM configurata. L'evidenza non contiene record CRM, token o altri segreti.
+
+Il preflight rimuove il blocco di compatibilità della connection per S1-00. Restano necessari
+estrazione staged, merge Bronze, audit, persistenza del watermark e il rail `run_load`; S1-04
+rimane pertanto bloccato fino al completamento di tali artefatti.
