@@ -4,7 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
-from scripts.dev_dispatcher import DispatcherConfig, human_reply_tasks, launch_smoke_session, review_thread_tasks, run_once, run_polling, smoke_comment
+from scripts.dev_dispatcher import AzureDevOpsClient, DispatcherConfig, human_reply_tasks, launch_smoke_session, review_thread_tasks, run_once, run_polling, run_smoke, smoke_comment
 
 
 class DevDispatcherTests(unittest.TestCase):
@@ -112,6 +112,27 @@ class DevDispatcherTests(unittest.TestCase):
 
         self.assertIn("[fabric-agentic-dev-agent]", comment)
         self.assertIn("- CONTEXT.md", comment)
+
+    @patch("scripts.dev_dispatcher.launch_smoke_session", return_value=["CONTEXT.md"])
+    @patch("scripts.dev_dispatcher.refresh_clone")
+    @patch("scripts.dev_dispatcher.AzureDevOpsClient")
+    def test_smoke_moves_ticket_to_doing_before_session_and_done_after(self, client_mock, _, __) -> None:
+        with TemporaryDirectory() as directory:
+            run_smoke(self.config, 42, Path(directory))
+
+        client = client_mock.return_value
+        self.assertEqual(client.method_calls[0].args, (42, "Doing"))
+        self.assertEqual(client.method_calls[-1].args, (42, "Done"))
+
+    @patch("scripts.dev_dispatcher.urlopen")
+    def test_work_item_patch_operations_use_json_patch_content_type(self, urlopen_mock) -> None:
+        urlopen_mock.return_value.__enter__.return_value.read.return_value = b"{}"
+        client = AzureDevOpsClient(self.config, token_provider=lambda _: "token")
+
+        client.request("POST", "/_apis/wit/workitems/$Issue?api-version=7.1", [{"op": "add"}])
+
+        request = urlopen_mock.call_args.args[0]
+        self.assertEqual(request.get_header("Content-type"), "application/json-patch+json")
 
 
 if __name__ == "__main__":

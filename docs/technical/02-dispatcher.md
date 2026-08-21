@@ -70,6 +70,12 @@ La modalità `--smoke-work-item-id <id>` avvia una singola sessione Claude con i
 JSON con l'elenco dei documenti letti. Il dispatcher, non il modello, pubblica il commento
 marcato `fabric-agentic-dev-agent` e porta il work item a `Done` tramite il token Azure DevOps
 del Dev SP. In questo smoke non sono consentiti Git, scritture file, Fabric, token o credenziali.
+
+**Verifica sul campo 2026-08-21**: lo smoke sul work item Azure Boards `#7` ha completato
+`To Do` → `Doing` → `Done`. Claude ha restituito task record, `CONTEXT.md`, `AGENTS.md`,
+`01-ciclo-di-vita-ticket.md` e `02-come-scrivere-un-ticket.md`; il commento è stato pubblicato
+da `fabric-agentic-dev-agent`. Il log locale contiene solo work item e documenti letti, senza
+token o credenziali.
 ---
 
 ## 3. Trigger del Dev Agent

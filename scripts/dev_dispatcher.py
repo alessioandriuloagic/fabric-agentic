@@ -97,13 +97,14 @@ class AzureDevOpsClient:
         self.config = config
         self.token_provider = token_provider
 
-    def request(self, method: str, path: str, body: dict | None = None) -> dict:
+    def request(self, method: str, path: str, body: dict | list | None = None) -> dict:
         token = self.token_provider(self.config)
+        content_type = "application/json-patch+json" if isinstance(body, list) else "application/json"
         request = Request(
             f"https://dev.azure.com/{self.config.organization}/{self.config.project}{path}",
             data=json.dumps(body).encode("utf-8") if body is not None else None,
             method=method,
-            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+            headers={"Authorization": f"Bearer {token}", "Content-Type": content_type},
         )
         try:
             with urlopen(request) as response:
@@ -131,8 +132,8 @@ class AzureDevOpsClient:
     def add_comment(self, work_item_id: int, text: str) -> None:
         self.request("POST", f"/_apis/wit/workItems/{work_item_id}/comments?api-version=7.1-preview.4", {"text": text})
 
-    def mark_done(self, work_item_id: int) -> None:
-        self.request("PATCH", f"/_apis/wit/workitems/{work_item_id}?api-version=7.1", [{"op": "add", "path": "/fields/System.State", "value": "Done"}])
+    def set_state(self, work_item_id: int, state: str) -> None:
+        self.request("PATCH", f"/_apis/wit/workitems/{work_item_id}?api-version=7.1", [{"op": "add", "path": "/fields/System.State", "value": state}])
 
 
 def load_state(state_path: Path) -> dict:
@@ -304,14 +305,15 @@ def smoke_comment(documents_read: list[str]) -> str:
 
 
 def run_smoke(config: DispatcherConfig, work_item_id: int, task_directory: Path) -> list[str]:
+    client = AzureDevOpsClient(config)
+    client.set_state(work_item_id, "Doing")
     refresh_clone(config)
     task_directory.mkdir(parents=True, exist_ok=True)
     task_path = task_directory / f"smoke-{uuid.uuid4()}.json"
     task_path.write_text(json.dumps(task_record(config, work_item_id), indent=2) + "\n", encoding="utf-8")
     documents = launch_smoke_session(config, task_path)
-    client = AzureDevOpsClient(config)
     client.add_comment(work_item_id, smoke_comment(documents))
-    client.mark_done(work_item_id)
+    client.set_state(work_item_id, "Done")
     return documents
 
 
