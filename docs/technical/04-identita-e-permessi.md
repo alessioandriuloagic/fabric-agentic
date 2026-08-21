@@ -46,6 +46,7 @@ Ne discendono due regole operative:
 | Il deploy usa un'identità distinta | `fabric-agentic-deploy` esegue i rail; Dev Agent e Review Agent non possono impersonarla |
 | Assegnazione alla capacity | Pattern verificato in `IP.dai_fabric_environments`: deploy SP con Azure RBAC `Contributor` sulla risorsa capacity **e** Object ID presente in `properties.administration.members`. Entrambi sono necessari per `assignToCapacity`; non dedurre ruoli ulteriori dal solo errore API |
 | Credenziale tracker Dev Agent | Certificato client non esportabile nell'utente Windows dell'owner. Il dispatcher acquisisce token Entra brevi per `https://app.vssps.visualstudio.com/.default`; nessun PAT o client secret nel repo o nel runtime del modello |
+| Credenziale GitHub Dev Agent | GitHub App installata sul solo repository `alessioandriuloagic/fabric-agentic`. Il dispatcher firma un JWT con una private key PEM locale protetta da ACL e ottiene un installation token breve; App ID e Installation ID non sono segreti, la private key non entra nel repository o nei log |
 
 > L'ultimo punto è spesso trascurato: abilitare la creazione di workspace via identità applicativa
 > a livello di tenant senza restringerla a un gruppo significa concederla a **tutte** le

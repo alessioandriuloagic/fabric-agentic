@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurata e provata la credenziale Azure DevOps non interattiva del Dev Agent: certificato
   client non esportabile nel certificate store locale e token Entra a breve durata per
   `app.vssps.visualstudio.com`; lettura del progetto tracker verificata senza PAT o client secret.
+- Registrata la GitHub App del Dev Agent (App ID e Installation ID) e predisposto il percorso
+  locale ACL-protetto per la private key PEM; la chiave resta fuori dal repository e dai log.
 - Rail `sync_workspace` (S1-03): workflow GitHub Actions DEV-only, ancorato a `main`, che
   sincronizza il feature workspace deterministico soltanto per modifiche remote e pubblica un
   artefatto `rail-result.json` v1.2. Conflitti e divergenze locali falliscono esplicitamente
