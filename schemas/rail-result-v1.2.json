@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/alessioandriuloagic/fabric-agentic/schemas/rail-result-v1.2.json",
+  "title": "Rail result v1.2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "rail", "outcome", "run_id", "workspace_id", "datasets", "messages", "sync_workspace", "timestamp"],
+  "properties": {
+    "schema_version": {"const": "1.2"},
+    "rail": {"const": "sync_workspace"},
+    "outcome": {"type": "string", "enum": ["success", "technical_failure", "quality_failure"]},
+    "run_id": {"type": "string", "minLength": 1},
+    "workspace_id": {"type": ["string", "null"]},
+    "datasets": {"type": "array", "maxItems": 0},
+    "messages": {"type": "array", "items": {"type": "string"}},
+    "sync_workspace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["work_item_id", "branch_name", "workspace_name", "status", "updated_items", "failure_stage", "failure_code"],
+      "properties": {
+        "work_item_id": {"type": "integer", "minimum": 1},
+        "branch_name": {"type": "string", "minLength": 1},
+        "workspace_name": {"type": "string", "minLength": 1},
+        "status": {"type": "string", "enum": ["synchronized", "already_aligned", "conflict", "divergent", "not_synchronized"]},
+        "updated_items": {"type": "array", "items": {"type": "string"}},
+        "failure_stage": {"type": ["string", "null"], "enum": ["configuration", "workspace", "git_connection", "git_status", "conflict", "divergence", "sync", "unknown", null]},
+        "failure_code": {"type": ["string", "null"], "enum": ["forbidden", "unauthorized", "bad_request", "api_request_failed", "operation_timeout", "unexpected", null]}
+      }
+    },
+    "timestamp": {"type": "string", "format": "date-time"}
+  }
+}
