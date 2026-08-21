@@ -104,6 +104,11 @@ minimi per il solo perimetro feature/capacity, il secondo puo' accodare il workf
 impersonarlo. Le cartelle richieste sono create con la Folders API; il task flow non viene creato
 nei feature workspace, secondo ADR-0003.
 
+La connection deve avere un role assignment che consenta al service principal di deploy di
+usarla: per `GitHubRepo`, aggiungere `fabric-agentic-deploy` (Object ID
+`db9d4adb-db6a-4238-8e75-c69d21b1b37e`) con ruolo `User`. Il PAT resta custodito nella
+connection e non viene esposto al service principal o al workflow.
+
 Il body `Git Connect` è specifico del provider: per GitHub usa `ownerName`,
 `gitProviderType: GitHub`, `repositoryName`, `branchName` e `directoryName` relativo (vuoto per
 la radice). I campi `organizationName` e `projectName` appartengono invece al provider Azure
