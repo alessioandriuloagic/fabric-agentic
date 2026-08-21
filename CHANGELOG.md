@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Primo rail reale `branch_out`: workflow GitHub Actions ancorato a `main`, limitato
+  all'environment `dev`, con creazione/riuso deterministico di branch e feature workspace,
+  assegnazione owner, capacity, connessione Git, cartelle e artefatto `rail-result.json`; usa
+  un'identita' OIDC di deploy distinta dal Dev Agent.
+- Creato nel tenant Agic Dev il service principal `fabric-agentic-deploy`, senza secret, e
+  configurate nell'environment GitHub `dev` le variabili non sensibili del rail per identità,
+  capacity, owner e repository. Restano da aggiungere la federated credential, i permessi
+  Fabric minimi e l'identificativo della Configured Connection Git.
+- Documentata la Configured Connection GitHub: custodisce in Fabric un fine-grained PAT limitato
+  al repository, con `Metadata: Read` e `Contents: Read and write`; il PAT non entra in GitHub
+  variables, repository, workflow o log.
+- Configurata la Configured Connection Fabric `GitHubRepo` per il repository e registrato il suo
+  identificativo nell'environment GitHub `dev`. Ricreato `ws_agentic_dev` sulla capacity
+  `fabricalessiodev`; i workflow OIDC ora usano il nuovo ID del workspace.
+- Contratto `rail-result` v1.1 specializzato per `branch_out`, con stato strutturato di branch,
+  workspace, connessione Git e sincronizzazione; consente `workspace_id: null` nei fallimenti
+  precedenti alla creazione. Aggiunti test locali e validazione CI del runner.
 - Scelta l'associazione dell'organizzazione Azure DevOps al tenant Agic Dev prima di aggiungere
   i service principal agentici a Boards; evita identità duplicate o configurazioni multi-tenant.
 - Provisionate nel tenant Agic Dev le identità `fabric-agentic-dev-agent` e

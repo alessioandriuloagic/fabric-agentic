@@ -23,7 +23,7 @@ jobs:
         run: |
           az rest \
             --method get \
-            --url "https://api.fabric.microsoft.com/v1/workspaces/b829fa8e-71c9-4f7f-b136-5b3c3a64d8ee" \
+            --url "https://api.fabric.microsoft.com/v1/workspaces/abb3a689-6a8a-4a98-88da-b3f7c6de05c5" \
             --resource "https://api.fabric.microsoft.com" \
             --query "{id:id,displayName:displayName,type:type}" \
             --output json

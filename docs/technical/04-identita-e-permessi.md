@@ -29,6 +29,7 @@ Ne discendono due regole operative:
 |---|---|
 | Dev Agent | Service principal dedicato |
 | Review Agent | Service principal dedicato, **distinto** |
+| Deploy pipeline | Service principal dedicato, distinto dagli agenti; esegue i rail con OIDC GitHub |
 | Dispatcher | Nessuna propria: usa quella dell'agente che serve |
 | `ExecutionCredential` | Credenziale tecnica **del cliente**, disponibile solo alle pipeline CI/CD |
 
@@ -42,6 +43,7 @@ Ne discendono due regole operative:
 | Le identità sono raccolte in un **gruppo di sicurezza dedicato** | Gli switch di tenant si applicano al gruppo, non al mondo |
 | La `ExecutionCredential` non è un'identità dell'agente | L'agente può accodare una pipeline ma non leggere, esportare o impersonare il segreto cliente |
 | L'organizzazione Azure DevOps è associata al tenant Fabric | I service principal del Dev Agent e Review Agent sono nel tenant Agic Dev e devono poter accedere a Boards senza identità duplicate cross-tenant |
+| Il deploy usa un'identità distinta | `fabric-agentic-deploy` esegue i rail; Dev Agent e Review Agent non possono impersonarla |
 
 > L'ultimo punto è spesso trascurato: abilitare la creazione di workspace via identità applicativa
 > a livello di tenant senza restringerla a un gruppo significa concederla a **tutte** le

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/alessioandriuloagic/fabric-agentic/schemas/rail-result-v1.1.json",
+  "title": "Rail result v1.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "rail",
+    "outcome",
+    "run_id",
+    "workspace_id",
+    "datasets",
+    "messages",
+    "branch_out",
+    "timestamp"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.1"
+    },
+    "rail": {
+      "const": "branch_out"
+    },
+    "outcome": {
+      "type": "string",
+      "enum": ["success", "technical_failure", "quality_failure"]
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workspace_id": {
+      "type": ["string", "null"]
+    },
+    "datasets": {
+      "type": "array",
+      "maxItems": 0
+    },
+    "messages": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "branch_out": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "work_item_id",
+        "branch_name",
+        "workspace_name",
+        "branch_status",
+        "workspace_status",
+        "git_connection_status",
+        "sync_status"
+      ],
+      "properties": {
+        "work_item_id": {"type": "integer", "minimum": 1},
+        "branch_name": {"type": "string", "minLength": 1},
+        "workspace_name": {"type": "string", "minLength": 1},
+        "branch_status": {"type": "string", "enum": ["created", "existing", "not_created"]},
+        "workspace_status": {"type": "string", "enum": ["created", "existing", "not_created"]},
+        "git_connection_status": {"type": "string", "enum": ["connected", "not_connected"]},
+        "sync_status": {"type": "string", "enum": ["synchronized", "not_synchronized"]}
+      }
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
