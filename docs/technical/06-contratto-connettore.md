@@ -107,7 +107,24 @@ completa resta la dimensione per la join in silver, **non** il driver dell'estra
 
 ---
 
-## 5. Connettore File
+## 5. Connettore CRM / Dataverse
+
+| Aspetto | Trattamento |
+|---|---|
+| Origine | Fabric Connection `CommonDataService`, referenziata per ID in configurazione |
+| Entità | Dichiarata in configurazione; primo tracer: `account` |
+| Chiave primaria | `accountid` |
+| Incrementalità | Watermark `modifiedon` |
+| Conteggio | Numero di record estratti dall'entità dopo i filtri dichiarati |
+| Dati verso il modello | Solo esiti, conteggi, nomi di colonna e identificativi mascherati |
+
+Il primo tracer usa la connection `b838644d-afd9-4ec3-973d-e36ed85ad167` verso l'ambiente CRM
+demo/sintetico. L'ID è configurazione di istanza, non un segreto; credenziali e token restano
+custoditi nella Fabric Connection.
+
+---
+
+## 6. Connettore File
 
 | Aspetto | Trattamento |
 |---|---|
@@ -129,7 +146,7 @@ configurazione.
 
 ---
 
-## 6. Registrazione di un nuovo connettore
+## 7. Registrazione di un nuovo connettore
 
 Aggiungere una **tipologia** di connettore non è un ticket di onboarding: è un intervento
 architetturale.
@@ -148,7 +165,7 @@ architetturale.
 
 ---
 
-## 7. Come si accorge un agente che il contratto è rotto
+## 8. Come si accorge un agente che il contratto è rotto
 
 Segnali che il Dev Agent deve riconoscere e **segnalare come rilievo architetturale**, invece di
 aggirare:

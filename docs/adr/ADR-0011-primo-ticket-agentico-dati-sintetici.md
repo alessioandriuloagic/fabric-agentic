@@ -27,8 +27,12 @@ workspace, identità e controlli dedicati.
 ## Decision
 
 Il primo ticket agentico reale non crea workspace di ambiente. Usa i rail verificati per creare
-il proprio feature workspace e realizza un tracer bullet su dati sintetici/open data: onboarding
-del dataset REST Open-Meteo `daily_weather` nel layer Bronze.
+il proprio feature workspace e realizza un tracer bullet su dati demo/sintetici: onboarding
+dell'entità CRM `account` nel layer Bronze.
+
+Il tracer usa la Fabric Connection `b838644d-afd9-4ec3-973d-e36ed85ad167`
+(`CommonDataService`), già disponibile per il CRM demo. La chiave primaria è `accountid`; il
+carico è incrementale con watermark `modifiedon`.
 
 Il ticket deve essere preceduto dalla verifica che il framework metadata-driven e il contratto
 del connettore siano presenti nel repository della soluzione. Se il framework manca, il Dev Agent
@@ -59,6 +63,12 @@ fuori dal perimetro dei rail agentici.
 **Why rejected**: manca un workspace/credenziale dedicata e la scelta violerebbe il vincolo
 esplicito di non configurare ambienti ulteriori prima dei relativi controlli.
 
+### Usare Open-Meteo `daily_weather`
+
+**Why rejected**: il framework candidato non espone un connettore REST/Open-Meteo. Introdurlo
+prima del primo ticket richiederebbe una nuova decisione architetturale e ritarderebbe la prova
+del ciclo agente su un connettore già disponibile.
+
 ### Usare un ticket solo documentale
 
 **Why rejected**: S0-14 ha già validato dispatcher, sessione e tracker; non dimostrerebbe i rail
@@ -69,3 +79,4 @@ e il ciclo dati che costituiscono l'obiettivo dell'MVP.
 - ADR-0007 - Pipeline CI/CD come rail
 - ADR-0008 - Permessi Fabric del Dev Agent
 - ADR-0010 - GitHub Flow senza protection rules
+- `docs/technical/09-framework-gate.md`

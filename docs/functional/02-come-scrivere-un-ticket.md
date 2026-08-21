@@ -105,28 +105,28 @@ delegare e cosa no.
 
 ## 4. Esempio — ticket ben scritto
 
-> **Titolo**: Onboarding del dataset `daily_weather` da Open-Meteo nel layer bronze
+> **Titolo**: Onboarding del dataset CRM `accounts` nel layer bronze
 >
 > **Obiettivo**
-> Il dataset meteo giornaliero di Open-Meteo è disponibile come tabella bronze, caricabile in
-> modalità incrementale.
+> Il dataset CRM `accounts` è disponibile come tabella bronze, caricabile in modalità
+> incrementale.
 >
 > **Contesto**
-> Primo dataset del source system `open_meteo`, connettore REST. Segui il runbook
+> Primo dataset del source system `crm_demo`, connettore CRM/Dataverse. Segui il runbook
 > *Onboarding di una sorgente*. Il framework di ingestion e il notebook di carico esistono già
 > e non vanno modificati.
 >
 > **Specifiche del dataset**
-> - Source system: `open_meteo` (nuovo)
-> - Connettore: REST
-> - Dataset: `daily_weather`
-> - Chiavi primarie: `city_id`, `date`
+> - Source system: `crm_demo` (nuovo)
+> - Connettore: CRM/Dataverse
+> - Dataset: `accounts`
+> - Fabric Connection: `b838644d-afd9-4ec3-973d-e36ed85ad167`
+> - Chiavi primarie: `accountid`
 > - Modalità di carico: incrementale
-> - Watermark column: `date`
-> - Elenco città da estrarre: come da configurazione (vedi runbook)
+> - Watermark column: `modifiedon`
 >
 > **Criteri di accettazione**
-> - La tabella bronze esiste ed è popolata
+> - La tabella bronze `crm_demo_accounts` esiste ed è popolata
 > - Il controllo di unicità sulle chiavi primarie è verde
 > - I conteggi di audit sorgente e destinazione coincidono
 > - La documentazione della sorgente e l'inventario dei dataset sono aggiornati

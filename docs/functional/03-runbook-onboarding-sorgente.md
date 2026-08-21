@@ -113,7 +113,26 @@ identificativo del run. Assegna il Review Agent.
 
 ---
 
-## 4. Caso specifico — connettore REST (Open-Meteo)
+## 4. Caso specifico — connettore CRM / Dataverse
+
+Il primo tracer usa l'entità CRM `account` dell'ambiente demo/sintetico collegato alla Fabric
+Connection `b838644d-afd9-4ec3-973d-e36ed85ad167`.
+
+| Campo | Valore del tracer |
+|---|---|
+| Source system | `crm_demo` |
+| Entità / dataset | `accounts` |
+| Chiave primaria | `accountid` |
+| Modalità | Incremental |
+| Watermark | `modifiedon` |
+| Credenziale | Riferimento alla Fabric Connection esistente, mai valore di token/secret |
+
+Prima dell'esecuzione, conferma che l'ambiente contiene solo dati demo/sintetici. Il rail e il
+modello ricevono solo evidenze aggregate o mascherate.
+
+---
+
+## 5. Caso specifico — connettore REST (Open-Meteo)
 
 Open-Meteo richiede **latitudine e longitudine come parametri di chiamata**: non esiste un
 endpoint "tutte le città".
@@ -135,7 +154,7 @@ layer silver, non il driver dell'estrazione.
 
 ---
 
-## 5. Caso specifico — connettore File
+## 6. Caso specifico — connettore File
 
 - I file di origine risiedono in un percorso convenzionale del lakehouse bronze.
 - Il connettore deve gestire lo schema in modo esplicito: **niente inferenza silenziosa**, che
@@ -145,7 +164,7 @@ layer silver, non il driver dell'estrazione.
 
 ---
 
-## 6. Criteri di completamento
+## 7. Criteri di completamento
 
 Il runbook è completato quando **tutti** i punti sono veri:
 

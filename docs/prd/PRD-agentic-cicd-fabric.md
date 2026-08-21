@@ -140,21 +140,16 @@ Espliciti, per proteggere lo scope:
 
 | # | Tipologia | Sorgente concreta | Ruolo |
 |---|---|---|---|
-| 1 | **REST API** | **Open-Meteo** — archivio storico meteo: nessuna autenticazione, watermark naturale su data, volume e profondità storica adeguati | Primo connettore, tracer bullet |
+| 1 | **CRM / Dataverse** | **CRM demo Customer Insight Journeys** — entità `account`, via Fabric Connection `CommonDataService` | Primo connettore, tracer bullet |
 | 2 | **File** | **Anagrafica città sintetica** (~1.000 righe, CSV/Parquet su OneLake Files) con coordinate geografiche | Secondo connettore, **prova dell'astrazione** |
 
-I due dataset sono **correlati**: le coordinate dell'anagrafica città si agganciano alle
-rilevazioni meteo, abilitando una join nel layer silver e quindi un semantic model e un report
-sensati per la demo commerciale.
+Il dataset CRM è usato esclusivamente come tracer con dati demo/sintetici. Il secondo connettore
+File resta la prova dell'astrazione; l'eventuale join e le lane Silver/Power BI vengono decise
+dopo che il framework CRM è portato e il tracer è verificato.
 
-> **Decisione di design**: l'anagrafica città è la **dimensione** della join, non il driver
-> delle chiamate REST. L'estrazione parametrizzata sulla tabella città (*parameter-driven
-> extraction*) è un'evoluzione possibile, ma introduce dipendenza tra connettori e centinaia di
-> chiamate per esecuzione: va decisa con ADR, non subita come effetto collaterale.
-
-- Framework di ingestion: metadata-driven da portare nella soluzione Agentic secondo ADR-0009.
-    Verifica B3 del 2026-08-21: il framework candidato non include REST/Open-Meteo; il tracer
-    bullet resta bloccato da S1-00 e da una decisione sul connettore REST
+- Framework di ingestion: metadata-driven CRM da portare nella soluzione Agentic secondo
+    ADR-0009. Il tracer `accounts` resta bloccato da S1-00 fino a provenienza riproducibile e
+    porting dei pattern CRM
 - Naming convention, struttura a cartelle del workspace e task flow: definiti in `CONTEXT.md`
 
 ### 6.2 In scope — Fase 2
@@ -437,7 +432,7 @@ Il Dev Agent ha una cassetta degli attrezzi ampia (Git, script, CLI Fabric, trac
 | V-3 | Service principal già disponibili; il tracker non consente l'assegnazione diretta di work item a un service principal — serve un marcatore alternativo (tag) |
 | V-4 | Gli agenti girano in sessione non interattiva: non possono chiedere conferme a runtime, quindi il perimetro deve essere garantito dai permessi |
 | V-5 | La sessione di un service principal sul control plane Fabric ha durata limitata e va rinnovata a ogni avvio |
-| V-6 | Sorgenti dati eterogenee: REST API (Open-Meteo) e File (dataset sintetico). La soluzione non deve assumere alcuna tipologia di sorgente specifica |
+| V-6 | Sorgenti dati eterogenee: CRM/Dataverse (tracer `accounts`) e File (dataset sintetico). La soluzione non deve assumere alcuna tipologia di sorgente specifica |
 | V-7 | Workflow Git: GitHub Flow, branch feature a vita breve, `main` sempre rilasciabile |
 | V-8 | Naming convention, struttura a cartelle del workspace e task flow sono definiti in `CONTEXT.md` e sono vincolanti per gli agenti |
 | V-9 | Fabric e identità vivono nel tenant **Agic Dev**; Azure Boards e GitHub sono servizi esterni. Nessun dato di cliente entra nel perimetro |
@@ -448,7 +443,7 @@ Il Dev Agent ha una cassetta degli attrezzi ampia (Git, script, CLI Fabric, trac
 |---|---|---|
 | A-1 | Il framework metadata-driven esistente accoglie un secondo connettore senza modifiche strutturali all'orchestrazione | Slice 4 — è il test dell'astrazione |
 | A-2 | Il volume dei feature workspace è sostenibile sulla capacity `fabricalessiodev` senza impatto sui carichi esistenti | Monitoraggio consumo in Slice 0-1 |
-| A-3 | Open-Meteo espone volume, paginazione e granularità temporale sufficienti a esercitare full e incremental load | Discovery tecnica in Slice 2 |
+| A-3 | Il CRM demo consente il carico incremental dell'entità `account` tramite `modifiedon` e conteggi riconciliabili | Discovery tecnica in S1-04 |
 | A-4 | La validazione automatica di TMDL/PBIR è realizzabile con il tooling disponibile senza Power BI Desktop interattivo | Spike dedicato prima dello Slice 6 |
 | A-5 | Le cartelle sono creabili via API; il task flow è un passo manuale documentato e non blocca la review | Deciso in ADR-0003 |
 
@@ -476,9 +471,9 @@ Ogni slice è verticale e produce valore osservabile: non "prima tutta l'infrast
 | Slice | Titolo | Obiettivo osservabile |
 |---|---|---|
 | **S0** | Fondamenta e knowledge base | Repo, struttura `/docs`, `CONTEXT.md`, documentazione funzionale, service principal configurati, branch policy che nega il push su `main` agli agenti **e verificata praticamente**. **Baseline KPI rilevata** |
-| **S1** | Primo ticket agentico: tracer bullet dati | Dopo S1-00 (framework metadata-driven e decisione REST), un work item "onboarda Open-Meteo `daily_weather` in Bronze" viene preso in carico dal Dev Agent, che usa feature workspace, configurazione metadata-driven, rail, esecuzione qualità e documentazione. `dev` è già predisposto; `test` e `prod` restano fuori scope. Vedi ADR-0011. |
-| **S2** | Tracer bullet dati — connettore REST | Ticket "onboarda un dataset da Open-Meteo nel bronze": nuova voce nel JSON di configurazione, carico eseguito, controlli PK e audit verdi, documentazione aggiornata, PR aperta |
-| **S3** | Review agentica | Il Review Agent revisiona la PR dello Slice 2 contro checklist chiusa, solleva almeno un rilievo, il Dev Agent corregge, il Review Agent approva |
+| **S1** | Primo ticket agentico: tracer bullet CRM | Dopo S1-00 (framework CRM metadata-driven portato con provenienza), un work item "onboarda CRM `accounts` in Bronze" viene preso in carico dal Dev Agent, che usa feature workspace, configurazione metadata-driven, rail, esecuzione qualità e documentazione. `dev` è già predisposto; `test` e `prod` restano fuori scope. Vedi ADR-0011. |
+| **S2** | Hardening tracer CRM | Carico `accounts` eseguito con controlli PK/audit verdi e baseline manuale/agentica confrontabile |
+| **S3** | Review agentica | Il Review Agent revisiona la PR dello Slice 1 contro checklist chiusa, solleva almeno un rilievo, il Dev Agent corregge, il Review Agent approva |
 | **S4** | Secondo connettore — File | Ticket "onboarda l'anagrafica città da file CSV/Parquet": **il vero test dell'astrazione**. Se richiede modifiche all'orchestrazione, il contratto di connettore va rivisto prima di procedere |
 | **S5** | Gestione dell'ambiguità | Ticket con specifica volutamente errata: l'agente rileva il problema, si ferma, commenta, riceve il chiarimento umano e corregge |
 | **S6** | Power BI lane | Ticket di change request su misura DAX in un semantic model, con regression test eseguito prima della PR |
@@ -508,10 +503,10 @@ L'MVP è accettato quando, **senza alcun intervento tecnico dell'owner oltre all
 | ID | Domanda | Owner | Stato |
 |---|---|---|---|
 | ~~Q-1~~ | ~~Il framework metadata-driven esistente va riusato, adattato o riscritto?~~ | — | **Chiusa 2026-08-20**: riusato as-is, la configurazione JSON per source system è il formato di riferimento |
-| ~~Q-2~~ | ~~Quale sorgente REST usiamo per i test?~~ | — | **Chiusa 2026-08-20**: Open-Meteo, REST API pubblica senza autenticazione; Business Central non è disponibile nello scope MVP |
+| ~~Q-2~~ | ~~Quale sorgente REST usiamo per i test?~~ | — | **Superata 2026-08-21 da ADR-0011**: il primo tracer usa CRM `accounts`; Open-Meteo resta una possibile evoluzione REST |
 | ~~Q-8~~ | ~~Quali convenzioni di naming adottiamo?~~ | — | **Chiusa 2026-08-20**: formalizzate in `CONTEXT.md`, progetto `agentic` |
-| ~~Q-10~~ | ~~Quale ambiente Business Central e quale autenticazione?~~ | — | **Chiusa 2026-08-20**: BC non disponibile, si usa Open-Meteo (nessuna autenticazione) + file sintetici |
-| ~~Q-11~~ | ~~Quale dominio e quale volume per il dataset sintetico?~~ | — | **Chiusa 2026-08-20**: anagrafica città con coordinate, ~1.000 righe, correlata a Open-Meteo |
+| ~~Q-10~~ | ~~Quale ambiente Business Central e quale autenticazione?~~ | — | **Superata 2026-08-21 da ADR-0011**: il primo tracer usa CRM demo via Fabric Connection esistente |
+| ~~Q-11~~ | ~~Quale dominio e quale volume per il dataset sintetico?~~ | — | **Rinviata a S4**: l'anagrafica città File resta il secondo connettore e la prova dell'astrazione |
 | ~~Q-3~~ | ~~Con quale tooling validiamo TMDL/PBIR in modo non interattivo?~~ | — | **Chiusa 2026-08-20**: `fabric-cicd==1.3.0` supporta `SemanticModel` TMDL e `Report` PBIR; S1-01 valida binding e deploy reale |
 | Q-4 | Qual è la definizione operativa di "regression suite DAX" e quali misure sono critiche? | @marco / @kent | Aperta — blocca S6 |
 | ~~Q-5~~ | ~~Quale strategia di cleanup dei feature workspace e quale soglia capacity?~~ | — | **Chiusa 2026-08-20**: Sweep pipeline schedulata (ADR-0004), capacity `fabricalessiodev` monitorata |
