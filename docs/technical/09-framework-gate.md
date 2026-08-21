@@ -68,3 +68,6 @@ Il workflow manuale `.github/workflows/crm-preflight.yml` usa l'identità OIDC d
 `nb_crm_preflight`. Avvia il job con `RunNotebook` e pubblica `crm-preflight-result.json`.
 Il notebook esegue una richiesta CRM `$top=0`; non legge righe account e non espone credenziali.
 L'esecuzione sul workspace resta la verifica successiva al merge.
+
+Il workflow invoca il deployer come modulo Python e garantisce un risultato tecnico strutturato
+anche se il processo non riesce ad avviarsi, così l'artifact rimane il canale di diagnosi primario.

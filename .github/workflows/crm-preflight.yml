@@ -32,7 +32,14 @@ jobs:
       - name: Create artifacts and run CRM preflight
         id: preflight
         continue-on-error: true
-        run: python scripts/fabric_crm_preflight.py --work-item-id "${{ inputs.work_item_id }}"
+        run: python -m scripts.fabric_crm_preflight --work-item-id "${{ inputs.work_item_id }}"
+
+      - name: Ensure preflight result exists
+        if: always()
+        run: |
+          if [ ! -f crm-preflight-result.json ]; then
+            printf '{"outcome":"technical_failure","work_item_id":%s,"message":"preflight process ended before writing a result"}\n' "${{ inputs.work_item_id }}" > crm-preflight-result.json
+          fi
 
       - name: Publish preflight result
         if: always()

@@ -1,4 +1,7 @@
-"""Deploy and execute the no-record CRM connection preflight in a feature workspace."""
+"""Deploy and execute the no-record CRM connection preflight in a feature workspace.
+
+Run as ``python -m scripts.fabric_crm_preflight`` so package imports resolve.
+"""
 
 import argparse
 import json

@@ -1,10 +1,17 @@
 import unittest
+from pathlib import Path
 from unittest.mock import Mock
 
 from scripts.fabric_crm_preflight import FabricClient, FabricPreflightError, feature_workspace_name
 
 
 class FabricCrmPreflightTests(unittest.TestCase):
+    def test_workflow_runs_the_deployer_as_a_module(self) -> None:
+        workflow = Path(".github/workflows/crm-preflight.yml").read_text(encoding="utf-8")
+
+        self.assertIn("python -m scripts.fabric_crm_preflight", workflow)
+        self.assertIn("Ensure preflight result exists", workflow)
+
     def test_derives_deterministic_feature_workspace_name(self) -> None:
         self.assertEqual(feature_workspace_name(42), "ws_agentic_feature_wi42")
         with self.assertRaises(FabricPreflightError):
