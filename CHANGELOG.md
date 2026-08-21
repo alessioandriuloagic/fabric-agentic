@@ -35,9 +35,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   diversa resta un fallimento tecnico esplicito.
 - Aggiunto al risultato `branch_out` il `failure_code` sanitizzato per classificare rifiuti API
   senza pubblicare messaggi: consente di distinguere permessi insufficienti da errori di input.
-- Documentato il requisito verificato per `assignToCapacity`: il deploy SP richiede il ruolo
-  **Capacity administrator** nel portale Fabric; il ruolo Azure RBAC `Contributor` sulla risorsa
-  capacity non è sufficiente.
+- Corretto il requisito per `assignToCapacity` dopo il confronto con il progetto IP: il deploy SP
+  usa Azure RBAC `Contributor` sulla capacity e la membership del proprio Object ID in
+  `properties.administration.members`; il secondo requisito era assente su `fabricalessiodev`.
 - Scelta l'associazione dell'organizzazione Azure DevOps al tenant Agic Dev prima di aggiungere
   i service principal agentici a Boards; evita identità duplicate o configurazioni multi-tenant.
 - Provisionate nel tenant Agic Dev le identità `fabric-agentic-dev-agent` e

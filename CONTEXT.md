@@ -231,7 +231,7 @@ Altro Lakehouse Fabric (shortcut) · Database / DWH · CRM (Dataverse) · ShareP
 | Nome progetto nel naming | **`agentic`** |
 | Dev Agent app ID | `e74ca724-e306-4ff3-ae02-77ef7368e673` (`fabric-agentic-dev-agent`) |
 | Review Agent app ID | `a6d3e2af-92e5-447a-bb1e-9a466e1bdaed` (`fabric-agentic-review-agent`) |
-| Deploy app ID | `33e53b67-3872-4bc0-8d20-ed76a3c85ae7` (`fabric-agentic-deploy`); service principal senza secret, federated credential e Configured Connection Git predisposte. Per assegnare feature workspace alla capacity deve essere **Capacity administrator nel portale Fabric**; Azure RBAC `Contributor` non basta |
+| Deploy app ID | `33e53b67-3872-4bc0-8d20-ed76a3c85ae7` (`fabric-agentic-deploy`); service principal senza secret, federated credential e Configured Connection Git predisposte. Per assegnare feature workspace usa il pattern IP: Azure RBAC `Contributor` sulla capacity **e** Object ID `db9d4adb-db6a-4238-8e75-c69d21b1b37e` in `properties.administration.members`; la seconda membership è ancora da aggiungere |
 | Workspace DEV | `ws_agentic_dev` — `abb3a689-6a8a-4a98-88da-b3f7c6de05c5`; ricreato il 2026-08-21 e assegnato a `fabricalessiodev` |
 | Ruolo Dev Agent nel workspace DEV | `Contributor`; nessun ruolo sulla capacity |
 | Federated credential OIDC | GitHub environment `dev`, subject con Organization ID `218064009` e Repository ID `1340835193`; test riuscito senza ruolo subscription |
