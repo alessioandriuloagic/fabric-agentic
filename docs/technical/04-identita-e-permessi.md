@@ -131,26 +131,28 @@ non da un permesso. Chi può accodare quella pipeline può deployare in produzio
 
 ---
 
-## 4. Protezione del ramo principale
+## 4. Governance del ramo principale
 
-È il controllo su cui poggia tutto il resto.
+È il controllo su cui poggia tutto il resto. Sul piano GitHub corrente le protection rules non sono
+disponibili; il controllo operativo è quindi GitHub Flow obbligatorio e merge umano.
 
 | Controllo | Requisito |
 |---|---|
-| Push diretto su `main` | Negato a **entrambi** gli agenti |
+| Push diretto su `main` | Vietato dal processo a **entrambi** gli agenti; enforcement tecnico non disponibile sul piano corrente |
 | Pull request | Obbligatoria per ogni modifica |
 | Approvazione umana | Obbligatoria, **in aggiunta** a quella del Review Agent |
-| Modifica delle policy | Riservata all'owner |
+| Modifica delle policy | Riservata all'owner; protection rules da abilitare con GitHub Pro/Organization |
 
-### Difesa in profondità
+### Regola operativa
 
-Il divieto va imposto **due volte**, con meccanismi indipendenti:
+Ogni modifica segue sempre questi passaggi:
 
-1. **Deny esplicito** sul permesso dell'identità
-2. **Branch policy** che richiede la PR per tutti
+1. creare un branch dedicato;
+2. aprire una pull request verso `main`;
+3. attendere la review;
+4. eseguire il merge solo manualmente dall'owner.
 
-> Un solo livello è fragile: una modifica di ruolo fatta per altri motivi può rimuoverlo senza
-> che nessuno se ne accorga. Due livelli indipendenti richiedono due errori distinti.
+> La regola è procedurale finché il piano GitHub non consente l'enforcement tecnico.
 
 ### Verifica pratica — obbligatoria
 
