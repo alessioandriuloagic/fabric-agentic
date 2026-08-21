@@ -4,7 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
-from scripts.dev_dispatcher import AzureDevOpsClient, DispatcherConfig, human_reply_tasks, launch_smoke_session, review_thread_tasks, run_once, run_polling, run_smoke, smoke_comment
+from scripts.dev_dispatcher import AzureDevOpsClient, DispatcherConfig, human_reply_tasks, launch_smoke_session, load_state, review_thread_tasks, run_once, run_polling, run_smoke, smoke_comment
 
 
 class DevDispatcherTests(unittest.TestCase):
@@ -68,6 +68,15 @@ class DevDispatcherTests(unittest.TestCase):
 
         self.assertEqual([task["trigger"] for task in tasks], ["human_reply"])
         self.assertEqual(seen, {1, 2})
+
+    def test_loads_windows_utf8_bom_state_file(self) -> None:
+        with TemporaryDirectory() as directory:
+            state_path = Path(directory) / "state.json"
+            state_path.write_text('{"dispatched_work_items": [6]}', encoding="utf-8-sig")
+
+            state = load_state(state_path)
+
+        self.assertEqual(state["dispatched_work_items"], [6])
 
     def test_review_thread_ignores_resolved_and_seen_threads(self) -> None:
         payload = {

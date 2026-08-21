@@ -16,6 +16,8 @@ si descrive come sono implementate.
 | [04 — Identità e permessi](04-identita-e-permessi.md) | Service principal, matrice dei permessi, controlli di piattaforma |
 | [05 — Struttura dei repository](05-struttura-repository.md) | Layout del repo soluzione e della knowledge base |
 | [06 — Contratto di connettore](06-contratto-connettore.md) | Schema della configurazione metadata-driven e interfaccia dei connettori |
+| [07 — Architecture review](07-architecture-review.md) | Validazione del design contro la documentazione ufficiale e rischi architetturali |
+| [08 — KPI baseline](08-kpi-baseline.md) | Misure iniziali del dispatcher e metodo di raccolta dei KPI |
 
 ## Convenzione sulle affermazioni di piattaforma
 

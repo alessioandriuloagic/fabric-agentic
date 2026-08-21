@@ -528,6 +528,11 @@ S0-14 è verde.
 - Consumo token del sistema in idle, misurato: **deve risultare ≈ 0**
 - Modalità di raccolta dei KPI documentata
 
+**Esito parziale 2026-08-21**: costo idle misurato con due cicli senza task: 0 sessioni Claude,
+0 token e $0; durate 9.985 s e 14.406 s. Metodo e KPI residui in
+`docs/technical/08-kpi-baseline.md`. Il tempo-uomo manuale resta da rilevare sul primo onboarding
+comparabile, quindi S0-15 si completa con tale osservazione.
+
 ---
 
 # SLICE 1 — Primo ticket agentico: creazione dei workspace
