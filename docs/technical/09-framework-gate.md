@@ -50,10 +50,12 @@ Il primo slice di S1-00 ha creato nel repository Agentic:
 - `configuration/crm_demo.json` e `schemas/crm-source-v1.0.json`;
 - validator fail-fast e builder OData `modifiedon` in `scripts/crm_framework.py`;
 - inventario `docs/sources/crm_demo.md`;
-- collocazioni versionate per futuri notebook e pipeline in `fabric/`.
+- collocazioni versionate per futuri notebook e pipeline in `fabric/`;
+- notebook FabricGitSource `nb_crm_preflight`, validato localmente senza esecuzione CRM.
 
 Il framework non è ancora eseguibile: mancano estrazione staged, merge Bronze, audit, watermark,
-notebook/pipeline Fabric e rail `run_load`. S1-04 resta bloccato fino a questi artefatti.
+deploy OIDC del notebook, Lakehouse target e rail `run_load`. S1-04 resta bloccato fino a questi
+artefatti.
 
 La semantica del watermark CRM è definita in ADR-0012: filtro inclusivo, merge su `accountid` e
 avanzamento solo dopo Bronze e audit riusciti. I notebook/pipeline futuri devono implementare
