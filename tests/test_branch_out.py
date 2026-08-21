@@ -3,7 +3,15 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
-from scripts.branch_out import RailError, derive_names, ensure_owner, main, new_result, require_uuid
+from scripts.branch_out import (
+    RailError,
+    derive_names,
+    ensure_git_connection,
+    ensure_owner,
+    main,
+    new_result,
+    require_uuid,
+)
 
 
 class BranchOutTests(unittest.TestCase):
@@ -63,6 +71,22 @@ class BranchOutTests(unittest.TestCase):
             result = __import__("json").loads(output_path.read_text(encoding="utf-8"))
 
         self.assertEqual(result["branch_out"]["failure_stage"], "workspace")
+
+    @patch.dict(
+        "os.environ",
+        {
+            "FABRIC_GIT_CONNECTION_ID": "connection-id",
+            "FABRIC_GIT_ORGANIZATION": "alessioandriuloagic",
+            "FABRIC_GIT_REPOSITORY": "fabric-agentic",
+        },
+    )
+    @patch("scripts.branch_out.fabric_optional", return_value={"gitProviderDetails": None})
+    @patch("scripts.branch_out.fabric")
+    def test_partial_git_connection_is_connected(self, fabric_mock, _) -> None:
+        connection_created = ensure_git_connection("workspace-id", "feature/wi-6-smoke-branch-out")
+
+        self.assertTrue(connection_created)
+        self.assertEqual(fabric_mock.call_args.args[:2], ("POST", "/workspaces/workspace-id/git/connect"))
 
 
 if __name__ == "__main__":
