@@ -235,6 +235,7 @@ Altro Lakehouse Fabric (shortcut) · Database / DWH · CRM (Dataverse) · ShareP
 | Review Agent app ID | `a6d3e2af-92e5-447a-bb1e-9a466e1bdaed` (`fabric-agentic-review-agent`) |
 | Deploy app ID | `33e53b67-3872-4bc0-8d20-ed76a3c85ae7` (`fabric-agentic-deploy`); service principal senza secret, federated credential e Configured Connection Git predisposte. Assegnazione feature workspace verificata con il pattern IP: Azure RBAC `Contributor` sulla capacity e Object ID `db9d4adb-db6a-4238-8e75-c69d21b1b37e` in `properties.administration.members` |
 | Workspace DEV | `ws_agentic_dev` — `abb3a689-6a8a-4a98-88da-b3f7c6de05c5`; ricreato il 2026-08-21 e assegnato a `fabricalessiodev` |
+| Ambienti non provisionati | Nessun workspace `test` o `prod`, nessuna credenziale o configurazione dedicata; restano fuori scope finché non vengono creati e governati esplicitamente |
 | Ruolo Dev Agent nel workspace DEV | `Contributor`; nessun ruolo sulla capacity |
 | Federated credential OIDC | GitHub environment `dev`, subject con Organization ID `218064009` e Repository ID `1340835193`; test riuscito senza ruolo subscription |
 | GitHub environments | `dev`, `test`, `prod` presenti; protection rules non disponibili sul piano GitHub Free |
@@ -244,6 +245,7 @@ Altro Lakehouse Fabric (shortcut) · Database / DWH · CRM (Dataverse) · ShareP
 | Smoke rail `branch_out` | Run GitHub Actions `32487821272` del 2026-08-21: esito `success`, branch `feature/wi-6-smoke-branch-out`, workspace `ws_agentic_feature_wi6` (`c3465ab0-210b-4b31-86fd-03d9611fc037`), capacity assegnata, Git connesso e sincronizzato |
 | Smoke rail `sync_workspace` | Run GitHub Actions `32488530726` del 2026-08-21: esito `success`, stesso work item/workspace, stato `already_aligned`, nessun item aggiornato e nessuna divergenza |
 | Smoke dispatcher Dev Agent | Work item Azure Boards `#7` del 2026-08-21: il dispatcher ha verificato trigger, transizione `To Do` → `Doing` → `Done`, sessione Claude read-only e commento dell'identità `fabric-agentic-dev-agent`, senza toccare Fabric |
+| Primo ticket agentico reale | ADR-0011: tracer bullet Open-Meteo `daily_weather` in feature workspace. `ws_agentic_dev` è un prerequisito esistente, non un deliverable agente; `test` e `prod` restano fuori scope |
 | Baseline KPI dispatcher | Due cicli idle il 2026-08-21: 0 task, 0 sessioni Claude e $0/0 token LLM; durate 9.985 s e 14.406 s. Dettaglio e KPI ancora da rilevare in `docs/technical/08-kpi-baseline.md` |
 | Identita' rail | L'OIDC del rail usa un service principal di deploy distinto dal Dev Agent; ha i soli privilegi necessari per feature workspace e capacity, mentre il Dev Agent puo' solo accodare il workflow e leggere l'artefatto |
 | Runtime Dev Agent | Claude Code `2.1.228` installato nativamente su Windows, canale `stable`. Verificata sessione headless `claude -p` con esito `READY` il 2026-08-21; Azure DevOps non interattivo e GitHub App sono verificati. Resta il clone isolato prima del dispatcher completo |

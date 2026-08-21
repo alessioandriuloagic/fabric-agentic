@@ -131,7 +131,8 @@ Espliciti, per proteggere lo scope:
 - Capacity Fabric: **`fabricalessiodev`** (SKU da verificare prima del capacity test)
 - Nome progetto per il naming: **`agentic`** → `ws_agentic_dev`, `ws_agentic_prod`, `ws_agentic_feature_wi<id>`
 - Service principal: **già disponibili** (uno per agente)
-- Workspace: **creati da zero dal sistema stesso**, come primo caso d'uso reale
+- Workspace: `ws_agentic_dev` già predisposto; i feature workspace sono creati dai rail. `test`
+    e `prod` non sono provisionati/configurati finché non esistono workspace e credenziali dedicate
 - Git integration Fabric ↔ GitHub: da configurare da zero
 - Pubblicazione DEV: automatica via pipeline CI/CD dopo merge umano su `main`; test e produzione restano protetti da pipeline umane
 
@@ -473,7 +474,7 @@ Ogni slice è verticale e produce valore osservabile: non "prima tutta l'infrast
 | Slice | Titolo | Obiettivo osservabile |
 |---|---|---|
 | **S0** | Fondamenta e knowledge base | Repo, struttura `/docs`, `CONTEXT.md`, documentazione funzionale, service principal configurati, branch policy che nega il push su `main` agli agenti **e verificata praticamente**. **Baseline KPI rilevata** |
-| **S1** | Primo ticket agentico: creazione workspace | Un work item "crea workspace DEV e PROD" viene preso in carico dal Dev Agent, che crea i workspace con **naming, cartelle e task flow** da `CONTEXT.md`, configura la Git integration e apre la PR. *È il primo caso d'uso reale scelto dall'owner* |
+| **S1** | Primo ticket agentico: tracer bullet dati | Un work item "onboarda Open-Meteo `daily_weather` in Bronze" viene preso in carico dal Dev Agent, che usa feature workspace, configurazione metadata-driven, rail, esecuzione qualità e documentazione. `dev` è già predisposto; `test` e `prod` restano fuori scope. Vedi ADR-0011. |
 | **S2** | Tracer bullet dati — connettore REST | Ticket "onboarda un dataset da Open-Meteo nel bronze": nuova voce nel JSON di configurazione, carico eseguito, controlli PK e audit verdi, documentazione aggiornata, PR aperta |
 | **S3** | Review agentica | Il Review Agent revisiona la PR dello Slice 2 contro checklist chiusa, solleva almeno un rilievo, il Dev Agent corregge, il Review Agent approva |
 | **S4** | Secondo connettore — File | Ticket "onboarda l'anagrafica città da file CSV/Parquet": **il vero test dell'astrazione**. Se richiede modifiche all'orchestrazione, il contratto di connettore va rivisto prima di procedere |
