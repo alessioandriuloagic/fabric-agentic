@@ -92,7 +92,26 @@ class BranchOutTests(unittest.TestCase):
         connection_created = ensure_git_connection("workspace-id", "feature/wi-6-smoke-branch-out")
 
         self.assertTrue(connection_created)
-        self.assertEqual(fabric_mock.call_args.args[:2], ("POST", "/workspaces/workspace-id/git/connect"))
+        self.assertEqual(
+            fabric_mock.call_args,
+            unittest.mock.call(
+                "POST",
+                "/workspaces/workspace-id/git/connect",
+                {
+                    "gitProviderDetails": {
+                        "ownerName": "alessioandriuloagic",
+                        "gitProviderType": "GitHub",
+                        "repositoryName": "fabric-agentic",
+                        "branchName": "feature/wi-6-smoke-branch-out",
+                        "directoryName": "",
+                    },
+                    "myGitCredentials": {
+                        "source": "ConfiguredConnection",
+                        "connectionId": "connection-id",
+                    },
+                },
+            ),
+        )
 
     @patch("scripts.branch_out.find_workspace", return_value={"id": "workspace-id", "capacityId": None})
     @patch("scripts.branch_out.fabric")

@@ -104,6 +104,11 @@ minimi per il solo perimetro feature/capacity, il secondo puo' accodare il workf
 impersonarlo. Le cartelle richieste sono create con la Folders API; il task flow non viene creato
 nei feature workspace, secondo ADR-0003.
 
+Il body `Git Connect` è specifico del provider: per GitHub usa `ownerName`,
+`gitProviderType: GitHub`, `repositoryName`, `branchName` e `directoryName` relativo (vuoto per
+la radice). I campi `organizationName` e `projectName` appartengono invece al provider Azure
+DevOps e non devono comparire nel rail GitHub.
+
 ---
 
 ## 4. Contratto — Run load

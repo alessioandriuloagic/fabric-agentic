@@ -243,10 +243,11 @@ def ensure_git_connection(workspace_id: str, branch_name: str) -> bool:
         f"/workspaces/{workspace_id}/git/connect",
         {
             "gitProviderDetails": {
-                "organizationName": organization,
+                "ownerName": organization,
+                "gitProviderType": "GitHub",
                 "repositoryName": repository,
                 "branchName": branch_name,
-                "directoryName": "/",
+                "directoryName": "",
             },
             "myGitCredentials": {"source": "ConfiguredConnection", "connectionId": connection_id},
         },
