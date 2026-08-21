@@ -154,22 +154,26 @@ degradato.
 
 ## 4. Livello 2 — Bootstrap della piattaforma
 
-Da qui in avanti è tutto agentico. Il primo ticket reale del nuovo cliente è:
+Prima del primo ticket agentico, l'owner predispone il solo workspace DEV e la relativa
+identità/credential di deploy. `test` e `prod` restano non provisionati finché non esistono
+workspace, credenziali e controlli dedicati.
 
-> **"Crea i workspace DEV e PROD del progetto"**
+Il primo ticket reale del nuovo cliente è:
+
+> **"Onboarda un dataset sintetico/open data nel layer Bronze del feature workspace"**
 
 Il Dev Agent:
 
-1. crea i workspace secondo le convenzioni di naming;
-2. crea la struttura a cartelle prevista per ogni layer;
-3. predispone il task flow che rappresenta il flusso end-to-end;
-4. configura la Git integration verso il repository della soluzione;
-5. documenta l'ambiente creato;
+1. crea branch e feature workspace tramite i rail;
+2. applica la configurazione dichiarativa del dataset;
+3. sincronizza ed esegue il carico nel feature workspace;
+4. allega le evidenze di qualità dati;
+5. aggiorna la documentazione della sorgente;
 6. apre la PR.
 
 > Questo ticket ha un valore che va oltre il risultato: è il **collaudo della catena**. Se
-> funziona, sai che identità, permessi, policy, dispatcher e sincronizzazione Git sono tutti
-> configurati correttamente — e lo sai prima di aver toccato un solo dato.
+> funziona, sai che identità, rail, dispatcher, sincronizzazione Git, esecuzione e qualità dati
+> sono tutti configurati correttamente prima di affrontare dati reali di cliente.
 
 ---
 

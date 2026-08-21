@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- ADR-0011: il primo ticket agentico reale diventa il tracer bullet Open-Meteo `daily_weather`
+  in feature workspace. `ws_agentic_dev` è già predisposto; `test` e `prod` restano non
+  provisionati/configurati fino a disponibilità di workspace e credenziali dedicate.
 - Primo vertical slice S0-09: dispatcher locale del Dev Agent con token Azure DevOps a breve
   durata via certificato, stato anti-duplicazione fuori dal repo e Trigger A verificato in
   modalità read-only sul work item `#6`. Completati anche Trigger B/C con deduplicazione di

@@ -535,12 +535,14 @@ comparabile, quindi S0-15 si completa con tale osservazione.
 
 ---
 
-# SLICE 1 — Primo ticket agentico: creazione dei workspace
+# SLICE 1 — Primo ticket agentico: tracer bullet dati
 
-**Obiettivo dello slice**: il Dev Agent crea da solo l'ambiente dati del progetto.
+**Obiettivo dello slice**: il Dev Agent completa un onboarding sintetico/open data in un feature
+workspace isolato, dall'input del ticket alla PR.
 
-**Criterio di uscita**: i workspace `ws_agentic_dev` e `ws_agentic_prod` esistono, conformi alle
-convenzioni, creati da un ticket.
+**Criterio di uscita**: il dataset Open-Meteo `daily_weather` è caricato e verificato nel feature
+workspace; la PR contiene evidenze, documentazione e changelog. `test` e `prod` restano fuori
+scope.
 
 ---
 
@@ -565,6 +567,10 @@ convenzioni, creati da un ticket.
 
 > Evidenza primaria: documentazione e sorgente `fabric-cicd` supportano `Report` (PBIR) e
 > `SemanticModel` (TMDL). PBIP non è un tipo deployabile: è il contenitore Desktop dei due item.
+
+**Stato 2026-08-21**: differito. Il criterio richiede uno workspace `test`, ma ADR-0011 mantiene
+`test` e `prod` non provisionati/configurati fino a workspace e credenziali dedicate. Lo spike non
+è una dipendenza del tracer bullet dati S1-04.
 
 ---
 
@@ -615,7 +621,7 @@ item `6`. Il workspace risultava già allineato al branch; il rail ha restituito
 
 ---
 
-### S1-04 · Ticket agentico: creare i workspace DEV e PROD
+### S1-04 · Ticket agentico: onboarding Open-Meteo `daily_weather`
 
 | | |
 |---|---|
@@ -624,28 +630,32 @@ item `6`. Il workspace risultava già allineato al branch; il rail ha restituito
 | **Dipendenze** | S1-02, S1-03, S0-14 |
 | **RF** | RF-10..RF-20, RF-50, RF-84 |
 
-**Obiettivo**: il primo ticket reale del progetto, eseguito interamente dall'agente.
+**Obiettivo**: il primo ticket reale del progetto, eseguito interamente dall'agente su dati open
+data/sintetici nel feature workspace.
 
 **Descrizione del ticket** *(da scrivere secondo `docs/functional/02`)*
 
-> **Obiettivo**: esistono i workspace `ws_agentic_dev` e `ws_agentic_prod`, conformi alle
-> convenzioni, connessi a Git.
+> **Obiettivo**: il dataset Open-Meteo `daily_weather` è disponibile nel layer Bronze del feature
+> workspace, con carico verificato e configurazione dichiarativa.
 >
 > **Criteri di accettazione**
 - Trigger A: work item in *To Do* con tag `dev-agent`
 - Trigger B: nuovo commento **umano** su work item in *Doing* con tag `waiting-input`
 - Trigger C: thread **non risolti** sulla PR dell'agente
-> - Il task flow è documentato come passo manuale, secondo ADR-0003
-> - `ws_agentic_dev` è connesso a `main` con sincronizzazione attiva
-> - La documentazione dell'ambiente è aggiornata
+> - Il feature workspace è ottenuto tramite `branch_out` e allineato tramite `sync_workspace`
+> - Source system: `open_meteo`; connettore: REST; dataset: `daily_weather`
+> - Chiavi primarie, modalità di carico, watermark ed endpoint sono dichiarati nella configurazione
+> - Il carico è eseguito nel feature workspace e le evidenze qualità sono allegate alla PR
+> - La documentazione della sorgente e del dataset è aggiornata
 > - `CHANGELOG.md` contiene la voce
 >
-> **Fuori scope**: sorgenti dati, lakehouse, notebook, pipeline, semantic model, report.
+> **Fuori scope**: `ws_agentic_dev`, `test`, `prod`, semantic model, report e modifiche al
+> framework condiviso. Se il framework metadata-driven manca, l'agente escala B3.
 
 **Criteri di accettazione del work item (lato sistema)**
 - Il ticket è preso in carico entro un ciclo di polling
-- L'agente crea branch e feature workspace conformi
-- L'agente apre la PR con l'evidenza di quanto creato
+- L'agente crea branch e feature workspace conformi tramite i rail
+- L'agente apre la PR con evidenza di esecuzione e qualità dati
 - **Nessun intervento tecnico umano** durante il ciclo
 - La PR è mergiata dall'owner
 
@@ -681,7 +691,7 @@ item `6`. Il workspace risultava già allineato al branch; il rail ha restituito
 | Slice | Item | Umani | Agentici | Criterio di uscita |
 |---|---|---|---|---|
 | **S0** | 15 | 15 | 1 (smoke test) | S0-14 verde |
-| **S1** | 5 | 4 | 1 | Workspace creati da un ticket |
+| **S1** | 5 | 4 | 1 | Tracer bullet Open-Meteo completato da un ticket |
 
 ### Percorso critico
 
