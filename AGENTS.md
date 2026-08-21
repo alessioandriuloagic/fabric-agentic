@@ -151,5 +151,6 @@ discipline used for release version bumps above.
 - **[2026-08-21] PAT della connessione Git Fabric** → [kaizen/20260821-fabric-git-pat.md](kaizen/20260821-fabric-git-pat.md)
 - **[2026-08-21] Fermarsi sui conflitti Git** → [kaizen/20260821-git-conflict-stop.md](kaizen/20260821-git-conflict-stop.md)
 - **[2026-08-21] Piano permessi capacity Fabric** → [kaizen/20260821-fabric-capacity-admin.md](kaizen/20260821-fabric-capacity-admin.md)
+- **[2026-08-21] Membership amministrativa capacity** → [kaizen/20260821-capacity-administration-membership.md](kaizen/20260821-capacity-administration-membership.md)
 
 <!-- init-dai-project:end -->
