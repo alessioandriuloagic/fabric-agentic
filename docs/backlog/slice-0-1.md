@@ -584,6 +584,10 @@ capacity, collegato Git e sincronizzato; l'artefatto `rail-result.json` ha `outc
 - Idempotente: senza differenze, non fa nulla
 - Riporta gli item aggiornati e segnala quelli divergenti
 
+**Esito 2026-08-21**: verificato con successo dal run GitHub Actions `32488530726` sul work
+item `6`. Il workspace risultava già allineato al branch; il rail ha restituito
+`already_aligned`, nessun item aggiornato e nessuna divergenza.
+
 ---
 
 ### S1-04 · Ticket agentico: creare i workspace DEV e PROD
