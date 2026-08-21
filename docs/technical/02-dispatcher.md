@@ -55,10 +55,11 @@ tutto ciò che serve viene riletto dal tracker e da Git.
 acquisito al bisogno con il certificato client non esportabile del Dev Agent; i task e lo stato
 anti-duplicazione vivono nella stessa directory locale, mai nel repository.
 
-Il primo vertical slice implementa Trigger A e il comando `--once --dry-run`: il run del
-2026-08-21 ha rilevato il work item `#6` senza creare task, avviare Claude o modificare Azure
-Boards. Trigger B, Trigger C, loop a 30 secondi e il lancio operativo della sessione restano
-parte del completamento di S0-09.
+I trigger A, B e C sono implementati e il comando `--once --dry-run` è stato verificato il
+2026-08-21: ha rilevato il work item `#6` senza creare task, avviare Claude o modificare Azure
+Boards/GitHub. Trigger B ignora commenti dell'agente e già osservati; Trigger C ignora thread
+risolti e già osservati. Loop a 30 secondi e il lancio operativo della sessione restano parte del
+completamento di S0-09/S0-14.
 
 ---
 

@@ -7,6 +7,7 @@ import argparse
 import base64
 import json
 import os
+import re
 import subprocess
 import sys
 import uuid
@@ -34,6 +35,7 @@ class DispatcherConfig:
     tenant_domain: str
     ado_app_id: str
     certificate_thumbprint: str
+    dev_agent_display_name: str
     github_owner: str
     github_repository: str
     github_app_id: str
@@ -53,6 +55,7 @@ def load_config(config_path: Path) -> DispatcherConfig:
             tenant_domain=config["azure_devops"]["tenant_domain"],
             ado_app_id=config["azure_devops"]["app_id"],
             certificate_thumbprint=config["azure_devops"]["certificate_thumbprint"],
+            dev_agent_display_name=config["azure_devops"]["dev_agent_display_name"],
             github_owner=config["github"]["owner"],
             github_repository=config["github"]["repository"],
             github_app_id=config["github"]["app_id"],
@@ -108,16 +111,26 @@ class AzureDevOpsClient:
             raise DispatcherError("Azure DevOps request failed") from error
 
     def new_work_item_ids(self) -> list[int]:
+        return self.work_item_ids("To Do", "[System.Tags] CONTAINS 'dev-agent'")
+
+    def waiting_input_work_item_ids(self) -> list[int]:
+        return self.work_item_ids("Doing", "[System.Tags] CONTAINS 'dev-agent' AND [System.Tags] CONTAINS 'waiting-input'")
+
+    def work_item_ids(self, state: str, tags_filter: str) -> list[int]:
         query = {
-            "query": "SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject] = @project AND [System.State] = 'To Do' AND [System.Tags] CONTAINS 'dev-agent' ORDER BY [System.ChangedDate] ASC"
+            "query": f"SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject] = @project AND [System.State] = '{state}' AND {tags_filter} ORDER BY [System.ChangedDate] ASC"
         }
         result = self.request("POST", "/_apis/wit/wiql?api-version=7.1", query)
         return [int(item["id"]) for item in result.get("workItems", [])]
 
+    def comments(self, work_item_id: int) -> list[dict]:
+        result = self.request("GET", f"/_apis/wit/workItems/{work_item_id}/comments?order=asc&api-version=7.1-preview.4")
+        return result.get("comments", [])
+
 
 def load_state(state_path: Path) -> dict:
     if not state_path.exists():
-        return {"dispatched_work_items": []}
+        return {"dispatched_work_items": [], "seen_comment_ids": [], "seen_review_thread_ids": []}
     try:
         return json.loads(state_path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as error:
@@ -131,14 +144,62 @@ def save_state(state_path: Path, state: dict) -> None:
     temporary_path.replace(state_path)
 
 
-def task_record(config: DispatcherConfig, work_item_id: int) -> dict:
+def task_record(config: DispatcherConfig, work_item_id: int, trigger: str = "new_work", pull_request_url: str | None = None) -> dict:
     return {
         "work_item_id": work_item_id,
-        "trigger": "new_work",
+        "trigger": trigger,
         "work_item_url": f"https://dev.azure.com/{config.organization}/{config.project}/_workitems/edit/{work_item_id}",
         "repository_path": str(config.repository_path),
-        "pull_request_url": None,
+        "pull_request_url": pull_request_url,
     }
+
+
+def human_reply_tasks(config: DispatcherConfig, client: AzureDevOpsClient, seen_comment_ids: set[int]) -> tuple[list[dict], set[int]]:
+    tasks = []
+    observed = set(seen_comment_ids)
+    for work_item_id in client.waiting_input_work_item_ids():
+        for comment in client.comments(work_item_id):
+            comment_id = int(comment["commentId"])
+            author = comment.get("createdBy", {}).get("displayName", "")
+            if comment_id in observed or author == config.dev_agent_display_name:
+                continue
+            observed.add(comment_id)
+            tasks.append(task_record(config, work_item_id, trigger="human_reply"))
+    return tasks, observed
+
+
+def github_graphql(config: DispatcherConfig, query: str, variables: dict) -> dict:
+    token = create_installation_token(config.github_app_id, config.github_installation_id, config.github_private_key_path).token
+    request = Request(
+        "https://api.github.com/graphql",
+        data=json.dumps({"query": query, "variables": variables}).encode("utf-8"),
+        method="POST",
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json", "X-GitHub-Api-Version": "2022-11-28"},
+    )
+    try:
+        with urlopen(request) as response:
+            result = json.load(response)
+    except Exception as error:
+        raise DispatcherError("GitHub review-thread request failed") from error
+    if result.get("errors"):
+        raise DispatcherError("GitHub review-thread request failed")
+    return result["data"]
+
+
+def review_thread_tasks(config: DispatcherConfig, payload: dict, seen_thread_ids: set[str]) -> tuple[list[dict], set[str]]:
+    tasks = []
+    observed = set(seen_thread_ids)
+    for pull_request in payload.get("repository", {}).get("pullRequests", {}).get("nodes", []):
+        match = re.fullmatch(r"feature/wi-(\d+)-.+", pull_request.get("headRefName", ""))
+        if not match:
+            continue
+        for thread in pull_request.get("reviewThreads", {}).get("nodes", []):
+            thread_id = thread["id"]
+            if thread["isResolved"] or thread_id in observed:
+                continue
+            observed.add(thread_id)
+            tasks.append(task_record(config, int(match.group(1)), trigger="review_thread", pull_request_url=pull_request["url"]))
+    return tasks, observed
 
 
 def refresh_clone(config: DispatcherConfig) -> None:
@@ -178,11 +239,30 @@ def launch_session(config: DispatcherConfig, task_path: Path) -> bool:
     return result.returncode == 0
 
 
+REVIEW_THREADS_QUERY = """
+query($owner: String!, $repository: String!) {
+    repository(owner: $owner, name: $repository) {
+        pullRequests(states: OPEN, first: 100) {
+            nodes {
+                url
+                headRefName
+                reviewThreads(first: 100) { nodes { id isResolved } }
+            }
+        }
+    }
+}
+"""
+
+
 def run_once(config: DispatcherConfig, state_path: Path, task_directory: Path, dry_run: bool) -> list[dict]:
     client = AzureDevOpsClient(config)
     state = load_state(state_path)
     dispatched = set(state.get("dispatched_work_items", []))
-    tasks = [task_record(config, work_item_id) for work_item_id in client.new_work_item_ids() if work_item_id not in dispatched]
+    new_work = [task_record(config, work_item_id) for work_item_id in client.new_work_item_ids() if work_item_id not in dispatched]
+    human_replies, seen_comments = human_reply_tasks(config, client, set(state.get("seen_comment_ids", [])))
+    review_payload = github_graphql(config, REVIEW_THREADS_QUERY, {"owner": config.github_owner, "repository": config.github_repository})
+    review_threads, seen_threads = review_thread_tasks(config, review_payload, set(state.get("seen_review_thread_ids", [])))
+    tasks = [*new_work, *human_replies, *review_threads]
     if not tasks or dry_run:
         return tasks
 
@@ -192,6 +272,8 @@ def run_once(config: DispatcherConfig, state_path: Path, task_directory: Path, d
     task_path = task_directory / f"{uuid.uuid4()}.json"
     task_path.write_text(json.dumps(task, indent=2) + "\n", encoding="utf-8")
     state["dispatched_work_items"] = [*dispatched, task["work_item_id"]]
+    state["seen_comment_ids"] = sorted(seen_comments)
+    state["seen_review_thread_ids"] = sorted(seen_threads)
     save_state(state_path, state)
     launch_session(config, task_path)
     return [task]
@@ -212,7 +294,7 @@ def main() -> int:
     try:
         config = load_config(args.config)
         if not args.once:
-            raise DispatcherError("only --once is supported until trigger B and C are added")
+            raise DispatcherError("only --once is supported until continuous polling is added")
         tasks = run_once(config, args.state, args.tasks, args.dry_run)
         if args.dry_run:
             print(json.dumps({"tasks": tasks}))
