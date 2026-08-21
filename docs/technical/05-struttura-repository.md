@@ -50,7 +50,7 @@ Entrambi vengono clonati da **ciascuno** dei due agenti, nei rispettivi ambienti
 ├── PROVENANCE.md                    # pattern copiati dall'asset IP e relativo commit origine
 │
 ├── configuration/                  # metadata-driven · un file per source system
-│   ├── open_meteo.json
+│   ├── crm_demo.json
 │   └── city_registry.json
 │
 └── fabric/                         # artefatti Fabric versionati (git sync)

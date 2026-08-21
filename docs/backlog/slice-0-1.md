@@ -540,9 +540,8 @@ comparabile, quindi S0-15 si completa con tale osservazione.
 **Obiettivo dello slice**: il Dev Agent completa un onboarding sintetico/open data in un feature
 workspace isolato, dall'input del ticket alla PR.
 
-**Criterio di uscita**: il dataset Open-Meteo `daily_weather` è caricato e verificato nel feature
-workspace; la PR contiene evidenze, documentazione e changelog. `test` e `prod` restano fuori
-scope.
+**Criterio di uscita**: il dataset CRM `accounts` è caricato e verificato nel feature workspace;
+la PR contiene evidenze, documentazione e changelog. `test` e `prod` restano fuori scope.
 
 ### S1-00 · Gate framework metadata-driven e REST
 
@@ -553,19 +552,19 @@ scope.
 | **Dipendenze** | ADR-0009, S0-14 |
 | **RF** | RF-30..RF-35, RF-50 |
 
-**Obiettivo**: rendere disponibile nella soluzione Agentic un framework metadata-driven
-riproducibile e decidere il trattamento del connettore REST necessario a Open-Meteo.
+**Obiettivo**: rendere disponibile nella soluzione Agentic un framework metadata-driven CRM
+riproducibile.
 
 **Criteri di accettazione**
 - `PROVENANCE.md` registra repository e commit pulito della fonte dei pattern copiati
 - La collocazione di configurazione, runtime, orchestrazione e qualità è definita nel repository
-- Il connettore REST è approvato con ADR oppure il tracer bullet è sostituito da una sorgente già
-  supportata
+- Il connettore CRM e la Fabric Connection `b838644d-afd9-4ec3-973d-e36ed85ad167` sono
+  referenziati nel contratto e nella configurazione di istanza
 - Nessun codice del framework viene copiato prima della decisione e della provenienza
 
 **Esito 2026-08-21**: B3 confermato. Il clone Agentic non contiene framework/configurazione;
-`fabric-universal-connector` non espone REST/Open-Meteo e il suo worktree non è pulito. Vedi
-`docs/technical/09-framework-gate.md`.
+il tracer è stato spostato su CRM `account`, tipologia già supportata. Resta da portare il
+framework da una fonte pulita con `PROVENANCE.md`. Vedi `docs/technical/09-framework-gate.md`.
 
 ---
 
@@ -644,7 +643,7 @@ item `6`. Il workspace risultava già allineato al branch; il rail ha restituito
 
 ---
 
-### S1-04 · Ticket agentico: onboarding Open-Meteo `daily_weather`
+### S1-04 · Ticket agentico: onboarding CRM `accounts`
 
 | | |
 |---|---|
@@ -658,7 +657,7 @@ data/sintetici nel feature workspace.
 
 **Descrizione del ticket** *(da scrivere secondo `docs/functional/02`)*
 
-> **Obiettivo**: il dataset Open-Meteo `daily_weather` è disponibile nel layer Bronze del feature
+> **Obiettivo**: il dataset CRM `accounts` è disponibile nel layer Bronze del feature
 > workspace, con carico verificato e configurazione dichiarativa.
 >
 > **Criteri di accettazione**
@@ -666,7 +665,9 @@ data/sintetici nel feature workspace.
 - Trigger B: nuovo commento **umano** su work item in *Doing* con tag `waiting-input`
 - Trigger C: thread **non risolti** sulla PR dell'agente
 > - Il feature workspace è ottenuto tramite `branch_out` e allineato tramite `sync_workspace`
-> - Source system: `open_meteo`; connettore: REST; dataset: `daily_weather`
+> - Source system: `crm_demo`; connettore: CRM/Dataverse; dataset: `accounts`
+> - Fabric Connection: `b838644d-afd9-4ec3-973d-e36ed85ad167`
+> - Chiave primaria: `accountid`; carico incremental; watermark: `modifiedon`
 > - Chiavi primarie, modalità di carico, watermark ed endpoint sono dichiarati nella configurazione
 > - Il carico è eseguito nel feature workspace e le evidenze qualità sono allegate alla PR
 > - La documentazione della sorgente e del dataset è aggiornata
@@ -714,7 +715,7 @@ data/sintetici nel feature workspace.
 | Slice | Item | Umani | Agentici | Criterio di uscita |
 |---|---|---|---|---|
 | **S0** | 15 | 15 | 1 (smoke test) | S0-14 verde |
-| **S1** | 6 | 5 | 1 | Tracer bullet Open-Meteo completato da un ticket |
+| **S1** | 6 | 5 | 1 | Tracer bullet CRM `accounts` completato da un ticket |
 
 ### Percorso critico
 

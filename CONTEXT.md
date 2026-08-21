@@ -81,7 +81,7 @@ Regola generale: `<prefisso>_<nome_in_snake_case>`, tutto minuscolo.
 | Lakehouse | `lh_` | `lh_bronze` |
 | Warehouse | `wh_` | `wh_gold` |
 | Notebook | `nb_` | `nb_ingestion_bronze` |
-| Data Pipeline | `pl_` | `pl_ingest_open_meteo_bronze` |
+| Data Pipeline | `pl_` | `pl_ingest_crm_accounts_bronze` |
 | Dataflow Gen2 | `df_` | `df_staging_customers` |
 | Semantic model | `sm_` | `sm_sales` |
 | Report | `rpt_` | `rpt_sales_overview` |
@@ -140,10 +140,10 @@ Get data from Source → Bronze Layer → Full & Incremental Load → Silver Lay
 
 | Elemento | Convenzione | Esempio |
 |---|---|---|
-| Source system | `snake_case`, singolare | `open_meteo`, `city_registry` |
-| Dataset | `snake_case`, plurale | `daily_weather`, `cities` |
-| File di configurazione | `configuration/<source_system>.json` | `configuration/open_meteo.json` |
-| Tabella bronze | `<source_system>_<dataset>` | `open_meteo_daily_weather`, `city_registry_cities` |
+| Source system | `snake_case`, singolare | `crm_demo`, `city_registry` |
+| Dataset | `snake_case`, plurale | `accounts`, `cities` |
+| File di configurazione | `configuration/<source_system>.json` | `configuration/crm_demo.json` |
+| Tabella bronze | `<source_system>_<dataset>` | `crm_demo_accounts`, `city_registry_cities` |
 | Path raw | `Files/raw/<source_system>/<dataset>/<run_timestamp>/` | — |
 | Colonne di metadato tecnico | prefisso `_meta_` | `_meta_ingested_at` |
 
@@ -161,9 +161,9 @@ Review Agent con access level `Stakeholder`; Azure DevOps li mostra in provision
 
 | Elemento | Pattern | Esempio |
 |---|---|---|
-| Branch feature | `feature/wi-<id>-<slug>` | `feature/wi-42-onboard-open-meteo-daily` |
+| Branch feature | `feature/wi-<id>-<slug>` | `feature/wi-42-onboard-crm-accounts` |
 | Branch di release | `chore/release-v<x.y.z>` | `chore/release-v0.2.0` |
-| Commit | Conventional Commits | `feat(bronze): onboard open_meteo daily_weather` |
+| Commit | Conventional Commits | `feat(bronze): onboard crm_demo accounts` |
 | Tag di release | `v<x.y.z>` | `v0.2.0` |
 | Tag work item per il Dev Agent | `dev-agent` | — |
 
@@ -192,14 +192,11 @@ tipologia di sorgente dietro un contratto comune.
 
 | # | Tipologia | Sorgente concreta | Note |
 |---|---|---|---|
-| 1 | **REST API** | **Open-Meteo** — archivio storico meteo | Nessuna autenticazione, watermark naturale su data, chiamate parametriche per coordinate |
+| 1 | **CRM / Dataverse** | **CRM demo Customer Insight Journeys** — entità `account` | Fabric Connection `CommonDataService`; chiave `accountid`, watermark `modifiedon` |
 | 2 | **File** | **Anagrafica città sintetica** (~1.000 righe) CSV/Parquet su OneLake Files | Generata da noi, con coordinate geografiche |
 
-I due dataset sono **correlati**: le coordinate dell'anagrafica città si agganciano alle
-rilevazioni meteo e abilitano la join nel layer silver.
-
-> L'anagrafica città è la **dimensione** della join, non il driver delle chiamate REST.
-> L'estrazione parametrizzata sulla tabella città è un'evoluzione da decidere con ADR.
+Il dataset CRM è il tracer iniziale con dati demo/sintetici. L'anagrafica città File resta il
+secondo connettore e la prova dell'astrazione; le join Silver sono un'evoluzione successiva.
 
 ### 7.2 Connettori previsti (fase 2)
 
@@ -245,8 +242,8 @@ Altro Lakehouse Fabric (shortcut) · Database / DWH · CRM (Dataverse) · ShareP
 | Smoke rail `branch_out` | Run GitHub Actions `32487821272` del 2026-08-21: esito `success`, branch `feature/wi-6-smoke-branch-out`, workspace `ws_agentic_feature_wi6` (`c3465ab0-210b-4b31-86fd-03d9611fc037`), capacity assegnata, Git connesso e sincronizzato |
 | Smoke rail `sync_workspace` | Run GitHub Actions `32488530726` del 2026-08-21: esito `success`, stesso work item/workspace, stato `already_aligned`, nessun item aggiornato e nessuna divergenza |
 | Smoke dispatcher Dev Agent | Work item Azure Boards `#7` del 2026-08-21: il dispatcher ha verificato trigger, transizione `To Do` → `Doing` → `Done`, sessione Claude read-only e commento dell'identità `fabric-agentic-dev-agent`, senza toccare Fabric |
-| Primo ticket agentico reale | ADR-0011: tracer bullet Open-Meteo `daily_weather` in feature workspace. `ws_agentic_dev` è un prerequisito esistente, non un deliverable agente; `test` e `prod` restano fuori scope |
-| Gate framework S1-00 | B3 confermato: la soluzione Agentic non contiene framework/configurazione metadata-driven e il framework candidato non supporta REST/Open-Meteo. Nessun ticket `daily_weather` prima di decisione sul connettore REST e `PROVENANCE.md` |
+| Primo ticket agentico reale | ADR-0011: tracer bullet CRM `accounts` (entità `account`) in feature workspace. `ws_agentic_dev` è un prerequisito esistente, non un deliverable agente; `test` e `prod` restano fuori scope |
+| Gate framework S1-00 | B3 confermato: la soluzione Agentic non contiene framework/configurazione metadata-driven. Il tracer CRM usa una tipologia supportata e la Fabric Connection `b838644d-afd9-4ec3-973d-e36ed85ad167`; nessun ticket prima di `PROVENANCE.md` e porting da fonte pulita |
 | Baseline KPI dispatcher | Due cicli idle il 2026-08-21: 0 task, 0 sessioni Claude e $0/0 token LLM; durate 9.985 s e 14.406 s. Dettaglio e KPI ancora da rilevare in `docs/technical/08-kpi-baseline.md` |
 | Identita' rail | L'OIDC del rail usa un service principal di deploy distinto dal Dev Agent; ha i soli privilegi necessari per feature workspace e capacity, mentre il Dev Agent puo' solo accodare il workflow e leggere l'artefatto |
 | Runtime Dev Agent | Claude Code `2.1.228` installato nativamente su Windows, canale `stable`. Verificata sessione headless `claude -p` con esito `READY` il 2026-08-21; Azure DevOps non interattivo e GitHub App sono verificati. Resta il clone isolato prima del dispatcher completo |

@@ -9,11 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- S1-00: documentato il gate B3 del framework metadata-driven. Il tracer Open-Meteo resta
-  bloccato finché non viene decisa la strategia REST e registrata la provenienza dei pattern da
-  portare nella soluzione Agentic.
-- ADR-0011: il primo ticket agentico reale diventa il tracer bullet Open-Meteo `daily_weather`
-  in feature workspace. `ws_agentic_dev` è già predisposto; `test` e `prod` restano non
+- S1-00: il tracer dati è riallineato su CRM `accounts`, tipologia già supportata e Fabric
+  Connection `CommonDataService` esistente. Resta bloccato solo dal porting riproducibile del
+  framework CRM con `PROVENANCE.md`.
+- ADR-0011: il primo ticket agentico reale diventa il tracer bullet CRM `accounts` in feature
+  workspace. `ws_agentic_dev` è già predisposto; `test` e `prod` restano non
   provisionati/configurati fino a disponibilità di workspace e credenziali dedicate.
 - Primo vertical slice S0-09: dispatcher locale del Dev Agent con token Azure DevOps a breve
   durata via certificato, stato anti-duplicazione fuori dal repo e Trigger A verificato in

@@ -14,7 +14,7 @@ onboarding:
 | `configuration/` | Assente |
 | `fabric/` | Assente |
 | `pipelines/` | Assente |
-| `configuration/open_meteo.json` | Assente |
+| configurazione CRM | Assente |
 | runtime o dipendenze ingestion | Assenti |
 
 Il framework locale candidato è `fabric-universal-connector`, commit
@@ -24,24 +24,19 @@ quindi non è una fonte riproducibile da copiare finché l'owner non indica un c
 ## 2. Compatibilità del connettore
 
 Il framework candidato include connettori Dataverse/CRM, Business Central e SQL. Non include un
-connettore REST generico o Open-Meteo. Il ticket `daily_weather` richiede quindi sia il porting
-del framework nella soluzione Agentic sia una decisione sull'introduzione di una nuova tipologia
-REST.
+connettore REST generico o Open-Meteo. L'owner ha quindi scelto il tracer CRM `account`, che usa
+una tipologia già supportata e la Fabric Connection `b838644d-afd9-4ec3-973d-e36ed85ad167`.
 
 ## 3. Esito
 
 Classificazione: **B3 - astrazione mancante**.
 
 Il Dev Agent non deve creare configurazione, notebook o pipeline ad hoc per aggirare il gate.
-S1-04 resta bloccato da S1-00 e da una decisione architetturale sul connettore REST.
+S1-04 resta bloccato da S1-00: il framework CRM deve essere portato nella soluzione con
+provenienza riproducibile prima dell'onboarding.
 
 ## 4. Decisione richiesta
 
-L'owner deve scegliere una delle opzioni:
-
-1. Portare i pattern del framework e progettare un connettore REST generico, con ADR dedicato.
-2. Sostituire il tracer bullet Open-Meteo con una sorgente già supportata dal framework portato.
-3. Rinviare il tracer bullet dati e scegliere un primo ticket agente non di ingestion.
-
-Qualunque opzione richiede provenienza dichiarata in `PROVENANCE.md`, secondo ADR-0009, prima
-di copiare codice o configurazione.
+Decisione chiusa: il tracer usa CRM `account` con chiave `accountid` e watermark `modifiedon`.
+La fonte CRM deve restare demo/sintetica. S1-00 richiede `PROVENANCE.md` e un commit pulito del
+framework, secondo ADR-0009, prima di copiare codice o configurazione.

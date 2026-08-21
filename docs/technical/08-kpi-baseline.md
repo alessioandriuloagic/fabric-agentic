@@ -39,7 +39,7 @@ token, contenuti di task o output di Claude.
 ## 3. Baseline manuale da rilevare
 
 Il tempo-uomo per l'onboarding manuale di un dataset non è stato ancora osservato in condizioni
-comparabili. Va rilevato sul primo onboarding Open-Meteo o City Registry con questo metodo:
+comparabili. Va rilevato sul primo onboarding CRM `accounts` con questo metodo:
 
 1. Avviare il timer quando l'owner inizia la configurazione tecnica.
 2. Fermare il timer dopo esecuzione, controlli qualità, documentazione e PR pronta per review.
