@@ -53,9 +53,11 @@ Il primo slice di S1-00 ha creato nel repository Agentic:
 - collocazioni versionate per futuri notebook e pipeline in `fabric/`;
 - notebook FabricGitSource `nb_crm_preflight`, validato localmente senza esecuzione CRM.
 
-Il framework non è ancora eseguibile: mancano estrazione staged, merge Bronze, audit, watermark,
-deploy OIDC del notebook, Lakehouse target e rail `run_load`. S1-04 resta bloccato fino a questi
-artefatti.
+Il runtime locale è ora eseguibile per il tracer: `scripts/crm_load.py` implementa estrazione
+staged JSONL, PK check, merge Bronze idempotente, audit per run e watermark post-audit; il rail
+`scripts/run_load.py` produce `rail-result` v1.0. Il notebook Fabric `nb_crm_load`, il deployer
+OIDC e il workflow `crm-run-load` sono ora versionati e limitati a `dev`. S1-04 resta bloccato
+fino alla prova sul feature workspace.
 
 La semantica del watermark CRM è definita in ADR-0012: filtro inclusivo, merge su `accountid` e
 avanzamento solo dopo Bronze e audit riusciti. I notebook/pipeline futuri devono implementare
@@ -84,6 +86,7 @@ ha completato il preflight con `outcome: success` per il work item `6`. Nel feat
 Il notebook ha completato la verifica OData `$top=0` sull'entity set `accounts` tramite la
 connection CRM configurata. L'evidenza non contiene record CRM, token o altri segreti.
 
-Il preflight rimuove il blocco di compatibilità della connection per S1-00. Restano necessari
-estrazione staged, merge Bronze, audit, persistenza del watermark e il rail `run_load`; S1-04
-rimane pertanto bloccato fino al completamento di tali artefatti.
+Il preflight rimuove il blocco di compatibilità della connection per S1-00. Il runtime locale, il
+notebook Fabric e il contratto `run_load` sono ora presenti; resta necessaria la prova end-to-end
+sul feature workspace con Lakehouse e identità OIDC. S1-04 rimane pertanto bloccato fino a quella
+verifica.

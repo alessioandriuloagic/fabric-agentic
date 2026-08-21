@@ -1,0 +1,54 @@
+name: CRM run load
+
+on:
+  workflow_dispatch:
+    inputs:
+      work_item_id:
+        description: Azure Boards work item ID for the feature workspace
+        required: true
+        type: number
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  crm-run-load:
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - name: Check out main
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: main
+
+      - name: Sign in to Azure with GitHub OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.FABRIC_DEPLOY_CLIENT_ID }}
+          tenant-id: ${{ vars.FABRIC_DEPLOY_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Deploy and run CRM load notebook
+        id: run-load
+        continue-on-error: true
+        run: python -m scripts.fabric_crm_load --work-item-id "${{ inputs.work_item_id }}"
+
+      - name: Ensure rail result exists
+        if: always()
+        run: |
+          if [ ! -f rail-result.json ]; then
+            printf '{"schema_version":"1.0","rail":"run_load","outcome":"technical_failure","run_id":"crm-load-wi%s","workspace_id":null,"datasets":[],"messages":["run_load process ended before writing a result"],"timestamp":"%s"}\n' "${{ inputs.work_item_id }}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > rail-result.json
+          fi
+
+      - name: Publish rail result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crm-run-load-result
+          path: rail-result.json
+          if-no-files-found: error
+
+      - name: Fail after publishing the rail result
+        if: steps.run-load.outcome == 'failure'
+        run: exit 1
