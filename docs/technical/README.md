@@ -18,6 +18,7 @@ si descrive come sono implementate.
 | [06 — Contratto di connettore](06-contratto-connettore.md) | Schema della configurazione metadata-driven e interfaccia dei connettori |
 | [07 — Architecture review](07-architecture-review.md) | Validazione del design contro la documentazione ufficiale e rischi architetturali |
 | [08 — KPI baseline](08-kpi-baseline.md) | Misure iniziali del dispatcher e metodo di raccolta dei KPI |
+| [09 — Framework gate](09-framework-gate.md) | Verifica B3 e decisione necessaria prima del primo onboarding agentico |
 
 ## Convenzione sulle affermazioni di piattaforma
 
