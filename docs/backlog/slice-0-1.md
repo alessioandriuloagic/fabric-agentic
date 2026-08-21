@@ -420,6 +420,10 @@ comportamento previsto dalla documentazione funzionale.
 - Divieti espliciti: mai merge, mai modifica di permessi o policy, mai segreti in chiaro
 - Le istruzioni sono nel repo e modificabili **solo per PR**
 
+**Stato 2026-08-21**: istruzioni e contratto task versionati in `agents/dev/`; Claude Code
+`2.1.228` è installato e una sessione headless minimale ha restituito `READY`. Restano il clone
+isolato e la credenziale Azure DevOps non interattiva del Dev Agent prima del dispatcher S0-09.
+
 ---
 
 ### S0-12 · Istruzioni del Review Agent

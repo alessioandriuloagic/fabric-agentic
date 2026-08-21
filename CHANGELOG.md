@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- S0-11: istruzioni versionate del Dev Agent e contratto JSON fra dispatcher e sessione in
+  `agents/dev/`; vincolano lettura del contesto, uso dei rail, escalation, sicurezza,
+  documentazione e divieto di merge o modifiche dirette a Fabric.
+- Installato e verificato Claude Code `2.1.228` per il Dev Agent: una sessione headless minimale
+  ha completato l'autenticazione locale con esito `READY`; il dispatcher attende clone isolato e
+  credenziale Azure DevOps non interattiva del service principal Dev Agent.
 - Rail `sync_workspace` (S1-03): workflow GitHub Actions DEV-only, ancorato a `main`, che
   sincronizza il feature workspace deterministico soltanto per modifiche remote e pubblica un
   artefatto `rail-result.json` v1.2. Conflitti e divergenze locali falliscono esplicitamente
