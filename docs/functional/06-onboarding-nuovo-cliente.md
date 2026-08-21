@@ -96,7 +96,8 @@ Solo il **Livello 1** richiede presenza umana. Ed è l'unico che si paga una vol
 - L'organizzazione precedente `alessioandriulo` resta la sorgente storica e non e' piu' il tracker operativo.
 - Service principal presenti nell'organizzazione: Dev Agent con licenza `Basic`, Review Agent con licenza `Stakeholder`; entrambi risultano in provisioning `pending`.
 - Workspace DEV creato: `ws_agentic_dev` (`b829fa8e-71c9-4f7f-b136-5b3c3a64d8ee`); Dev Agent assegnato come `Contributor`, senza permessi sulla capacity.
-- Federated credential GitHub Actions configurata per l'environment `dev`; resta da eseguire il workflow di test OIDC.
+- Federated credential GitHub Actions configurata per l'environment `dev`; test riuscito su `main` con run `32468016615`, verificando login federato e lettura dei metadati del workspace.
+- Environment GitHub `test` e `prod` creati. Le protection rules non sono disponibili sul piano corrente; il processo obbligatorio resta branch dedicato, PR verso `main` e merge umano.
 
 **Tracker**
 

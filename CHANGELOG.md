@@ -28,6 +28,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Creato `ws_agentic_dev`, assegnato il Dev Agent come `Contributor` senza permessi sulla capacity
   e aggiunto il workflow manuale `test-azure-oidc-dev.yml` per verificare login OIDC e lettura dei
   metadati del workspace.
+- Test OIDC completato con successo su `main` (run `32468016615`): login federato e lettura dei
+  metadati di `ws_agentic_dev` verificati senza ruoli sulla subscription o sulla capacity.
+- Creati gli environment GitHub `test` e `prod`. Le protection rules e la branch protection di
+  `main` restano bloccate dal piano GitHub Free sul repository privato personale; nessuna variabile
+  OIDC è stata aggiunta agli ambienti senza workspace e credenziale dedicate.
+- Accettata ADR-0010: GitHub Flow obbligatorio senza protection rules; ogni modifica usa branch
+  dedicato e PR verso `main`, con merge umano, mentre gli enforcement tecnici restano rinviati.
 - GitHub Actions scelto come motore CI/CD per il repository GitHub `alessioandriuloagic/fabric-agentic`.
 - Dev Agent formalizzato come data engineer Fabric end-to-end: sviluppa gli item in Git e li
   valida nel feature workspace; dopo merge umano una pipeline CI/CD ancorata a `main` pubblica

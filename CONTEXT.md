@@ -8,7 +8,7 @@
 
 | Campo | Valore |
 |---|---|
-| Versione | 0.4 |
+| Versione | 0.6 |
 | Ultimo aggiornamento | 2026-08-21 |
 | Documenti collegati | `docs/prd/PRD-agentic-cicd-fabric.md`, `docs/adr/` |
 
@@ -233,7 +233,9 @@ Altro Lakehouse Fabric (shortcut) · Database / DWH · CRM (Dataverse) · ShareP
 | Review Agent app ID | `a6d3e2af-92e5-447a-bb1e-9a466e1bdaed` (`fabric-agentic-review-agent`) |
 | Workspace DEV | `ws_agentic_dev` — `b829fa8e-71c9-4f7f-b136-5b3c3a64d8ee` |
 | Ruolo Dev Agent nel workspace DEV | `Contributor`; nessun ruolo sulla capacity |
-| Federated credential OIDC | GitHub environment `dev`, subject con Organization ID `218064009` e Repository ID `1340835193` |
+| Federated credential OIDC | GitHub environment `dev`, subject con Organization ID `218064009` e Repository ID `1340835193`; test riuscito senza ruolo subscription |
+| GitHub environments | `dev`, `test`, `prod` presenti; protection rules non disponibili sul piano GitHub Free |
+| Governance Git | Branch dedicato obbligatorio, PR verso `main`, review e merge umano; vedi ADR-0010 |
 | Identità | Un service principal per agente; nessun secret creato. Il workflow OIDC di test usa la `ExecutionCredential` configurata nell'environment GitHub `dev` |
 | Dati | Esclusivamente sintetici o open data. **Nessun dato di cliente entra nel perimetro** |
 
