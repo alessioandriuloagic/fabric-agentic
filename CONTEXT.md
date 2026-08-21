@@ -242,7 +242,7 @@ Altro Lakehouse Fabric (shortcut) · Database / DWH · CRM (Dataverse) · ShareP
 | Smoke rail `branch_out` | Run GitHub Actions `32487821272` del 2026-08-21: esito `success`, branch `feature/wi-6-smoke-branch-out`, workspace `ws_agentic_feature_wi6` (`c3465ab0-210b-4b31-86fd-03d9611fc037`), capacity assegnata, Git connesso e sincronizzato |
 | Smoke rail `sync_workspace` | Run GitHub Actions `32488530726` del 2026-08-21: esito `success`, stesso work item/workspace, stato `already_aligned`, nessun item aggiornato e nessuna divergenza |
 | Identita' rail | L'OIDC del rail usa un service principal di deploy distinto dal Dev Agent; ha i soli privilegi necessari per feature workspace e capacity, mentre il Dev Agent puo' solo accodare il workflow e leggere l'artefatto |
-| Runtime Dev Agent | Claude Code `2.1.228` installato nativamente su Windows, canale `stable`; l'autenticazione locale Claude e il clone isolato del Dev Agent sono prerequisiti ancora da completare prima del dispatcher |
+| Runtime Dev Agent | Claude Code `2.1.228` installato nativamente su Windows, canale `stable`. Verificata sessione headless `claude -p` con esito `READY` il 2026-08-21; restano il clone isolato e la credenziale Azure DevOps non interattiva del Dev Agent prima del dispatcher |
 | Identità | Un service principal per agente; nessun secret creato. Il workflow OIDC di test usa la `ExecutionCredential` configurata nell'environment GitHub `dev` |
 | Dati | Esclusivamente sintetici o open data. **Nessun dato di cliente entra nel perimetro** |
 
