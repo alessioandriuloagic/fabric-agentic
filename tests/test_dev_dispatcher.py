@@ -4,7 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
-from scripts.dev_dispatcher import DispatcherConfig, human_reply_tasks, review_thread_tasks, run_once
+from scripts.dev_dispatcher import DispatcherConfig, human_reply_tasks, review_thread_tasks, run_once, run_polling
 
 
 class DevDispatcherTests(unittest.TestCase):
@@ -86,6 +86,16 @@ class DevDispatcherTests(unittest.TestCase):
 
         self.assertEqual([(task["work_item_id"], task["trigger"]) for task in tasks], [(6, "review_thread")])
         self.assertEqual(seen, {"seen", "new"})
+
+    @patch("scripts.dev_dispatcher.run_once", return_value=[])
+    def test_polling_writes_safe_metadata_once_per_cycle(self, _) -> None:
+        with TemporaryDirectory() as directory:
+            log_path = Path(directory) / "dispatcher.log"
+            run_polling(self.config, Path(directory) / "state.json", Path(directory) / "tasks", log_path, cycles=2, sleep=lambda _: None)
+            events = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines()]
+
+        self.assertEqual([event["event"] for event in events], ["poll_completed", "poll_completed"])
+        self.assertTrue(all("token" not in json.dumps(event).lower() for event in events))
 
 
 if __name__ == "__main__":
