@@ -544,6 +544,29 @@ workspace isolato, dall'input del ticket alla PR.
 workspace; la PR contiene evidenze, documentazione e changelog. `test` e `prod` restano fuori
 scope.
 
+### S1-00 · Gate framework metadata-driven e REST
+
+| | |
+|---|---|
+| **Esecutore** | Umano + architetto |
+| **Taglia** | L |
+| **Dipendenze** | ADR-0009, S0-14 |
+| **RF** | RF-30..RF-35, RF-50 |
+
+**Obiettivo**: rendere disponibile nella soluzione Agentic un framework metadata-driven
+riproducibile e decidere il trattamento del connettore REST necessario a Open-Meteo.
+
+**Criteri di accettazione**
+- `PROVENANCE.md` registra repository e commit pulito della fonte dei pattern copiati
+- La collocazione di configurazione, runtime, orchestrazione e qualità è definita nel repository
+- Il connettore REST è approvato con ADR oppure il tracer bullet è sostituito da una sorgente già
+  supportata
+- Nessun codice del framework viene copiato prima della decisione e della provenienza
+
+**Esito 2026-08-21**: B3 confermato. Il clone Agentic non contiene framework/configurazione;
+`fabric-universal-connector` non espone REST/Open-Meteo e il suo worktree non è pulito. Vedi
+`docs/technical/09-framework-gate.md`.
+
 ---
 
 ### S1-01 · Spike: deploy e binding Power BI con `fabric-cicd`
@@ -627,7 +650,7 @@ item `6`. Il workspace risultava già allineato al branch; il rail ha restituito
 |---|---|
 | **Esecutore** | **Agente** |
 | **Taglia** | M |
-| **Dipendenze** | S1-02, S1-03, S0-14 |
+| **Dipendenze** | S1-00, S1-02, S1-03, S0-14 |
 | **RF** | RF-10..RF-20, RF-50, RF-84 |
 
 **Obiettivo**: il primo ticket reale del progetto, eseguito interamente dall'agente su dati open
@@ -650,7 +673,7 @@ data/sintetici nel feature workspace.
 > - `CHANGELOG.md` contiene la voce
 >
 > **Fuori scope**: `ws_agentic_dev`, `test`, `prod`, semantic model, report e modifiche al
-> framework condiviso. Se il framework metadata-driven manca, l'agente escala B3.
+> framework condiviso. Il ticket non parte finché S1-00 non è chiuso.
 
 **Criteri di accettazione del work item (lato sistema)**
 - Il ticket è preso in carico entro un ciclo di polling
@@ -691,7 +714,7 @@ data/sintetici nel feature workspace.
 | Slice | Item | Umani | Agentici | Criterio di uscita |
 |---|---|---|---|---|
 | **S0** | 15 | 15 | 1 (smoke test) | S0-14 verde |
-| **S1** | 5 | 4 | 1 | Tracer bullet Open-Meteo completato da un ticket |
+| **S1** | 6 | 5 | 1 | Tracer bullet Open-Meteo completato da un ticket |
 
 ### Percorso critico
 

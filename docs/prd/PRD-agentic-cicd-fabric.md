@@ -152,7 +152,9 @@ sensati per la demo commerciale.
 > extraction*) è un'evoluzione possibile, ma introduce dipendenza tra connettori e centinaia di
 > chiamate per esecuzione: va decisa con ADR, non subita come effetto collaterale.
 
-- Framework di ingestion: **metadata-driven già esistente, riusato** — un file JSON di configurazione per source system
+- Framework di ingestion: metadata-driven da portare nella soluzione Agentic secondo ADR-0009.
+    Verifica B3 del 2026-08-21: il framework candidato non include REST/Open-Meteo; il tracer
+    bullet resta bloccato da S1-00 e da una decisione sul connettore REST
 - Naming convention, struttura a cartelle del workspace e task flow: definiti in `CONTEXT.md`
 
 ### 6.2 In scope — Fase 2
@@ -474,7 +476,7 @@ Ogni slice è verticale e produce valore osservabile: non "prima tutta l'infrast
 | Slice | Titolo | Obiettivo osservabile |
 |---|---|---|
 | **S0** | Fondamenta e knowledge base | Repo, struttura `/docs`, `CONTEXT.md`, documentazione funzionale, service principal configurati, branch policy che nega il push su `main` agli agenti **e verificata praticamente**. **Baseline KPI rilevata** |
-| **S1** | Primo ticket agentico: tracer bullet dati | Un work item "onboarda Open-Meteo `daily_weather` in Bronze" viene preso in carico dal Dev Agent, che usa feature workspace, configurazione metadata-driven, rail, esecuzione qualità e documentazione. `dev` è già predisposto; `test` e `prod` restano fuori scope. Vedi ADR-0011. |
+| **S1** | Primo ticket agentico: tracer bullet dati | Dopo S1-00 (framework metadata-driven e decisione REST), un work item "onboarda Open-Meteo `daily_weather` in Bronze" viene preso in carico dal Dev Agent, che usa feature workspace, configurazione metadata-driven, rail, esecuzione qualità e documentazione. `dev` è già predisposto; `test` e `prod` restano fuori scope. Vedi ADR-0011. |
 | **S2** | Tracer bullet dati — connettore REST | Ticket "onboarda un dataset da Open-Meteo nel bronze": nuova voce nel JSON di configurazione, carico eseguito, controlli PK e audit verdi, documentazione aggiornata, PR aperta |
 | **S3** | Review agentica | Il Review Agent revisiona la PR dello Slice 2 contro checklist chiusa, solleva almeno un rilievo, il Dev Agent corregge, il Review Agent approva |
 | **S4** | Secondo connettore — File | Ticket "onboarda l'anagrafica città da file CSV/Parquet": **il vero test dell'astrazione**. Se richiede modifiche all'orchestrazione, il contratto di connettore va rivisto prima di procedere |
