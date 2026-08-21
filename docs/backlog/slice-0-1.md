@@ -420,6 +420,9 @@ comportamento previsto dalla documentazione funzionale.
 - Divieti espliciti: mai merge, mai modifica di permessi o policy, mai segreti in chiaro
 - Le istruzioni sono nel repo e modificabili **solo per PR**
 
+**Stato 2026-08-21**: istruzioni e contratto task versionati in `agents/dev/`. Il runtime
+headless Claude Code e il dispatcher S0-09 restano da predisporre e verificare.
+
 ---
 
 ### S0-12 · Istruzioni del Review Agent
