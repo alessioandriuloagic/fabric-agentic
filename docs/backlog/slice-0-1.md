@@ -384,6 +384,10 @@ stato scritto nel repository o nei log.
 > Le due verifiche anti-loop non sono opzionali: sono le due cause più probabili di consumo
 > token incontrollato, e si manifestano solo in esercizio se non le cerchi ora.
 
+**Stato 2026-08-21**: Trigger A implementato e verificato con `--once --dry-run` sul work item
+`#6`; non ha avviato Claude né modificato il tracker. Trigger B/C, anti-loop, loop continuo e
+smoke S0-14 restano aperti.
+
 ---
 
 ### S0-10 · Dispatcher del Review Agent

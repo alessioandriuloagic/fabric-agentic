@@ -47,6 +47,19 @@ flowchart LR
 **Ogni sessione è nuova.** Il dispatcher non passa contesto tra una sessione e la successiva:
 tutto ciò che serve viene riletto dal tracker e da Git.
 
+### Implementazione corrente
+
+`scripts/dev_dispatcher.py` è il dispatcher locale del Dev Agent. Viene eseguito come
+`python -m scripts.dev_dispatcher` e legge la configurazione non segreta fuori dal repository in
+`%USERPROFILE%\.fabric-agentic\dev-agent\dispatcher-config.json`. Il token Azure DevOps viene
+acquisito al bisogno con il certificato client non esportabile del Dev Agent; i task e lo stato
+anti-duplicazione vivono nella stessa directory locale, mai nel repository.
+
+Il primo vertical slice implementa Trigger A e il comando `--once --dry-run`: il run del
+2026-08-21 ha rilevato il work item `#6` senza creare task, avviare Claude o modificare Azure
+Boards. Trigger B, Trigger C, loop a 30 secondi e il lancio operativo della sessione restano
+parte del completamento di S0-09.
+
 ---
 
 ## 3. Trigger del Dev Agent
