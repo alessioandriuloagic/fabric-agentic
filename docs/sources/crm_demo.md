@@ -19,6 +19,7 @@
 | Primary key | `accountid` |
 | Load mode | Incremental |
 | Watermark | `modifiedon` |
+| Watermark policy | Inclusive (`>=`), commit only after Bronze merge and audit |
 | Projected columns | `accountid`, `name`, `modifiedon` |
 
 The Fabric Connection owns all credential material. Configuration stores only its identifier.

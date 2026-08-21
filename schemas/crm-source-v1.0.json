@@ -30,6 +30,7 @@
           "primary_key",
           "load_mode",
           "watermark_column",
+          "watermark_policy",
           "select_columns"
         ],
         "properties": {
@@ -38,6 +39,7 @@
           "primary_key": {"const": ["accountid"]},
           "load_mode": {"const": "incremental"},
           "watermark_column": {"const": "modifiedon"},
+          "watermark_policy": {"const": "inclusive_commit_after_bronze_audit"},
           "select_columns": {
             "type": "array",
             "minItems": 3,

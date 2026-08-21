@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Avviato S1-00: provenienza del framework CRM registrata al commit pulito, configurazione
   `crm_demo`, schema fail-fast, builder OData incremental e collocazioni notebook/pipeline creati.
   Il framework non esegue ancora estrazioni o scritture Bronze.
+- ADR-0012: definita la semantica CRM `accounts` per watermark inclusivo, merge idempotente e
+  avanzamento del watermark solo dopo Bronze e audit riusciti.
 - ADR-0011: il primo ticket agentico reale diventa il tracer bullet CRM `accounts` in feature
   workspace. `ws_agentic_dev` è già predisposto; `test` e `prod` restano non
   provisionati/configurati fino a disponibilità di workspace e credenziali dedicate.

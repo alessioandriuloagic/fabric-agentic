@@ -11,6 +11,7 @@
       "primary_key": ["accountid"],
       "load_mode": "incremental",
       "watermark_column": "modifiedon",
+      "watermark_policy": "inclusive_commit_after_bronze_audit",
       "select_columns": ["accountid", "name", "modifiedon"]
     }
   ]

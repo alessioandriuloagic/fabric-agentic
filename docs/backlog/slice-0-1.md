@@ -560,6 +560,8 @@ riproducibile.
 - La collocazione di configurazione, runtime, orchestrazione e qualità è definita nel repository
 - Il connettore CRM e la Fabric Connection `b838644d-afd9-4ec3-973d-e36ed85ad167` sono
   referenziati nel contratto e nella configurazione di istanza
+- Watermark inclusivo, merge su `accountid` e commit post-Bronze/audit sono implementati secondo
+  ADR-0012
 - Nessun codice del framework viene copiato prima della decisione e della provenienza
 
 **Esito 2026-08-21**: B3 confermato. Il clone Agentic non contiene framework/configurazione;
