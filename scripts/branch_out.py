@@ -180,6 +180,11 @@ def ensure_workspace(workspace_name: str, capacity_id: str) -> tuple[str, str]:
         workspace_id = workspace.get("id")
         if not workspace_id:
             raise RailError("workspace")
+        assigned_capacity_id = workspace.get("capacityId")
+        if assigned_capacity_id and assigned_capacity_id != capacity_id:
+            raise RailError("workspace")
+        if not assigned_capacity_id:
+            fabric("POST", f"/workspaces/{workspace_id}/assignToCapacity", {"capacityId": capacity_id})
         return workspace_id, "existing"
 
     workspace = fabric("POST", "/workspaces", {"displayName": workspace_name})

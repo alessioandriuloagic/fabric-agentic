@@ -30,6 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corretto `branch_out` per le risposte Fabric con connessione Git priva di
   `gitProviderDetails`: il workspace viene collegato anziché terminare con eccezione. Anche gli
   errori imprevisti ora pubblicano un `rail-result.json` con failure stage `unknown`.
+- Corretto il rerun di `branch_out` dopo una creazione workspace interrotta: se il feature
+  workspace esiste senza capacity, il rail assegna quella configurata; una capacity esistente
+  diversa resta un fallimento tecnico esplicito.
 - Scelta l'associazione dell'organizzazione Azure DevOps al tenant Agic Dev prima di aggiungere
   i service principal agentici a Boards; evita identità duplicate o configurazioni multi-tenant.
 - Provisionate nel tenant Agic Dev le identità `fabric-agentic-dev-agent` e
