@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from scripts.crm_framework import CrmFrameworkError, build_accounts_request, load_configuration
+from scripts.crm_framework import CrmFrameworkError, build_accounts_request, commit_watermark, load_configuration, plan_accounts_load
 
 
 class CrmFrameworkTests(unittest.TestCase):
@@ -38,6 +38,17 @@ class CrmFrameworkTests(unittest.TestCase):
     def test_rejects_naive_watermarks(self) -> None:
         with self.assertRaises(CrmFrameworkError):
             build_accounts_request("https://org4009cd0e.crm4.dynamics.com", datetime(2026, 8, 21, 14, 0))
+
+    def test_inclusive_watermark_is_merged_and_committed_only_after_bronze_and_audit(self) -> None:
+        confirmed = datetime(2026, 8, 21, 14, 0, tzinfo=timezone.utc)
+        observed = datetime(2026, 8, 21, 15, 0, tzinfo=timezone.utc)
+        plan = plan_accounts_load("https://org4009cd0e.crm4.dynamics.com", confirmed, observed)
+
+        self.assertEqual(plan.merge_key, "accountid")
+        self.assertIn("modifiedon%20ge%202026-08-21T14%3A00%3A00Z", plan.request_url)
+        with self.assertRaises(CrmFrameworkError):
+            commit_watermark(plan, bronze_merged=True, audit_written=False)
+        self.assertEqual(commit_watermark(plan, bronze_merged=True, audit_written=True), observed)
 
 
 if __name__ == "__main__":

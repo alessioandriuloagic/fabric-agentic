@@ -54,3 +54,7 @@ Il primo slice di S1-00 ha creato nel repository Agentic:
 
 Il framework non è ancora eseguibile: mancano estrazione staged, merge Bronze, audit, watermark,
 notebook/pipeline Fabric e rail `run_load`. S1-04 resta bloccato fino a questi artefatti.
+
+La semantica del watermark CRM è definita in ADR-0012: filtro inclusivo, merge su `accountid` e
+avanzamento solo dopo Bronze e audit riusciti. I notebook/pipeline futuri devono implementare
+questa sequenza senza fallback append.

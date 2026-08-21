@@ -115,12 +115,17 @@ completa resta la dimensione per la join in silver, **non** il driver dell'estra
 | Entità | Dichiarata in configurazione; primo tracer: `account` |
 | Chiave primaria | `accountid` |
 | Incrementalità | Watermark `modifiedon` |
+| Semantica watermark | `modifiedon >= ultimo watermark confermato`; nuovo watermark solo dopo merge Bronze e audit |
 | Conteggio | Numero di record estratti dall'entità dopo i filtri dichiarati |
 | Dati verso il modello | Solo esiti, conteggi, nomi di colonna e identificativi mascherati |
 
 Il primo tracer usa la connection `b838644d-afd9-4ec3-973d-e36ed85ad167` verso l'ambiente CRM
 demo/sintetico. L'ID è configurazione di istanza, non un segreto; credenziali e token restano
 custoditi nella Fabric Connection.
+
+La riestrazione inclusiva è assorbita da un merge idempotente su `accountid`. Il watermark è il
+massimo `modifiedon` del batch riuscito e non avanza in caso di fallimento di staging, PK check,
+Bronze o audit. Vedi ADR-0012.
 
 ---
 
