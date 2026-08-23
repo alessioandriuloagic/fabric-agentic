@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Aggiornato `nb_crm_load` per il nuovo CRM `org12202591`: il notebook recupera direttamente la
+  client secret dal Key Vault con `notebookutils.credentials.getSecret` e ottiene il token
+  Dataverse con client credentials, senza dipendere dalla Fabric Key Vault Connection che
+  restituiva `DMTS_KeyVaultInternalErrorCode`.
+- Generata e salvata nel Key Vault DEV la client secret annuale `fabric-agentic-key` per lo SP
+  `fabric-agentic-deploy`; il valore non è presente nel repository o nei log.
+- Autorizzato lo SP `fabric-agentic-deploy` con `Key Vault Secrets User` sul vault
+  `kv-fabric-agentic-dev-01`; la Fabric Connection CRM deve ancora essere modificata per usare
+  questa identità del tenant corrente.
+- Creato il Key Vault DEV `kv-fabric-agentic-dev-01` in `alessio_dev` con RBAC abilitato. Il
+  vault appartiene al tenant `1cf6...`; l'accesso dello SP CRM nel tenant `d5e...` resta da
+  configurare in modo esplicito prima di inserire o usare secret.
 - Corretto `crm-run-load`: il deployer aggiorna anche il notebook `nb_crm_load` già esistente e
   materializza il binding dinamico al Lakehouse del feature workspace prima di eseguirlo. Il run
   reale del 2026-08-23 aveva avuto esito tecnico positivo ma nessuna tabella visibile perché il

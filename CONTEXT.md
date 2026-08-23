@@ -188,6 +188,23 @@ La piattaforma è **multi-sorgente per costruzione**. Il framework metadata-driv
 viene riusato: un file JSON di configurazione per source system, e un **connettore** per
 tipologia di sorgente dietro un contratto comune.
 
+### 7.4 Secret store CRM DEV
+
+| Elemento | Valore |
+|---|---|
+| Key Vault | `kv-fabric-agentic-dev-01` |
+| Resource group | `alessio_dev` |
+| Subscription | `898b6a78-11dd-4e23-bf53-9e17f541d955` |
+| Tenant del vault | `1cf6db06-3e00-48b6-a65c-be932526610e` |
+| URI | `https://kv-fabric-agentic-dev-01.vault.azure.net/` |
+| Autorizzazione | Azure RBAC abilitato |
+| Secret SP | `fabric-agentic-key` (scadenza 2027-08-23) |
+
+Lo SP interno `fabric-agentic-deploy` (`db9d4adb-db6a-4238-8e75-c69d21b1b37e`) ha il ruolo
+`Key Vault Secrets User` sul vault. La Fabric Connection CRM esistente riferisce ancora uno SP
+del tenant `d5e193bb-0b46-467d-9d95-03eb0d012c42`; va modificata o ricreata per usare lo SP
+interno prima del prossimo run. Nessun secret viene versionato nel repository.
+
 ### 7.1 Connettori in fase 1
 
 | # | Tipologia | Sorgente concreta | Note |
