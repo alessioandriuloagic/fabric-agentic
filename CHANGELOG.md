@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Corretto `crm-run-load`: il deployer aggiorna anche il notebook `nb_crm_load` già esistente e
+  materializza il binding dinamico al Lakehouse del feature workspace prima di eseguirlo. Il run
+  reale del 2026-08-23 aveva avuto esito tecnico positivo ma nessuna tabella visibile perché il
+  notebook era stato riusato senza Lakehouse predefinito.
 - Implementato il primo runtime deterministico CRM: estrazione staged JSONL con watermark
   inclusivo, controllo PK, merge idempotente Bronze, audit per `run_id` e persistenza del
   watermark solo dopo l'audit. Aggiunto il rail locale `run_load` con risultato `rail-result`

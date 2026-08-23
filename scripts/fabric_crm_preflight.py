@@ -106,6 +106,16 @@ class FabricClient:
             raise FabricPreflightError("Fabric item creation failed")
         return created
 
+    def update_item_definition(self, workspace_id: str, item_id: str, definition: dict) -> None:
+        status, headers, _ = self.request("POST", f"/workspaces/{workspace_id}/items/{item_id}/updateDefinition", {"definition": definition})
+        if status == 202:
+            location = headers.get("Location") or headers.get("location")
+            if not location:
+                raise FabricPreflightError("Fabric item update did not return an operation location")
+            self.wait_lro(location)
+        elif status != 200:
+            raise FabricPreflightError("Fabric item update failed")
+
     def run_notebook(self, workspace_id: str, notebook_id: str) -> None:
         status, headers, _ = self.request("POST", f"/workspaces/{workspace_id}/items/{notebook_id}/jobs/instances?jobType=RunNotebook")
         if status != 202:

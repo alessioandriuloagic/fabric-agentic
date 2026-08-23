@@ -1,6 +1,7 @@
 """Build Fabric item-definition payloads from versioned Git artifact sources."""
 
 import base64
+import json
 from pathlib import Path
 
 
@@ -8,7 +9,7 @@ class FabricArtifactError(ValueError):
     """Raised when a versioned Fabric artifact is incomplete or unsafe to deploy."""
 
 
-def notebook_definition(notebook_directory: Path) -> dict:
+def notebook_definition(notebook_directory: Path, default_lakehouse: dict | None = None) -> dict:
     source_path = notebook_directory / "notebook-content.py"
     platform_path = notebook_directory / ".platform"
     if not source_path.exists() or not platform_path.exists():
@@ -20,6 +21,18 @@ def notebook_definition(notebook_directory: Path) -> dict:
         raise FabricArtifactError("notebook source is not FabricGitSource format")
     if '"type": "Notebook"' not in platform:
         raise FabricArtifactError("platform metadata is not a Notebook")
+    if default_lakehouse is not None:
+        required = {"id", "displayName", "workspace_id"}
+        if not required.issubset(default_lakehouse):
+            raise FabricArtifactError("default Lakehouse metadata is incomplete")
+        dependencies = {
+            "lakehouse": {
+                "default_lakehouse": default_lakehouse["id"],
+                "default_lakehouse_name": default_lakehouse["displayName"],
+                "default_lakehouse_workspace_id": default_lakehouse["workspace_id"],
+            }
+        }
+        source = source.replace('"dependencies": {}', f'"dependencies": {json.dumps(dependencies, separators=(",", ":"))}')
 
     return {
         "format": "FabricGitSource",

@@ -86,7 +86,8 @@ ha completato il preflight con `outcome: success` per il work item `6`. Nel feat
 Il notebook ha completato la verifica OData `$top=0` sull'entity set `accounts` tramite la
 connection CRM configurata. L'evidenza non contiene record CRM, token o altri segreti.
 
-Il preflight rimuove il blocco di compatibilità della connection per S1-00. Il runtime locale, il
-notebook Fabric e il contratto `run_load` sono ora presenti; resta necessaria la prova end-to-end
-sul feature workspace con Lakehouse e identità OIDC. S1-04 rimane pertanto bloccato fino a quella
-verifica.
+Il preflight rimuove il blocco di compatibilità della connection per S1-00. Il run reale del
+2026-08-23 ha verificato OIDC, deploy e job `RunNotebook`, ma non ha prodotto tabelle visibili: il
+notebook esistente era stato riusato senza binding al Lakehouse. Il deployer ora aggiorna sempre
+la definizione con il Lakehouse dinamico prima del run; resta necessaria una riesecuzione end-to-end
+con verifica SQL di staging, Bronze, audit e watermark. S1-04 rimane bloccato fino a quella prova.
