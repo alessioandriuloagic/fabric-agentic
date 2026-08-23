@@ -15,3 +15,6 @@ pagination, Delta Bronze merge, audit and post-audit watermark commit. The workf
 updates the notebook's default Lakehouse binding even when the item already exists. A rerun is
 required because the 2026-08-23 execution completed without visible tables under the previous
 unbound definition, before S1-04 can close.
+
+The load notebook reads the service-principal secret directly from Azure Key Vault with
+`notebookutils.credentials.getSecret`; the separate Fabric Key Vault connection is not required.

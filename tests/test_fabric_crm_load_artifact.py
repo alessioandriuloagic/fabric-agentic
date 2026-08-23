@@ -15,6 +15,8 @@ class FabricCrmLoadArtifactTests(unittest.TestCase):
         self.assertLess(source.index("audit_delta"), source.index("watermark.write"))
         self.assertIn("modifiedon ge", source)
         self.assertIn("primary key check failed", source)
+        self.assertIn("notebookutils.credentials.getSecret", source)
+        self.assertNotIn("connections.getCredential", source)
 
 
 if __name__ == "__main__":
