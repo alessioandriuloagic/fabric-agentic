@@ -18,6 +18,7 @@ class FabricCrmLoadTests(unittest.TestCase):
             {"id": "lakehouse-id"},
             {"id": "notebook-id"},
         ]
+        client.update_item_definition.return_value = None
 
         result = run_load(6)
 
@@ -26,6 +27,7 @@ class FabricCrmLoadTests(unittest.TestCase):
         schema = json.loads(Path("schemas/rail-result-v1.0.json").read_text(encoding="utf-8"))
         self.assertEqual(list(Draft202012Validator(schema, format_checker=FormatChecker()).iter_errors(result)), [])
         client.run_notebook.assert_called_once_with("workspace-id", "notebook-id")
+        client.update_item_definition.assert_called_once()
         self.assertEqual(client.ensure_item.call_args_list[0].args[1:3], ("lh_bronze_crm_demo", "Lakehouse"))
         self.assertEqual(client.ensure_item.call_args_list[1].args[1:3], ("nb_crm_load", "Notebook"))
         self.assertTrue(Path("fabric/notebook/nb_crm_load.Notebook/notebook-content.py").exists())

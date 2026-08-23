@@ -19,6 +19,16 @@ class FabricArtifactTests(unittest.TestCase):
         self.assertIn("$top=0&$count=true", source)
         self.assertNotIn("print(access_token)", source)
 
+    def test_binds_notebook_definition_to_the_discovered_lakehouse(self) -> None:
+        definition = notebook_definition(
+            Path("fabric/notebook/nb_crm_load.Notebook"),
+            {"id": "lakehouse-id", "displayName": "lh_bronze_crm_demo", "workspace_id": "workspace-id"},
+        )
+
+        source = base64.b64decode(definition["parts"][0]["payload"]).decode("utf-8")
+        self.assertIn('"default_lakehouse":"lakehouse-id"', source)
+        self.assertIn('"default_lakehouse_workspace_id":"workspace-id"', source)
+
     def test_rejects_missing_platform_metadata(self) -> None:
         with TemporaryDirectory() as directory:
             notebook = Path(directory)

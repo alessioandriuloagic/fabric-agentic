@@ -12,4 +12,6 @@ Bronze directly. Bronze merge, audit and watermark commit belong to the shared l
 The versioned artifact `nb_crm_load.Notebook` now implements that contract with Dataverse
 pagination, Delta Bronze merge, audit and post-audit watermark commit. The workflow
 `.github/workflows/crm-run-load.yml` deploys and runs it with OIDC in `dev`; the field execution
-is still required before S1-04 can close.
+updates the notebook's default Lakehouse binding even when the item already exists. A rerun is
+required because the 2026-08-23 execution completed without visible tables under the previous
+unbound definition, before S1-04 can close.

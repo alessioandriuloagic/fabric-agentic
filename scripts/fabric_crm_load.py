@@ -25,7 +25,23 @@ def run_load(work_item_id: int) -> dict:
     client = FabricClient(access_token())
     workspace = find_workspace(client, work_item_id)
     lakehouse = client.ensure_item(workspace["id"], LAKEHOUSE_NAME, "Lakehouse")
-    notebook = client.ensure_item(workspace["id"], NOTEBOOK_NAME, "Notebook", notebook_definition(NOTEBOOK_DIRECTORY))
+    notebook = client.ensure_item(
+        workspace["id"],
+        NOTEBOOK_NAME,
+        "Notebook",
+        notebook_definition(
+            NOTEBOOK_DIRECTORY,
+            {"id": lakehouse["id"], "displayName": LAKEHOUSE_NAME, "workspace_id": workspace["id"]},
+        ),
+    )
+    client.update_item_definition(
+        workspace["id"],
+        notebook["id"],
+        notebook_definition(
+            NOTEBOOK_DIRECTORY,
+            {"id": lakehouse["id"], "displayName": LAKEHOUSE_NAME, "workspace_id": workspace["id"]},
+        ),
+    )
     client.run_notebook(workspace["id"], notebook["id"])
     return {
         "schema_version": "1.0",
