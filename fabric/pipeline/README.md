@@ -8,3 +8,7 @@ The OIDC wrapper `.github/workflows/crm-run-load.yml` now deploys and runs the n
 feature workspace and publishes `rail-result.json`. A native Fabric Data Pipeline artifact is
 still not added; the workflow is the current CI/CD rail. `test` and `prod` are intentionally
 unchanged.
+
+The notebook writes aggregate run evidence to `Files/agentic/run_load_result.json`; the deployer
+reads that file through OneLake and propagates counts, reconciliation and watermark into the
+published rail result.
