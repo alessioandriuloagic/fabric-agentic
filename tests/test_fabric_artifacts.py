@@ -13,8 +13,8 @@ class FabricArtifactTests(unittest.TestCase):
     def test_builds_fabric_git_source_notebook_definition(self) -> None:
         definition = notebook_definition(NOTEBOOK_PATH)
 
-        self.assertEqual(definition["format"], "FabricGitSource")
-        self.assertEqual([part["path"] for part in definition["parts"]], ["notebook-content.py", ".platform"])
+        self.assertEqual(definition["format"], "ipynb")
+        self.assertEqual([part["path"] for part in definition["parts"]], ["notebook-content.ipynb"])
         source = base64.b64decode(definition["parts"][0]["payload"]).decode("utf-8")
         self.assertIn("$top=0&$count=true", source)
         self.assertNotIn("print(access_token)", source)

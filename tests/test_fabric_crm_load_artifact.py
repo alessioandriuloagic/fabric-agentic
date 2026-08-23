@@ -10,7 +10,7 @@ class FabricCrmLoadArtifactTests(unittest.TestCase):
         definition = notebook_definition(directory)
         source = (directory / "notebook-content.py").read_text(encoding="utf-8")
 
-        self.assertEqual(definition["format"], "FabricGitSource")
+        self.assertEqual(definition["format"], "ipynb")
         self.assertLess(source.index("write_staging"), source.index("load_bronze"))
         self.assertLess(source.index("audit_delta"), source.index("watermark.write"))
         self.assertIn("modifiedon ge", source)
