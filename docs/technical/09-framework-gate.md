@@ -91,3 +91,20 @@ Il preflight rimuove il blocco di compatibilità della connection per S1-00. Il 
 notebook esistente era stato riusato senza binding al Lakehouse. Il deployer ora aggiorna sempre
 la definizione con il Lakehouse dinamico prima del run; resta necessaria una riesecuzione end-to-end
 con verifica SQL di staging, Bronze, audit e watermark. S1-04 rimane bloccato fino a quella prova.
+
+### Esito operativo 2026-08-23 — run CRM `32648577263`
+
+Il run sul commit `f0ca7b6d7c6d440531ffea13d225382ab1169977` è terminato con successo dopo il
+passaggio al secret Key Vault diretto e al nuovo ambiente `org12202591`. Nel Lakehouse
+`lh_bronze_crm_demo` del feature workspace `c3465ab0-210b-4b31-86fd-03d9611fc037` sono presenti
+le tabelle `crm_demo_accounts`, `crm_demo_load_audit` e `crm_demo_watermark`.
+
+Questo chiude la verifica di materializzazione tecnica. Il notebook scrive anche l'evidenza
+aggregata in `Files/agentic/run_load_result.json`; il deployer la recupera per valorizzare il
+`rail-result` con conteggi, PK, riconciliazione e watermark.
+
+### Evidenza quantitativa fornita dall'esecuzione
+
+La verifica delle tabelle ha rilevato 10 record in `crm_demo_accounts`, una riga in
+`crm_demo_load_audit` e una riga in `crm_demo_watermark`. Il prossimo run deve confermare che
+questi valori siano presenti anche nel `rail-result` pubblicato.

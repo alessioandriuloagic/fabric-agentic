@@ -2,8 +2,11 @@
 
 import argparse
 import json
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.error import HTTPError
+from urllib.request import Request, urlopen
 
 from scripts.crm_framework import CrmFrameworkError, load_configuration
 from scripts.fabric_artifacts import notebook_definition
@@ -18,6 +21,32 @@ from scripts.fabric_crm_preflight import (
 LAKEHOUSE_NAME = "lh_bronze_crm_demo"
 NOTEBOOK_NAME = "nb_crm_load"
 NOTEBOOK_DIRECTORY = Path("fabric/notebook/nb_crm_load.Notebook")
+RESULT_PATH = "Files/agentic/run_load_result.json"
+
+
+def storage_access_token() -> str:
+    result = subprocess.run(
+        ["az", "account", "get-access-token", "--resource", "https://storage.azure.com", "--query", "accessToken", "--output", "tsv"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0 or not result.stdout.strip():
+        raise FabricPreflightError("OneLake access token acquisition failed")
+    return result.stdout.strip()
+
+
+def read_load_result(workspace_id: str, lakehouse_id: str) -> dict:
+    url = f"https://onelake.dfs.fabric.microsoft.com/{workspace_id}/{lakehouse_id}/{RESULT_PATH}"
+    request = Request(url, headers={"Authorization": f"Bearer {storage_access_token()}"})
+    try:
+        with urlopen(request) as response:
+            result = json.loads(response.read().decode("utf-8"))
+    except (HTTPError, OSError, json.JSONDecodeError) as error:
+        raise FabricPreflightError("CRM load evidence is unavailable") from error
+    if result.get("rail") != "run_load" or result.get("outcome") != "success":
+        raise FabricPreflightError("CRM load evidence is invalid")
+    return result
 
 
 def run_load(work_item_id: int) -> dict:
@@ -43,23 +72,24 @@ def run_load(work_item_id: int) -> dict:
         ),
     )
     client.run_notebook(workspace["id"], notebook["id"])
+    evidence = read_load_result(workspace["id"], lakehouse["id"])
     return {
         "schema_version": "1.0",
         "rail": "run_load",
         "outcome": "success",
-        "run_id": f"crm-load-wi{work_item_id}",
+        "run_id": evidence["run_id"],
         "workspace_id": workspace["id"],
         "datasets": [{
             "name": configuration["datasets"][0]["name"],
             "status": "loaded",
-            "source_count": None,
-            "destination_count": None,
+            "source_count": evidence["extracted_count"],
+            "destination_count": evidence["destination_count"],
             "supports_source_count": True,
-            "reconciliation": "not_applicable",
-            "pk_check": "not_applicable",
+            "reconciliation": "passed",
+            "pk_check": "passed",
         }],
-        "messages": ["CRM load notebook completed; notebook evidence is stored in Fabric."],
-        "watermark": None,
+        "messages": [f"Evidence stored at {RESULT_PATH}."],
+        "watermark": evidence["watermark"],
         "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
     }
 

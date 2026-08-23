@@ -28,6 +28,7 @@ ENTITY_SET = "accounts"
 BRONZE_TABLE = "crm_demo_accounts"
 AUDIT_TABLE = "crm_demo_load_audit"
 WATERMARK_TABLE = "crm_demo_watermark"
+RESULT_PATH = "Files/agentic/run_load_result.json"
 RUN_ID = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:8]
 
 
@@ -136,7 +137,7 @@ accounts = fetch_accounts(token, confirmed_watermark)
 staging_path = write_staging(accounts)
 load_result = load_bronze(staging_path, len(accounts), confirmed_watermark)
 
-notebookutils.notebook.exit(json.dumps({
+evidence = {
     "schema_version": "1.0",
     "rail": "run_load",
     "outcome": "success",
@@ -144,7 +145,9 @@ notebookutils.notebook.exit(json.dumps({
     "staging_path": staging_path,
     "dataset": "accounts",
     **load_result,
-}))
+}
+notebookutils.fs.put(RESULT_PATH, json.dumps(evidence), True)
+notebookutils.notebook.exit(json.dumps(evidence))
 
 # METADATA ********************
 # META {

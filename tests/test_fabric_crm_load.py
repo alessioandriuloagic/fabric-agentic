@@ -10,20 +10,33 @@ from scripts.fabric_crm_load import run_load
 
 class FabricCrmLoadTests(unittest.TestCase):
     @patch("scripts.fabric_crm_load.access_token", return_value="opaque-token")
+    @patch("scripts.fabric_crm_load.read_load_result")
     @patch("scripts.fabric_crm_load.find_workspace", return_value={"id": "workspace-id"})
     @patch("scripts.fabric_crm_load.FabricClient")
-    def test_deploys_and_runs_deterministic_load_artifacts(self, client_class: Mock, find_workspace: Mock, access_token: Mock) -> None:
+    def test_deploys_and_runs_deterministic_load_artifacts(self, client_class: Mock, find_workspace: Mock, read_load_result: Mock, access_token: Mock) -> None:
         client = client_class.return_value
         client.ensure_item.side_effect = [
             {"id": "lakehouse-id"},
             {"id": "notebook-id"},
         ]
         client.update_item_definition.return_value = None
+        read_load_result.return_value = {
+            "rail": "run_load",
+            "outcome": "success",
+            "run_id": "20260823T153000Z-abcd1234",
+            "extracted_count": 10,
+            "destination_count": 10,
+            "watermark": "2026-08-23T15:30:00Z",
+        }
 
         result = run_load(6)
 
         self.assertEqual(result["rail"], "run_load")
         self.assertEqual(result["outcome"], "success")
+        self.assertEqual(result["run_id"], "20260823T153000Z-abcd1234")
+        self.assertEqual(result["datasets"][0]["source_count"], 10)
+        self.assertEqual(result["datasets"][0]["destination_count"], 10)
+        self.assertEqual(result["watermark"], "2026-08-23T15:30:00Z")
         schema = json.loads(Path("schemas/rail-result-v1.0.json").read_text(encoding="utf-8"))
         self.assertEqual(list(Draft202012Validator(schema, format_checker=FormatChecker()).iter_errors(result)), [])
         client.run_notebook.assert_called_once_with("workspace-id", "notebook-id")
