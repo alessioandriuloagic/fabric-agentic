@@ -144,6 +144,7 @@ discipline used for release version bumps above.
 
 ## Kaizen Learnings
 
+- **[2026-08-23] Escludere gli artifact temporanei dai commit** → [kaizen/20260823-git-temp-artifact.md](kaizen/20260823-git-temp-artifact.md)
 - **[2026-08-20] Tenant di esecuzione** → [kaizen/20260820-tenant-selection.md](kaizen/20260820-tenant-selection.md)
 - **[2026-08-21] Subject OIDC GitHub con identificativi** → [kaizen/20260821-github-subject-ids.md](kaizen/20260821-github-subject-ids.md)
 - **[2026-08-21] Account VS Code per Fabric** → [kaizen/20260821-vscode-fabric-account.md](kaizen/20260821-vscode-fabric-account.md)
