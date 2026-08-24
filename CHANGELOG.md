@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- S1-05: registrata la retrospettiva del primo ciclo CRM in `docs/technical/10-retrospettiva-s1-04.md`,
+  con KPI osservati, interventi umani non previsti e gap di strumentazione senza stime.
+
 - Verificato il run reale CRM `32648577263`: nel feature Lakehouse sono state materializzate le
   tabelle `crm_demo_accounts`, `crm_demo_load_audit` e `crm_demo_watermark`. La riconciliazione
   quantitativa via SQL e la propagazione di conteggi/watermark nel `rail-result` restano aperte.
@@ -16,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   watermark.
 - Il notebook CRM ora persiste l'evidenza aggregata in OneLake e il deployer la propaga nel
   `rail-result`, includendo conteggi, PK, riconciliazione e watermark.
+- Verificato il run post-merge `32648994929`: delta incrementale di 5 record, Bronze totale di 10,
+  PK/reconciliation passati e watermark `2026-08-21T17:39:25Z`. Da chiarire nel contratto la
+  distinzione tra conteggio del batch e totale destinazione.
 - Aggiornato `nb_crm_load` per il nuovo CRM `org12202591`: il notebook recupera direttamente la
   client secret dal Key Vault con `notebookutils.credentials.getSecret` e ottiene il token
   Dataverse con client credentials, senza dipendere dalla Fabric Key Vault Connection che

@@ -3,7 +3,7 @@
   "source_system": "crm_demo",
   "connector_type": "crm_dataverse",
   "connection_id": "b838644d-afd9-4ec3-973d-e36ed85ad167",
-  "environment_url": "https://org4009cd0e.crm4.dynamics.com",
+  "environment_url": "https://org12202591.crm4.dynamics.com",
   "datasets": [
     {
       "name": "accounts",

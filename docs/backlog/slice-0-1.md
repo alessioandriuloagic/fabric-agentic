@@ -722,6 +722,11 @@ data/sintetici nel feature workspace.
 > Le decisioni prese a voce durante questo primo ciclo e non scritte **si ripresenteranno
 > identiche** al ticket successivo. La retrospettiva serve esattamente a impedirlo.
 
+**Esito 2026-08-24**: completata in `docs/technical/10-retrospettiva-s1-04.md`. Il ciclo ha
+confermato KPI-7 a zero e nessun difetto post-merge osservato; KPI-1, KPI-2, KPI-3 e KPI-5 restano
+parziali o non misurabili per gap di strumentazione esplicitamente registrati. Gli interventi
+tecnici umani necessari sono stati classificati come difetti del sistema e corretti nei rail.
+
 ---
 
 ## Riepilogo

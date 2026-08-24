@@ -108,3 +108,11 @@ aggregata in `Files/agentic/run_load_result.json`; il deployer la recupera per v
 La verifica delle tabelle ha rilevato 10 record in `crm_demo_accounts`, una riga in
 `crm_demo_load_audit` e una riga in `crm_demo_watermark`. Il prossimo run deve confermare che
 questi valori siano presenti anche nel `rail-result` pubblicato.
+
+### Esito rail con evidenza aggregata — run `32648994929`
+
+Il run post-merge sul commit `5c8ca12f46107603d6a1d4465207b5439bcbef16` ha pubblicato un
+`rail-result` completo: `source_count=5`, `destination_count=10`, `pk_check=passed`,
+`reconciliation=passed` e watermark `2026-08-21T17:39:25Z`. Nel carico incrementale il valore 5
+è il delta estratto, mentre 10 è il totale Bronze dopo il merge; il contratto dovrà distinguere
+esplicitamente conteggio caricato e totale destinazione per evitare ambiguità.
