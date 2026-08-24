@@ -13,7 +13,7 @@ def execute_load(workspace_id: str, staged_path: Path, bronze_path: Path, audit_
         raise CrmLoadError("workspace ID is required")
     result = load_staged_accounts(staged_path, bronze_path, audit_path, watermark_path, run_id)
     return {
-        "schema_version": "1.0",
+        "schema_version": "1.3",
         "rail": "run_load",
         "outcome": "success",
         "run_id": run_id,
@@ -21,8 +21,8 @@ def execute_load(workspace_id: str, staged_path: Path, bronze_path: Path, audit_
         "datasets": [{
             "name": "accounts",
             "status": "loaded",
-            "source_count": result.extracted_count,
-            "destination_count": result.destination_count,
+            "loaded_count": result.extracted_count,
+            "total_destination_count": result.destination_count,
             "supports_source_count": True,
             "reconciliation": "passed",
             "pk_check": "passed",
@@ -65,8 +65,8 @@ def main() -> int:
             "datasets": [{
                 "name": "accounts",
                 "status": "failed",
-                "source_count": None,
-                "destination_count": None,
+                "loaded_count": None,
+                "total_destination_count": None,
                 "supports_source_count": True,
                 "reconciliation": "failed" if quality_failure else "not_applicable",
                 "pk_check": "failed" if quality_failure else "not_applicable",

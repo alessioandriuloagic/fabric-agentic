@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Issue #42: introdotto il contratto rail-result v1.3 per `run_load`, con distinzione esplicita
+  tra `loaded_count` del batch e `total_destination_count` dopo il merge.
+
 - S1-05: registrata la retrospettiva del primo ciclo CRM in `docs/technical/10-retrospettiva-s1-04.md`,
   con KPI osservati, interventi umani non previsti e gap di strumentazione senza stime.
 

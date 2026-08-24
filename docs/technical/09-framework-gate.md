@@ -112,7 +112,8 @@ questi valori siano presenti anche nel `rail-result` pubblicato.
 ### Esito rail con evidenza aggregata — run `32648994929`
 
 Il run post-merge sul commit `5c8ca12f46107603d6a1d4465207b5439bcbef16` ha pubblicato un
-`rail-result` completo: `source_count=5`, `destination_count=10`, `pk_check=passed`,
+`rail-result` completo: `loaded_count=5`, `total_destination_count=10`, `pk_check=passed`,
 `reconciliation=passed` e watermark `2026-08-21T17:39:25Z`. Nel carico incrementale il valore 5
 è il delta estratto, mentre 10 è il totale Bronze dopo il merge; il contratto dovrà distinguere
-esplicitamente conteggio caricato e totale destinazione per evitare ambiguità.
+esplicitamente conteggio caricato e totale destinazione per evitare ambiguità. La versione v1.3
+del contratto formalizza questa distinzione.
