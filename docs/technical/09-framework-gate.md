@@ -132,7 +132,7 @@ all'utente. S1-01 resta quindi parzialmente completato fino alla pubblicazione e
 
 ### Correzione apertura PBIP — 2026-08-24
 
-Power BI Desktop rifiutava `powerbi/CRM Demo.pbip` perché il manifest dichiarava `semanticModel`
-come secondo artifact. Il formato PBIP del Desktop richiede invece la proprietà `dataset`; il
-manifest è stato corretto mantenendo il path `CRM Demo.SemanticModel`. La validazione del Report
-ora restituisce 0 errori; restano solo warning per schemi remoti non raggiungibili.
+Power BI Desktop rifiutava `powerbi/CRM Demo.pbip` perché il manifest dichiarava un secondo
+artifact `dataset`. Il formato PBIP del Desktop richiede un solo artifact `report`; il semantic
+model resta collegato dal `datasetReference` in `definition.pbir`. La validazione del Report ora
+restituisce 0 errori; restano solo warning per schemi remoti non raggiungibili.
