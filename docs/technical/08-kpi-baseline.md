@@ -11,12 +11,12 @@ viene usato come dato di confronto senza dichiararlo.
 
 | KPI | Metodo | Stato |
 |---|---|---|
-| KPI-1 Autonomia | Conteggio ticket dalla presa in carico alla PR approvata senza interventi tecnici umani | Da rilevare con S1-04 |
-| KPI-2 Lead time | Timestamp work item `To Do` -> apertura PR | Da rilevare con S1-04 |
+| KPI-1 Autonomia | Conteggio ticket dalla presa in carico alla PR approvata senza interventi tecnici umani | S1-04: non calcolabile; interventi tecnici registrati |
+| KPI-2 Lead time | Timestamp work item `To Do` -> apertura PR | S1-04: gap; timestamp work item non disponibile |
 | KPI-3 Cicli review | Conteggio iterazioni Dev/Review su PR | Da rilevare con Review Agent attivo |
 | KPI-4 Copertura documentale | Review della PR contro checklist E1-E5 | Attiva dalla prima PR agentica |
-| KPI-5 Costo | Metadati `total_cost_usd` dell'output JSON Claude per sessione | Da rilevare con S1-04 |
-| KPI-6 Difetti sfuggiti | Rilievi post-merge attribuiti a una PR agentica | Baseline iniziale: 0 osservati |
+| KPI-5 Costo | Metadati `total_cost_usd` dell'output JSON Claude per sessione | S1-04: gap; metadati non disponibili |
+| KPI-6 Difetti sfuggiti | Rilievi post-merge attribuiti a una PR agentica | S1-04: 0 osservati |
 | KPI-7 Costo idle | Sessioni Claude avviate durante polling senza task | Misurato |
 
 ## 2. Misura idle
@@ -47,3 +47,10 @@ comparabili. Va rilevato sul primo onboarding CRM `accounts` con questo metodo:
 4. Confrontare il valore con il lead time e il costo della prima esecuzione agentica S1-04.
 
 Finché questa misura non esiste, KPI-1, KPI-2 e KPI-5 non hanno un baseline quantitativo.
+
+## 4. Esito S1-05
+
+La retrospettiva del primo ciclo è registrata in
+[`10-retrospettiva-s1-04.md`](10-retrospettiva-s1-04.md). I run CI forniscono tempi di esecuzione,
+ma non il lead time del ticket; il costo LLM non è stato persistito. Questi sono gap di
+strumentazione, non valori pari a zero.

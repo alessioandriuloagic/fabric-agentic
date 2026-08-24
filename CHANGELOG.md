@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- S1-05: registrata la retrospettiva del primo ciclo CRM in `docs/technical/10-retrospettiva-s1-04.md`,
+  con KPI osservati, interventi umani non previsti e gap di strumentazione senza stime.
+
 - Verificato il run reale CRM `32648577263`: nel feature Lakehouse sono state materializzate le
   tabelle `crm_demo_accounts`, `crm_demo_load_audit` e `crm_demo_watermark`. La riconciliazione
   quantitativa via SQL e la propagazione di conteggi/watermark nel `rail-result` restano aperte.
