@@ -604,12 +604,16 @@ post-merge resta aperta.
 > Evidenza primaria: documentazione e sorgente `fabric-cicd` supportano `Report` (PBIR) e
 > `SemanticModel` (TMDL). PBIP non è un tipo deployabile: è il contenitore Desktop dei due item.
 
-**Stato 2026-08-24**: workspace `ws_agentic_test` creato e assegnato alla capacity
+**Stato 2026-08-24 — TODO futuro**: workspace `ws_agentic_test` creato e assegnato alla capacity
 `fabricalessiodev` nel tenant corrente. Semantic Model `CRM Demo` creato nel workspace con Direct
-Lake verso `lh_bronze_crm_demo`. Il Report PBIR non è stato importato via Fabric Items REST API:
-l'endpoint rifiuta il formato con `Report_Import_FailedToImportReport` e messaggio relativo alla
-risoluzione dello schema di `version.json`. S1-01 resta aperto sul deploy del report e sulla prova
-`byConnection`; validazione locale PBIR: 0 errori, warning solo per schema remoti non raggiungibili.
+Lake verso `lh_bronze_crm_demo`. Lo sviluppo Report Power BI è sospeso: Desktop continua a
+segnalare un errore JavaScript di rendering (`visualContainers`) con la live connection, nonostante
+la validazione PBIR locale. L'errore è registrato nel runbook con ID attività
+`f46caa69-5f7f-46d4-ab27-854dca94a8e2`. La pubblicazione e la verifica `byConnection` restano
+fuori dal percorso critico fino a una futura attività dedicata.
+
+**Priorità corrente**: integrare GitHub Issues per issue, stato, commenti, trigger del dispatcher e
+tracciabilità PR; Azure Boards resta il tracker legacy da dismettere.
 
 ---
 

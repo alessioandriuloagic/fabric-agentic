@@ -181,3 +181,13 @@ in full edit mode; la connessione usa `pbiServiceXmlaStyleLive`.
 Una pagina PBIR senza visual containers causava un errore JavaScript durante l'attivazione del
 report live-connected. È stata aggiunta una textbox statica non legata ai dati; la validazione PBIR
 ora restituisce 0 errori e 0 warning.
+Il renderer riceve inoltre `reportSource: Default` in `report.json`, campo ammesso dallo schema
+Report 2.0; `layoutOptimization` è stato escluso perché non ammesso dallo stesso schema.
+
+### Decisione di priorità — 2026-08-24
+
+L'errore Desktop di rendering persiste (`Cannot read properties of undefined (reading
+'visualContainers')`, attività `f46caa69-5f7f-46d4-ab27-854dca94a8e2`, rilevato il 2026-08-24).
+Lo sviluppo Report Power BI è classificato come **TODO futuro** e rimosso dal percorso critico.
+La prossima priorità è l'integrazione GitHub Issues; non sono previste altre correzioni PBIP/PBIR
+in questa fase.
