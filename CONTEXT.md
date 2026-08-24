@@ -249,8 +249,8 @@ Altro Lakehouse Fabric (shortcut) · Database / DWH · CRM (Dataverse) · ShareP
 | Review Agent app ID | `a6d3e2af-92e5-447a-bb1e-9a466e1bdaed` (`fabric-agentic-review-agent`) |
 | Deploy app ID | `33e53b67-3872-4bc0-8d20-ed76a3c85ae7` (`fabric-agentic-deploy`); service principal senza secret, federated credential e Configured Connection Git predisposte. Assegnazione feature workspace verificata con il pattern IP: Azure RBAC `Contributor` sulla capacity e Object ID `db9d4adb-db6a-4238-8e75-c69d21b1b37e` in `properties.administration.members` |
 | Workspace DEV | `ws_agentic_dev` — `abb3a689-6a8a-4a98-88da-b3f7c6de05c5`; ricreato il 2026-08-21 e assegnato a `fabricalessiodev` |
-| Workspace TEST | `ws_agentic_test` — `782a3048-e181-4138-bb2c-e87f4c75f013`; creato il 2026-08-24, assegnato alla capacity `fabricalessiodev` (`8626d394-40c1-4872-a1f1-25b8cfcbf6ad`), SKU F2 Active |
-| Ambienti non provisionati | Workspace `prod` e relative credenziali/configurazione restano non provisionati; il workspace `test` esiste ma gli item e le credenziali dedicate per S1-01 restano da predisporre |
+| Workspace TEST | `ws_agentic_test` — `782a3048-e181-4138-bb2c-e87f4c75f013`; creato il 2026-08-24 e assegnato alla capacity `fabricalessiodev` (`8626d394-40c1-4872-a1f1-25b8cfcbf6ad`), SKU F2 Active. Semantic Model `CRM Demo` creato: `c405057b-6ebe-4043-8126-a23d035fab33`; Report PBIR non ancora importato via REST |
+| Ambienti non provisionati | Workspace `prod` e relative credenziali/configurazione restano non provisionati; nel workspace `test` gli item Power BI sono parziali e manca la credenziale dedicata |
 | Ruolo Dev Agent nel workspace DEV | `Contributor`; nessun ruolo sulla capacity |
 | Federated credential OIDC | GitHub environment `dev`, subject con Organization ID `218064009` e Repository ID `1340835193`; test riuscito senza ruolo subscription |
 | GitHub environments | `dev`, `test`, `prod` presenti; protection rules non disponibili sul piano GitHub Free |

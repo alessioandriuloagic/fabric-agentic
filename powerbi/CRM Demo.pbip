@@ -6,7 +6,7 @@
         "path": "CRM Demo.Report"
       }
     },
-    {
+        {
       "dataset": {
         "path": "CRM Demo.SemanticModel"
       }

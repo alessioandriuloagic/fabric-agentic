@@ -605,9 +605,11 @@ post-merge resta aperta.
 > `SemanticModel` (TMDL). PBIP non è un tipo deployabile: è il contenitore Desktop dei due item.
 
 **Stato 2026-08-24**: workspace `ws_agentic_test` creato e assegnato alla capacity
-`fabricalessiodev` nel tenant corrente. Restano da predisporre credenziali dedicate, Semantic
-Model TMDL, Report PBIR e la prova reale degli scenari `byPath` e `byConnection`. Lo spike non è
-una dipendenza del tracer bullet dati S1-04.
+`fabricalessiodev` nel tenant corrente. Semantic Model `CRM Demo` creato nel workspace con Direct
+Lake verso `lh_bronze_crm_demo`. Il Report PBIR non è stato importato via Fabric Items REST API:
+l'endpoint rifiuta il formato con `Report_Import_FailedToImportReport` e messaggio relativo alla
+risoluzione dello schema di `version.json`. S1-01 resta aperto sul deploy del report e sulla prova
+`byConnection`; validazione locale PBIR: 0 errori, warning solo per schema remoti non raggiungibili.
 
 ---
 
