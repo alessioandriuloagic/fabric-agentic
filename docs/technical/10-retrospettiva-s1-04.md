@@ -42,7 +42,8 @@ L'issue #42 mantiene aperta la distinzione contrattuale tra delta caricato e tot
 - Conservare per ogni sessione agentica metadati di costo non sensibili: durata, token aggregati
   e `total_cost_usd`, se il runtime li espone.
 - Attivare il Review Agent prima di usare KPI-3 come misura comparabile.
-- Chiudere la semantica `loaded_count`/`total_destination_count` tramite issue #42.
+- Chiudere la semantica `loaded_count`/`total_destination_count` tramite issue #42 (implementata
+  nel contratto v1.3).
 - Usare come baseline corrente: KPI-7 = 0, KPI-6 = 0 osservati; KPI-1, KPI-2, KPI-3 e KPI-5
   restano da rilevare con strumentazione completa.
 

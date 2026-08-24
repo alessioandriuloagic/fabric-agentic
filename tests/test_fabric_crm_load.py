@@ -24,8 +24,8 @@ class FabricCrmLoadTests(unittest.TestCase):
             "rail": "run_load",
             "outcome": "success",
             "run_id": "20260823T153000Z-abcd1234",
-            "extracted_count": 10,
-            "destination_count": 10,
+            "loaded_count": 5,
+            "total_destination_count": 10,
             "watermark": "2026-08-23T15:30:00Z",
         }
 
@@ -34,10 +34,11 @@ class FabricCrmLoadTests(unittest.TestCase):
         self.assertEqual(result["rail"], "run_load")
         self.assertEqual(result["outcome"], "success")
         self.assertEqual(result["run_id"], "20260823T153000Z-abcd1234")
-        self.assertEqual(result["datasets"][0]["source_count"], 10)
-        self.assertEqual(result["datasets"][0]["destination_count"], 10)
+        self.assertEqual(result["datasets"][0]["loaded_count"], 5)
+        self.assertEqual(result["datasets"][0]["total_destination_count"], 10)
+        self.assertNotEqual(result["datasets"][0]["loaded_count"], result["datasets"][0]["total_destination_count"])
         self.assertEqual(result["watermark"], "2026-08-23T15:30:00Z")
-        schema = json.loads(Path("schemas/rail-result-v1.0.json").read_text(encoding="utf-8"))
+        schema = json.loads(Path("schemas/rail-result-v1.3.json").read_text(encoding="utf-8"))
         self.assertEqual(list(Draft202012Validator(schema, format_checker=FormatChecker()).iter_errors(result)), [])
         client.run_notebook.assert_called_once_with("workspace-id", "notebook-id")
         client.update_item_definition.assert_called_once()

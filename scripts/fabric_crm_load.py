@@ -74,16 +74,17 @@ def run_load(work_item_id: int) -> dict:
     client.run_notebook(workspace["id"], notebook["id"])
     evidence = read_load_result(workspace["id"], lakehouse["id"])
     return {
-        "schema_version": "1.0",
+        "schema_version": "1.3",
         "rail": "run_load",
         "outcome": "success",
+        "schema_version": "1.3",
         "run_id": evidence["run_id"],
         "workspace_id": workspace["id"],
         "datasets": [{
             "name": configuration["datasets"][0]["name"],
             "status": "loaded",
-            "source_count": evidence["extracted_count"],
-            "destination_count": evidence["destination_count"],
+            "loaded_count": evidence["loaded_count"],
+            "total_destination_count": evidence["total_destination_count"],
             "supports_source_count": True,
             "reconciliation": "passed",
             "pk_check": "passed",
@@ -107,7 +108,7 @@ def main() -> int:
         result = run_load(args.work_item_id)
     except (FabricPreflightError, CrmFrameworkError) as error:
         result = {
-            "schema_version": "1.0",
+            "schema_version": "1.3",
             "rail": "run_load",
             "outcome": "technical_failure",
             "run_id": f"crm-load-wi{args.work_item_id}",

@@ -127,7 +127,7 @@ def load_bronze(staged_path: str, extracted_count: int, previous_watermark: str 
         committed_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         watermark = spark.createDataFrame([(candidate, committed_at)], "watermark string, committed_at string")
         watermark.write.mode("append").format("delta").saveAsTable(WATERMARK_TABLE)
-    return {"extracted_count": extracted_count, "destination_count": destination_count, "watermark": candidate}
+    return {"loaded_count": extracted_count, "total_destination_count": destination_count, "watermark": candidate}
 
 
 # CELL ********************
@@ -138,7 +138,7 @@ staging_path = write_staging(accounts)
 load_result = load_bronze(staging_path, len(accounts), confirmed_watermark)
 
 evidence = {
-    "schema_version": "1.0",
+    "schema_version": "1.3",
     "rail": "run_load",
     "outcome": "success",
     "run_id": RUN_ID,

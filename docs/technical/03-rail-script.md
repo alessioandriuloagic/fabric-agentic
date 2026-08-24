@@ -154,8 +154,8 @@ l'esito. Mai dai log della pipeline, sempre da questo artefatto. Lo schema norma
     {
       "name": "dataset_name",
       "status": "loaded|skipped|failed",
-      "source_count": 1000,
-      "destination_count": 1000,
+      "loaded_count": 1000,
+      "total_destination_count": 1000,
       "reconciliation": "passed|failed|not_applicable",
       "supports_source_count": true,
       "pk_check": "passed|failed|not_applicable"
@@ -174,6 +174,9 @@ l'esito. Mai dai log della pipeline, sempre da questo artefatto. Lo schema norma
 **Campi critici:**
 - **`outcome`**: categorizzazione semantica, non codice di uscita. `success` se tutto verde, `technical_failure` se errore esecuzione, `quality_failure` se controlli falliscono.
 - **`supports_source_count`**: booleano. Se `false`, il Review Agent non deve forzare la riconciliazione dei conteggi per questo dataset.
+- **`loaded_count`**: numero di record caricati o processati nel batch corrente.
+- **`total_destination_count`**: numero totale di record presenti nella destinazione dopo il merge.
+  Non rappresenta il delta del batch e può quindi essere maggiore di `loaded_count`.
 - **`diagnostics`**: opzionale per i carichi, obbligatorio per `diagnose_data`; può contenere solo
   statistiche, indicatori e identificativi mascherati conformi alla policy dati dell'istanza.
 
