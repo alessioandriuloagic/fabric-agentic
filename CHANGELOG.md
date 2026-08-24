@@ -33,6 +33,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Aggiunto lo schema ufficiale `fabric/pbip/pbipProperties/1.0.0` al manifest `CRM Demo.pbip`,
   evitando che Desktop interpreti il progetto con il parser legacy.
+
+- Allineata la versione del manifest shortcut PBIP a `1.0`, perché Power BI Desktop August 2026
+  rifiuta `1.0.0` come minor version non supportata; le versioni PBIR interne restano invariate.
 - S1-01: predisposto il progetto PBIP/TMDL CRM Demo con Direct Lake verso `lh_bronze_crm_demo`.
   Il Semantic Model è stato creato nel workspace test; il manifest PBIP è stato corretto per usare
   un solo artifact `report`, con il modello collegato da `definition.pbir`.

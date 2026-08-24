@@ -16,3 +16,9 @@ Desktop può usare il parser legacy e segnalare una minor version non supportata
 Usare `versionMetadata/1.0.0` per `version.json`, con contenuto `"version": "1.0.0"`, e
 `pagesMetadata/1.0.0` per `pages.json`. La validazione locale deve risultare succeeded con zero
 errori e zero warning.
+
+## Versione shortcut PBIP
+
+La build Desktop August 2026 segnala una minor version non supportata quando il manifest usa
+`"version": "1.0.0"`. Il manifest shortcut viene portato a `"version": "1.0"`; questa è distinta
+dalla versione PBIR `definition.pbir` (`4.0`) e da quella metadata dei file PBIR (`1.0.0`).
