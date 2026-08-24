@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Corretto lo schema `$schema` dei file `.platform` PBIP/PBIR al formato Git Integration richiesto
+  da Power BI Desktop (`gitIntegration/platformProperties/2.0.0`).
+
 - S1-01: predisposto il progetto PBIP/TMDL CRM Demo con Direct Lake verso `lh_bronze_crm_demo`.
   Il Semantic Model è stato creato nel workspace test; il manifest PBIP è stato corretto per usare
   un solo artifact `report`, con il modello collegato da `definition.pbir`.

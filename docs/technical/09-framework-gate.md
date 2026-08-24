@@ -136,3 +136,8 @@ Power BI Desktop rifiutava `powerbi/CRM Demo.pbip` perché il manifest dichiarav
 artifact `dataset`. Il formato PBIP del Desktop richiede un solo artifact `report`; il semantic
 model resta collegato dal `datasetReference` in `definition.pbir`. La validazione del Report ora
 restituisce 0 errori; restano solo warning per schemi remoti non raggiungibili.
+### Correzione schema `.platform` — 2026-08-24
+
+Power BI Desktop ha poi rifiutato il progetto perché i file `.platform` usavano lo schema
+`item/platformProperties`. Entrambi sono stati aggiornati al formato Git Integration
+`gitIntegration/platformProperties/2.0.0/schema.json`, richiesto dal PBIP/PBIR corrente.
