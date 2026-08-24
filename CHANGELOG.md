@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- S1-01: predisposto il progetto PBIP/TMDL CRM Demo con Direct Lake verso `lh_bronze_crm_demo`.
+  Il Semantic Model è stato creato nel workspace test; l'import del Report PBIR via Fabric Items
+  REST API resta bloccato da `Report_Import_FailedToImportReport` sulla risoluzione di `version.json`.
 - Creato e verificato il workspace Fabric `ws_agentic_test` nel tenant corrente, assegnato alla
   capacity `fabricalessiodev` con SKU F2; restano da predisporre gli item e le credenziali dello
   spike Power BI S1-01.

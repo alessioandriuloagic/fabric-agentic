@@ -117,3 +117,15 @@ Il run post-merge sul commit `5c8ca12f46107603d6a1d4465207b5439bcbef16` ha pubbl
 è il delta estratto, mentre 10 è il totale Bronze dopo il merge; il contratto dovrà distinguere
 esplicitamente conteggio caricato e totale destinazione per evitare ambiguità. La versione v1.3
 del contratto formalizza questa distinzione.
+
+## 8. S1-01 — Spike Power BI
+
+Il workspace `ws_agentic_test` è stato creato il 2026-08-24. Nel workspace è stato creato il
+Semantic Model `CRM Demo` (`c405057b-6ebe-4043-8126-a23d035fab33`) in Direct Lake verso il
+Lakehouse `lh_bronze_crm_demo`. La validazione locale del Report PBIR ha prodotto 0 errori.
+
+L'import del Report tramite Fabric Items REST API non è riuscito: il servizio ha restituito
+`Report_Import_FailedToImportReport` con un errore sulla risoluzione dello schema/versione di
+`version.json`. La verifica read-only successiva conferma che nel workspace è presente solo il
+Semantic Model e nessun Report. S1-01 resta quindi parzialmente completato; sono da valutare
+Git Integration, pubblicazione da Power BI Desktop o API legacy PBIX.

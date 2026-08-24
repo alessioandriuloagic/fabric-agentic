@@ -1,0 +1,12 @@
+{
+  "version": "2.0.0",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/platformProperties/2.0.0/schema.json",
+  "config": {
+    "logicalId": "f6d6a4e9-6d6e-4d94-ae3e-6b7a0a9a0012"
+  },
+  "metadata": {
+    "type": "Report",
+    "displayName": "CRM Demo",
+    "description": "Minimal report for the Fabric CI/CD Power BI spike."
+  }
+}
