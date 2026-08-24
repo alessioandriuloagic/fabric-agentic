@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Rimosse le visuali PBIR pre-associate dal report CRM Demo per evitare `Missing_References` con
+  il Semantic Model live: il report resta collegato via `byConnection` e le visuali saranno
+  ricreate in Desktop dopo la verifica degli oggetti effettivamente esposti dal modello remoto.
+
 - Corretto lo schema `$schema` dei file `.platform` PBIP/PBIR al formato Git Integration richiesto
   da Power BI Desktop (`gitIntegration/platformProperties/2.0.0`).
 
@@ -23,6 +27,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Allineati gli schema metadata PBIR: `version.json` usa `versionMetadata/1.0.0` e `pages.json`
   usa `pagesMetadata/1.0.0`; validazione locale conclusa con 0 errori e 0 warning.
+
+- Allineata anche la versione del contenuto PBIR in `version.json` a `1.0.0`, compatibile con
+  Power BI Desktop August 2026; `definition.pbir` resta a versione `4.0`.
 
 - S1-01: predisposto il progetto PBIP/TMDL CRM Demo con Direct Lake verso `lh_bronze_crm_demo`.
   Il Semantic Model è stato creato nel workspace test; il manifest PBIP è stato corretto per usare
