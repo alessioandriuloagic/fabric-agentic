@@ -39,5 +39,7 @@ audit and watermark tables in the feature Lakehouse. Counts and the committed wa
 yet propagated into `rail-result.json`; they still require SQL verification.
 
 The execution evidence reports 10 rows in `crm_demo_accounts`, one row in
-`crm_demo_load_audit`, and one row in `crm_demo_watermark`. The next run will also publish these
-aggregates and the committed watermark in `rail-result.json`.
+`crm_demo_load_audit`, and one row in `crm_demo_watermark`. Run `32648994929` also published
+`source_count=5`, `destination_count=10`, passed PK/reconciliation checks, and watermark
+`2026-08-21T17:39:25Z`. Here 5 is the incremental delta and 10 is the total Bronze after merge;
+the rail should later distinguish these counts explicitly.
