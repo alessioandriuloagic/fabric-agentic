@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- S1-01: predisposto il progetto PBIP/TMDL CRM Demo con Direct Lake verso `lh_bronze_crm_demo`.
+  Il Semantic Model è stato creato nel workspace test; l'import del Report PBIR via Fabric Items
+  REST API resta bloccato da `Report_Import_FailedToImportReport` sulla risoluzione di `version.json`.
+
 - Issue #42: introdotto il contratto rail-result v1.3 per `run_load`, con distinzione esplicita
   tra `loaded_count` del batch e `total_destination_count` dopo il merge.
 
