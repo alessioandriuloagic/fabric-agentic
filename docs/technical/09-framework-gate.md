@@ -141,3 +141,5 @@ restituisce 0 errori; restano solo warning per schemi remoti non raggiungibili.
 Power BI Desktop ha poi rifiutato il progetto perché i file `.platform` usavano lo schema
 `item/platformProperties`. Entrambi sono stati aggiornati al formato Git Integration
 `gitIntegration/platformProperties/2.0.0/schema.json`, richiesto dal PBIP/PBIR corrente.
+La versione dell'artifact è valorizzata dentro `config.version`; una proprietà `version` alla
+radice viene rifiutata da Power BI Desktop.
