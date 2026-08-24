@@ -604,9 +604,10 @@ post-merge resta aperta.
 > Evidenza primaria: documentazione e sorgente `fabric-cicd` supportano `Report` (PBIR) e
 > `SemanticModel` (TMDL). PBIP non è un tipo deployabile: è il contenitore Desktop dei due item.
 
-**Stato 2026-08-21**: differito. Il criterio richiede uno workspace `test`, ma ADR-0011 mantiene
-`test` e `prod` non provisionati/configurati fino a workspace e credenziali dedicate. Lo spike non
-è una dipendenza del tracer bullet dati S1-04.
+**Stato 2026-08-24**: workspace `ws_agentic_test` creato e assegnato alla capacity
+`fabricalessiodev` nel tenant corrente. Restano da predisporre credenziali dedicate, Semantic
+Model TMDL, Report PBIR e la prova reale degli scenari `byPath` e `byConnection`. Lo spike non è
+una dipendenza del tracer bullet dati S1-04.
 
 ---
 

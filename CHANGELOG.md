@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Creato e verificato il workspace Fabric `ws_agentic_test` nel tenant corrente, assegnato alla
+  capacity `fabricalessiodev` con SKU F2; restano da predisporre gli item e le credenziali dello
+  spike Power BI S1-01.
+
 - Issue #42: introdotto il contratto rail-result v1.3 per `run_load`, con distinzione esplicita
   tra `loaded_count` del batch e `total_destination_count` dopo il merge.
 
