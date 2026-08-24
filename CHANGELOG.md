@@ -36,6 +36,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Allineata la versione del manifest shortcut PBIP a `1.0`, perché Power BI Desktop August 2026
   rifiuta `1.0.0` come minor version non supportata; le versioni PBIR interne restano invariate.
+
+- Ripristinata la versione PBIR `4.0.0` in `definition/version.json`: il formato PBIR con cartella
+  `definition/` richiede `4.0` o superiore; `1.0.0` faceva ignorare i visual containers e causava
+  l'errore JavaScript `visualContainers` durante il rendering.
 - S1-01: predisposto il progetto PBIP/TMDL CRM Demo con Direct Lake verso `lh_bronze_crm_demo`.
   Il Semantic Model è stato creato nel workspace test; il manifest PBIP è stato corretto per usare
   un solo artifact `report`, con il modello collegato da `definition.pbir`.

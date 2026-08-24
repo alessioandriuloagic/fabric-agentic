@@ -148,6 +148,8 @@ Il manifest `CRM Demo.pbip` include inoltre lo schema ufficiale
 `version`.
 La versione dello shortcut è `1.0`, compatibile con la build Desktop August 2026; non va confusa
 con `definition.pbir` a versione `4.0`.
+La versione di `definition/version.json` è `4.0.0`, necessaria perché il report usa il formato PBIR
+con cartella `definition/`; usare `1.0.0` fa ignorare i visual containers e rompe il rendering.
 
 ### Correzione apertura PBIP — 2026-08-24
 
