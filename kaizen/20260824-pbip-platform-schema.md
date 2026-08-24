@@ -15,6 +15,12 @@ Usare lo schema Git Integration in `.platform` sia per Report sia per Semantic M
 `config.version` e `config.logicalId` obbligatori.
 Validare il progetto con Power BI Desktop dopo ogni correzione del manifest o degli artifact.
 
+## Versioni metadata PBIR
+
+I file `version.json` e `pages.json` sono metadata e richiedono rispettivamente gli schema
+`versionMetadata/1.0.0` e `pagesMetadata/1.0.0`; gli schema `version/` e `pages/2.0.0` non sono
+compatibili con il formato metadata richiesto da Power BI Desktop.
+
 ## Ulteriore correzione
 
 `defaultPowerBIDataSourceVersion` non appartiene a `definition.pbism`; va mantenuta in

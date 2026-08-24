@@ -130,6 +130,10 @@ Semantic Model e nessun Report. La pubblicazione del Report è stata assegnata m
 all'utente. S1-01 resta quindi parzialmente completato fino alla pubblicazione e alla verifica
 `byConnection`.
 
+I metadata PBIR sono ora allineati agli schema supportati: `version.json` usa
+`versionMetadata/1.0.0` e `pages/pages.json` usa `pagesMetadata/1.0.0`. Il validator locale
+restituisce `succeeded`, con 0 errori e 0 warning.
+
 ### Correzione apertura PBIP — 2026-08-24
 
 Power BI Desktop rifiutava `powerbi/CRM Demo.pbip` perché il manifest dichiarava un secondo
