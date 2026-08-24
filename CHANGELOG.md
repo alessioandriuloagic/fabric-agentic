@@ -9,9 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-<<<<<<< HEAD
-=======
->>>>>>> 2ff71f2 (fix(powerbi): use dataset artifact in PBIP manifest)
 - Creato e verificato il workspace Fabric `ws_agentic_test` nel tenant corrente, assegnato alla
   capacity `fabricalessiodev` con SKU F2; restano da predisporre gli item e le credenziali dello
   spike Power BI S1-01.
