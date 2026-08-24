@@ -1,8 +1,14 @@
 {
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/1.0.0/schema.json",
   "version": "4.0",
   "datasetReference": {
-    "byPath": {
-      "path": "../CRM Demo.SemanticModel"
+    "byConnection": {
+      "connectionString": "Data Source=powerbi://api.powerbi.com/v1.0/myorg/ws_agentic_test;Initial Catalog=CRM Demo;Integrated Security=ClaimsToken",
+      "pbiServiceModelId": null,
+      "pbiModelVirtualServerName": "sobe_wowvirtualserver",
+      "pbiModelDatabaseName": "c405057b-6ebe-4043-8126-a23d035fab33",
+      "connectionType": "pbiServiceXmlaStyleLive",
+      "name": "EntityDataSource"
     }
   }
 }
