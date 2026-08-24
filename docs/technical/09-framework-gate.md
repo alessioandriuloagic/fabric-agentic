@@ -141,6 +141,8 @@ PBIR locali; le visuali vanno ricreate in Desktop dopo la verifica del modello r
 I metadata PBIR sono ora allineati agli schema supportati: `version.json` usa
 `versionMetadata/1.0.0` e `pages/pages.json` usa `pagesMetadata/1.0.0`. Il validator locale
 restituisce `succeeded`, con 0 errori e 0 warning.
+Il contenuto di `version.json` è `1.0.0`; `definition.pbir` mantiene `4.0` perché sono versioni
+di file differenti.
 
 ### Correzione apertura PBIP — 2026-08-24
 
