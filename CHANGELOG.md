@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Rimosse le visuali PBIR pre-associate dal report CRM Demo per evitare `Missing_References` con
+  il Semantic Model live: il report resta collegato via `byConnection` e le visuali saranno
+  ricreate in Desktop dopo la verifica degli oggetti effettivamente esposti dal modello remoto.
+
 - Corretto lo schema `$schema` dei file `.platform` PBIP/PBIR al formato Git Integration richiesto
   da Power BI Desktop (`gitIntegration/platformProperties/2.0.0`).
 

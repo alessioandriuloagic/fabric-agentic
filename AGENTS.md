@@ -144,6 +144,7 @@ discipline used for release version bumps above.
 
 ## Kaizen Learnings
 
+- **[2026-08-24] PBIR live model references** → [kaizen/20260824-pbir-live-references.md](kaizen/20260824-pbir-live-references.md)
 - **[2026-08-24] PBIP platform schema** → [kaizen/20260824-pbip-platform-schema.md](kaizen/20260824-pbip-platform-schema.md)
 - **[2026-08-24] PBIR metadata schema** → [kaizen/20260824-pbir-metadata-schema.md](kaizen/20260824-pbir-metadata-schema.md)
 - **[2026-08-24] PBIP live semantic model binding** → [kaizen/20260824-pbip-byconnection.md](kaizen/20260824-pbip-byconnection.md)
