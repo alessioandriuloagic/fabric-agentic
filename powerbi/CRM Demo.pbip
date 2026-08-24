@@ -6,8 +6,8 @@
         "path": "CRM Demo.Report"
       }
     },
-    {
-      "semanticModel": {
+        {
+      "dataset": {
         "path": "CRM Demo.SemanticModel"
       }
     }
