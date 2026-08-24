@@ -144,6 +144,7 @@ discipline used for release version bumps above.
 
 ## Kaizen Learnings
 
+- **[2026-08-24] PBIP platform schema** → [kaizen/20260824-pbip-platform-schema.md](kaizen/20260824-pbip-platform-schema.md)
 - **[2026-08-24] PBIP: un solo report artifact** → [kaizen/20260824-pbip-report-artifact.md](kaizen/20260824-pbip-report-artifact.md)
 - **[2026-08-23] Destinazione Key Vault confermata dall'owner** → [kaizen/20260823-keyvault-target.md](kaizen/20260823-keyvault-target.md)
 - **[2026-08-23] Distinguere condivisione e identita' della connection** → [kaizen/20260823-oauth-connection-identity.md](kaizen/20260823-oauth-connection-identity.md)
