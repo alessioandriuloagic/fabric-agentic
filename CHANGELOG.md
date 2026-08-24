@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Aggiunto `reportSource: Default` ai metadati PBIR del report CRM Demo per inizializzare
+  esplicitamente l'esplorazione durante il rendering della live connection.
+
 - Aggiunta una textbox statica al report PBIR CRM Demo: una pagina senza visual containers causava
   il crash JavaScript `visualContainers` durante l'attivazione del report live-connected.
 

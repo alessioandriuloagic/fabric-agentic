@@ -181,3 +181,6 @@ in full edit mode; la connessione usa `pbiServiceXmlaStyleLive`.
 Una pagina PBIR senza visual containers causava un errore JavaScript durante l'attivazione del
 report live-connected. È stata aggiunta una textbox statica non legata ai dati; la validazione PBIR
 ora restituisce 0 errori e 0 warning.
+
+Il renderer riceve inoltre `reportSource: Default` in `report.json`, campo ammesso dallo schema
+Report 2.0; `layoutOptimization` è stato escluso perché non ammesso dallo stesso schema.
