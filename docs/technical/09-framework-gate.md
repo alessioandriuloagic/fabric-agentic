@@ -143,3 +143,7 @@ Power BI Desktop ha poi rifiutato il progetto perché i file `.platform` usavano
 `gitIntegration/platformProperties/2.0.0/schema.json`, richiesto dal PBIP/PBIR corrente.
 La versione dell'artifact è valorizzata dentro `config.version`; una proprietà `version` alla
 radice viene rifiutata da Power BI Desktop.
+
+Il successivo errore su `definition.pbism` è stato corretto rimuovendo
+`defaultPowerBIDataSourceVersion` da quel file: la proprietà resta nel `model.tmdl`, mentre
+`definition.pbism` contiene solo `version`.

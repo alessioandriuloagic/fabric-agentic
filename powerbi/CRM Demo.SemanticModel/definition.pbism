@@ -1,4 +1,3 @@
 {
-  "version": "4.0",
-  "defaultPowerBIDataSourceVersion": "powerBI_V3"
+  "version": "4.0"
 }

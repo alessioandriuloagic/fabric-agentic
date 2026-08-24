@@ -14,3 +14,8 @@ URL, Desktop ha mostrato che `version` deve stare dentro `config`, non alla radi
 Usare lo schema Git Integration in `.platform` sia per Report sia per Semantic Model, con
 `config.version` e `config.logicalId` obbligatori.
 Validare il progetto con Power BI Desktop dopo ogni correzione del manifest o degli artifact.
+
+## Ulteriore correzione
+
+`defaultPowerBIDataSourceVersion` non appartiene a `definition.pbism`; va mantenuta in
+`definition/model.tmdl`. Il file `definition.pbism` contiene solo la versione del formato.
