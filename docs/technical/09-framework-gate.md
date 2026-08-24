@@ -175,3 +175,9 @@ Il report usa ora `datasetReference.byConnection` in `definition.pbir` verso il 
 `CRM Demo` (`c405057b-6ebe-4043-8126-a23d035fab33`) nel workspace `ws_agentic_test`
 (`782a3048-e181-4138-bb2c-e87f4c75f013`). Il binding live evita che Desktop apra il modello locale
 in full edit mode; la connessione usa `pbiServiceXmlaStyleLive`.
+
+### Correzione renderer `visualContainers` — 2026-08-24
+
+Una pagina PBIR senza visual containers causava un errore JavaScript durante l'attivazione del
+report live-connected. È stata aggiunta una textbox statica non legata ai dati; la validazione PBIR
+ora restituisce 0 errori e 0 warning.
