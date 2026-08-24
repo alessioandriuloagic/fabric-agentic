@@ -1,0 +1,18 @@
+{
+  "version": "1.0.0",
+  "artifacts": [
+    {
+      "report": {
+        "path": "CRM Demo.Report"
+      }
+    },
+    {
+      "dataset": {
+        "path": "CRM Demo.SemanticModel"
+      }
+    }
+  ],
+  "settings": {
+    "enableAutoRecovery": true
+  }
+}

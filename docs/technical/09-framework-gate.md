@@ -117,3 +117,29 @@ Il run post-merge sul commit `5c8ca12f46107603d6a1d4465207b5439bcbef16` ha pubbl
 è il delta estratto, mentre 10 è il totale Bronze dopo il merge; il contratto dovrà distinguere
 esplicitamente conteggio caricato e totale destinazione per evitare ambiguità. La versione v1.3
 del contratto formalizza questa distinzione.
+<<<<<<< HEAD
+=======
+
+## 8. S1-01 — Spike Power BI
+
+Il workspace `ws_agentic_test` è stato creato il 2026-08-24. Nel workspace è stato creato il
+Semantic Model `CRM Demo` (`c405057b-6ebe-4043-8126-a23d035fab33`) in Direct Lake verso il
+Lakehouse `lh_bronze_crm_demo`. La validazione locale del Report PBIR ha prodotto 0 errori.
+
+L'import del Report tramite Fabric Items REST API non è riuscito: il servizio ha restituito
+`Report_Import_FailedToImportReport` con un errore sulla risoluzione dello schema/versione di
+`version.json`. La verifica read-only successiva conferma che nel workspace è presente solo il
+Semantic Model e nessun Report. La pubblicazione del Report è stata assegnata manualmente
+all'utente. S1-01 resta quindi parzialmente completato fino alla pubblicazione e alla verifica
+`byConnection`.
+
+### Correzione apertura PBIP — 2026-08-24
+
+Power BI Desktop rifiutava `powerbi/CRM Demo.pbip` perché il manifest dichiarava `semanticModel`
+ come secondo artifact. Il formato PBIP del Desktop richiede invece la proprietà `dataset`; il
+ manifest è stato corretto mantenendo il path `CRM Demo.SemanticModel`. La validazione del Report
+ ora restituisce 0 errori; restano solo warning per schemi remoti non raggiungibili.
+come secondo artifact. Il formato PBIP del Desktop richiede invece la proprietà `dataset`; il
+manifest è stato corretto mantenendo il path `CRM Demo.SemanticModel`. La validazione del Report
+ora restituisce 0 errori; restano solo warning per schemi remoti non raggiungibili.
+>>>>>>> 2ff71f2 (fix(powerbi): use dataset artifact in PBIP manifest)
