@@ -11,5 +11,8 @@ alle versioni metadata PBIR supportate.
 o `pages/2.0.0` produce un mismatch tra schema e modello.
 
 ## What to do instead
-Usare `versionMetadata/1.0.0` per `version.json` e `pagesMetadata/1.0.0` per `pages.json`.
-La validazione locale deve risultare succeeded con zero errori e zero warning.
+Il manifest `.pbip` deve includere lo schema `fabric/pbip/pbipProperties/1.0.0`; senza `$schema`
+Desktop può usare il parser legacy e segnalare una minor version non supportata.
+Usare `versionMetadata/1.0.0` per `version.json`, con contenuto `"version": "1.0.0"`, e
+`pagesMetadata/1.0.0` per `pages.json`. La validazione locale deve risultare succeeded con zero
+errori e zero warning.

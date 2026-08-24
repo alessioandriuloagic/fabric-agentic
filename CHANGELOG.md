@@ -24,6 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Allineati gli schema metadata PBIR: `version.json` usa `versionMetadata/1.0.0` e `pages.json`
   usa `pagesMetadata/1.0.0`; validazione locale conclusa con 0 errori e 0 warning.
 
+- Allineata anche la versione del contenuto PBIR in `version.json` a `1.0.0`, compatibile con
+  Power BI Desktop August 2026; `definition.pbir` resta a versione `4.0`.
+
+- Aggiunto lo schema ufficiale `fabric/pbip/pbipProperties/1.0.0` al manifest `CRM Demo.pbip`,
+  evitando che Desktop interpreti il progetto con il parser legacy.
+
 - S1-01: predisposto il progetto PBIP/TMDL CRM Demo con Direct Lake verso `lh_bronze_crm_demo`.
   Il Semantic Model è stato creato nel workspace test; il manifest PBIP è stato corretto per usare
   un solo artifact `report`, con il modello collegato da `definition.pbir`.

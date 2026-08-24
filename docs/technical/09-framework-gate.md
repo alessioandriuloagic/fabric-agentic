@@ -133,6 +133,11 @@ all'utente. S1-01 resta quindi parzialmente completato fino alla pubblicazione e
 I metadata PBIR sono ora allineati agli schema supportati: `version.json` usa
 `versionMetadata/1.0.0` e `pages/pages.json` usa `pagesMetadata/1.0.0`. Il validator locale
 restituisce `succeeded`, con 0 errori e 0 warning.
+Il contenuto di `version.json` è `1.0.0`; `definition.pbir` mantiene `4.0` perché sono versioni
+di file differenti.
+Il manifest `CRM Demo.pbip` include inoltre lo schema ufficiale
+`fabric/pbip/pbipProperties/1.0.0`, necessario per evitare il parsing legacy della proprietà
+`version`.
 
 ### Correzione apertura PBIP — 2026-08-24
 
