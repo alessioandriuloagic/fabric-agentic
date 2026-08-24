@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corretto `definition.pbism`: rimossa la proprietà non supportata
   `defaultPowerBIDataSourceVersion`, già presente nel `model.tmdl` dove è prevista.
 
+- Collegato `CRM Demo.Report` al Semantic Model Fabric remoto tramite `datasetReference.byConnection`
+  e `pbiServiceXmlaStyleLive`, usando il workspace `ws_agentic_test` e l'ID del modello pubblicato.
+
 - S1-01: predisposto il progetto PBIP/TMDL CRM Demo con Direct Lake verso `lh_bronze_crm_demo`.
   Il Semantic Model è stato creato nel workspace test; il manifest PBIP è stato corretto per usare
   un solo artifact `report`, con il modello collegato da `definition.pbir`.

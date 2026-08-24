@@ -147,3 +147,10 @@ radice viene rifiutata da Power BI Desktop.
 Il successivo errore su `definition.pbism` è stato corretto rimuovendo
 `defaultPowerBIDataSourceVersion` da quel file: la proprietà resta nel `model.tmdl`, mentre
 `definition.pbism` contiene solo `version`.
+
+### Binding live al Semantic Model — 2026-08-24
+
+Il report usa ora `datasetReference.byConnection` in `definition.pbir` verso il Semantic Model
+`CRM Demo` (`c405057b-6ebe-4043-8126-a23d035fab33`) nel workspace `ws_agentic_test`
+(`782a3048-e181-4138-bb2c-e87f4c75f013`). Il binding live evita che Desktop apra il modello locale
+in full edit mode; la connessione usa `pbiServiceXmlaStyleLive`.
