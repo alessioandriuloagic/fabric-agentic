@@ -130,6 +130,14 @@ Semantic Model e nessun Report. La pubblicazione del Report è stata assegnata m
 all'utente. S1-01 resta quindi parzialmente completato fino alla pubblicazione e alla verifica
 `byConnection`.
 
+### Blocco `Missing_References` — 2026-08-24
+
+Desktop ha restituito `Missing_References` durante il caricamento delle visuali PBIR. La
+definition del Semantic Model live non è interrogabile tramite gli endpoint disponibili e non ha
+refresh registrati; per evitare riferimenti dati non verificati, le visuali pre-associate sono
+state rimosse. Il report mantiene il binding `byConnection` e si apre senza dipendere da query
+PBIR locali; le visuali vanno ricreate in Desktop dopo la verifica del modello remoto.
+
 I metadata PBIR sono ora allineati agli schema supportati: `version.json` usa
 `versionMetadata/1.0.0` e `pages/pages.json` usa `pagesMetadata/1.0.0`. Il validator locale
 restituisce `succeeded`, con 0 errori e 0 warning.
