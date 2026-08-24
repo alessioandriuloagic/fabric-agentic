@@ -146,6 +146,8 @@ di file differenti.
 Il manifest `CRM Demo.pbip` include inoltre lo schema ufficiale
 `fabric/pbip/pbipProperties/1.0.0`, necessario per evitare il parsing legacy della proprietà
 `version`.
+La versione dello shortcut è `1.0`, compatibile con la build Desktop August 2026; non va confusa
+con `definition.pbir` a versione `4.0`.
 
 ### Correzione apertura PBIP — 2026-08-24
 
