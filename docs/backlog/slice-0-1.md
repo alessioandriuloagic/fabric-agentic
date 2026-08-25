@@ -236,7 +236,9 @@ revisione umana restano obbligatori, ma i 9 controlli pratici non sono marcati c
 Agent su `ws_agentic_dev` e nessun accesso Fabric per il Review Agent. La GET del workspace ha
 restituito HTTP `200`, ma il POST di creazione workspace ha restituito HTTP `201`: il Dev Agent può
 ancora creare risorse. Il workspace di probe è stato eliminato immediatamente. Il setting tenant va
-ristretto al solo gruppo `FabricAgentDeploy` e la prova va ripetuta.
+ristretto al solo gruppo `FabricAgentDeploy` e la prova va ripetuta. La verifica Entra del
+2026-08-25 mostra però che `FabricAgentDeploy` ha 0 membri; il Dev Agent Object ID
+`f3db164f-509c-46ff-83b2-23b1b81b4b19` non risulta nella membership del gruppo.
 
 ---
 

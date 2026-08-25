@@ -68,7 +68,8 @@ La prova API del Service Principal Dev Agent ha ottenuto un token nel tenant cor
 `https://api.fabric.microsoft.com` e la GET del workspace ha restituito HTTP `200`: la lettura
 Viewer è verificata. Un POST di creazione workspace ha però restituito HTTP `201`; la risorsa di
 probe è stata eliminata immediatamente. Il setting tenant di creazione deve essere ristretto al
-gruppo `FabricAgentDeploy` prima di ripetere le prove di scrittura.
+gruppo `FabricAgentDeploy` prima di ripetere le prove di scrittura. La verifica Entra del
+2026-08-25 mostra il gruppo con 0 membri; il Dev Agent non risulta nella membership effettiva.
 
 ### 3.1 Dev Agent
 

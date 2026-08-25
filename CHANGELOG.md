@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Registrato il fallimento del probe S0-07: il Dev Agent legge il workspace con HTTP `200`, ma può
   ancora creare un workspace con HTTP `201`; la risorsa temporanea è stata eliminata. Il setting
-  di creazione va ristretto al gruppo `FabricAgentDeploy`.
+  di creazione va ristretto al gruppo `FabricAgentDeploy`. La verifica Entra mostra però il gruppo
+  vuoto, quindi il Dev Agent continua a poter creare risorse.
 
 - Aggiornato il risultato della prova S0-07: il Service Principal Dev Agent legge il workspace
   Fabric con HTTP `200`; il setting di creazione workspace/connection/deployment pipeline resta
