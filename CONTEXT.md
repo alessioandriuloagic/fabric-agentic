@@ -73,8 +73,10 @@ sola. Sempre qualificata.
 - Dopo l'update dei permessi sull'installazione, il test reale GitHub raggiunge l'API e il
    dispatcher legge correttamente una issue di prova (`#64`) con label `dev-agent`:
    `1 task found`, trigger `new_work`, in `dry-run`.
-- L'issue di prova `#64` resta aperta per consentire verifiche successive e va chiusa al termine
-   della validazione operativa.
+- L'issue di prova `#64` è stata chiusa dopo la validazione read-only.
+- Lifecycle operativo GitHub verificato sull'issue temporanea `#66`: `new_work`, passaggio a
+   `Doing`, sessione smoke S0-14, commento dell'identità GitHub App e passaggio finale a `Done`
+   (issue chiusa). Il log dispatcher conferma il polling e il completamento del ciclo.
 - Il test reale Azure DevOps passa con il work item `#6`: il service principal ottiene il token
    tramite il certificato locale e il dispatcher trova `1 task` con trigger `new_work`.
 - Identità Azure DevOps individuata: App Registration/Service Principal Dev Agent con Application
