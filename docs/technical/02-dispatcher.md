@@ -16,11 +16,10 @@ Il risultato della sessione viene verificato: un exit code non riuscito produce 
 (`Dev Agent session failed`) dopo la persistenza del dispatch. Il ciclo non viene quindi registrato
 come completato con successo e lo stato conserva l'ID già assegnato per evitare duplicazioni.
 
-Per GitHub il handoff include il body dell'issue e gli allegati presenti come link
-`https://github.com/user-attachments/...`. Il dispatcher scarica gli allegati nella directory
-temporanea del task e scrive `issue-context.md`, che il Dev Agent deve leggere insieme al task
-record. Sono accettati solo questi URL e ogni file è limitato a 10 MiB; token e contenuti non
-entrano nei log.
+Per GitHub il handoff include il body dell'issue. Gli allegati destinati all'automazione sono
+versionati in `attachments/<issue-number>/` e vengono letti direttamente dalla clone isolata;
+non si dipende dal download degli URL `user-attachments`, che non ha un endpoint GitHub App
+documentato. Ogni file è limitato a 10 MiB; token e contenuti non entrano nei log.
 
 Conseguenza diretta: a sistema fermo il costo è **zero**. Se il polling fosse affidato al modello,
 pagheresti token per scoprire ripetutamente che non c'è nulla da fare — che è la condizione in cui

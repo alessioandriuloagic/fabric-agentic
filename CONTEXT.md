@@ -64,6 +64,7 @@ sola. Sempre qualificata.
 | **GitHubIssuesTracker** | Adapter per GitHub Issues. Usa REST API + GraphQL. Identità di dispatch via GitHub App (federated OIDC). |
 | **Device-of-record tag** | Tag/label sul work item che qualifica quale agente detiene il lavoro. Default: `dev-agent` (Azure) e label `dev-agent` (GitHub). |
 | **Waiting-input tag** | Tag/label aggiunto quando il work item è in `Doing` e attende feedback umano (commento da non-agente). Permette al dispatcher di discriminare tra agente bloccato e agente attivo. |
+| **Issue attachment repository path** | Percorso versionato `attachments/<issue-number>/` per trascrizioni e file che il Dev Agent deve leggere nella clone isolata. |
 
 ### Stato verifica backend (2026-08-25)
 

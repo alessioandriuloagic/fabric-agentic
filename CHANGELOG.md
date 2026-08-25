@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Aggiunta la cartella `attachments/<issue-number>/` come canale versionato e riproducibile per
+  trascrizioni e file che il Dev Agent deve leggere.
+
 - Il dispatcher ora solleva `DispatcherError` quando la sessione Dev Agent termina con exit code
   non riuscito, evitando di registrare il ciclo come completato senza successo.
 
