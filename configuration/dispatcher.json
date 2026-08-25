@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "azure_devops": {
+    "organization": "AlessioAndriuloDev",
+    "project": "fabric-agentic",
+    "tenant_domain": "agicdev.onmicrosoft.com",
+    "app_id": "application-id-for-aad",
+    "certificate_thumbprint": "cert-thumbprint-from-key-vault",
+    "dev_agent_display_name": "[fabric-agentic-dev-agent]"
+  },
+  "github": {
+    "owner": "alessioandriuloagic",
+    "repository": "fabric-agentic",
+    "app_id": 4672750,
+    "installation_id": 155470382,
+    "private_key_path": "/path/to/github-app-key.pem"
+  },
+  "agent": {
+    "repository_path": "/path/to/fabric-agentic",
+    "claude_command": "claude",
+    "poll_seconds": 30
+  },
+  "dispatcher": {
+    "tracker_type": "azure_devops"
+  }
+}
