@@ -465,8 +465,10 @@ isolato e la credenziale Azure DevOps non interattiva del Dev Agent prima del di
 - Divieti espliciti: mai scrivere codice di feature, mai approvare con rilievi aperti
 - Regola: un rilievo non riconducibile alla checklist non è un rilievo
 
-**Stato 2026-08-25**: da completare. Nel repository è presente `agents/dev/`, ma non è ancora
-presente `agents/review/` con istruzioni versionate per il Review Agent.
+**Stato 2026-08-25**: istruzioni versionate create in `agents/review/INSTRUCTIONS.md`. Il
+contratto definisce lettura indipendente del diff, checklist A-F completa, formato dell'esito e
+divieti di scrittura, merge, accesso a Fabric e accesso a credenziali. Resta da provare il Review
+Agent in esercizio su una PR reale.
 
 ---
 
