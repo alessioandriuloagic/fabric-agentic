@@ -9,7 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Sospeso lo sviluppo Report Power BI come TODO futuro: l'errore Desktop di rendering
+- Implementata astrazione `WorkItemTracker` per supporto multi-backend tracker (issue #61):
+  - Interfaccia `WorkItemTracker` con metodi comuni (new_items, waiting_input_items, comments, add_comment, set_state)
+  - Adapter `GitHubIssuesTracker` per GitHub Issues via API REST + GraphQL
+  - Adapter `AzureDevOpsTracker` migrato dal dispatcher
+  - Tipo `WorkItemComment` normalizzato tra tracker
+  - Factory `create_tracker()` per selezione backend configurabile via `dispatcher.tracker_type`
+  - Configurazione template in `configuration/dispatcher.json`
+  - Test completi per adapter (10 test) e dispatcher (9 test aggiornati)
+  - Backward compatible: Azure Boards rimane default
+
+### Sospeso lo sviluppo Report Power BI come TODO futuro: l'errore Desktop di rendering
   `visualContainers` con live connection è documentato e rimosso dal percorso critico.
 - Definita come prossima priorità l'integrazione GitHub Issues per sostituire progressivamente
   Azure Boards nella gestione del ciclo di vita delle issue.
