@@ -64,6 +64,11 @@ L'owner conferma che il Dev Agent ha ruolo `Viewer` su `ws_agentic_dev` e che il
 ha alcun accesso Fabric. Questa conferma non sostituisce le prove negative richieste per verificare
 che il Dev Agent non possa creare workspace, scrivere item o avviare job.
 
+La prova API del Service Principal Dev Agent ha ottenuto un token nel tenant corretto con audience
+`https://api.fabric.microsoft.com`, ma la GET del workspace ha restituito HTTP `401`. Prima di
+continuare con le prove di autorizzazione va verificato lo switch tenant `Service principals can
+use Fabric APIs` e l'associazione effettiva del principal al workspace.
+
 ### 3.1 Dev Agent
 
 > **Rivisto dopo la review architetturale** (`07-architecture-review.md`, ADR-0008). Il Dev

@@ -233,10 +233,11 @@ revisione umana restano obbligatori, ma i 9 controlli pratici non sono marcati c
 > impersonarla né modificarne la definizione. Vedi ADR-0007 e ADR-0008.
 
 **Stato aggiornato 2026-08-25**: parzialmente verificato. L'owner conferma `Viewer` per il Dev
-Agent su `ws_agentic_dev` e nessun accesso Fabric per il Review Agent. La pubblicazione del
-notebook è stata eseguita dall'identità Azure CLI dell'owner e non costituisce prova dei permessi
-del Dev Agent. Restano da eseguire le prove negative di creazione/scrittura/avvio job del Dev Agent,
-la verifica degli switch tenant e la registrazione dell'evidenza completa.
+Agent su `ws_agentic_dev` e nessun accesso Fabric per il Review Agent. La prova con il Service
+Principal Dev Agent ha ottenuto un token con tenant e audience corretti, ma la GET del workspace
+ha restituito HTTP `401`; quindi il ruolo non è ancora verificato end-to-end. Restano da verificare
+lo switch tenant `Service principals can use Fabric APIs`, l'associazione effettiva del SP e le
+prove negative di creazione/scrittura/avvio job.
 
 ---
 
