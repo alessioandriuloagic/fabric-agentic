@@ -65,6 +65,23 @@ sola. Sempre qualificata.
 | **Device-of-record tag** | Tag/label sul work item che qualifica quale agente detiene il lavoro. Default: `dev-agent` (Azure) e label `dev-agent` (GitHub). |
 | **Waiting-input tag** | Tag/label aggiunto quando il work item è in `Doing` e attende feedback umano (commento da non-agente). Permette al dispatcher di discriminare tra agente bloccato e agente attivo. |
 
+### Stato verifica backend (2026-08-25)
+
+- I test unitari mirati per autenticazione, adapter e dispatcher passano: `22 passed`.
+- Il PEM GitHub locale è stato caricato come chiave RSA privata valida e il JWT viene firmato
+   correttamente dopo la normalizzazione dell'App ID a stringa.
+- Dopo l'update dei permessi sull'installazione, il test reale GitHub raggiunge l'API e il
+   dispatcher legge correttamente una issue di prova (`#64`) con label `dev-agent`:
+   `1 task found`, trigger `new_work`, in `dry-run`.
+- L'issue di prova `#64` resta aperta per consentire verifiche successive e va chiusa al termine
+   della validazione operativa.
+- Il test reale Azure DevOps passa con il work item `#6`: il service principal ottiene il token
+   tramite il certificato locale e il dispatcher trova `1 task` con trigger `new_work`.
+- Identità Azure DevOps individuata: App Registration/Service Principal Dev Agent con Application
+   ID `e74ca724-e306-4ff3-ae02-77ef7368e673`; certificato locale `CN=fabric-agentic-dev-agent`,
+   con chiave privata nello store `CurrentUser\My` e thumbprint configurato nel dispatcher.
+- Non creare issue di prova né modificare stati finché il test read-only GitHub non passa.
+
 ---
 
 ## 2. Glossario di dominio dati

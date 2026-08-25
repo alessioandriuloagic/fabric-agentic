@@ -38,7 +38,7 @@ def create_app_jwt(app_id: str, private_key: str, now: int | None = None) -> str
     issued_at = int(time.time()) if now is None else now
     try:
         return jwt.encode(
-            {"iat": issued_at - 60, "exp": issued_at + 540, "iss": app_id},
+            {"iat": issued_at - 60, "exp": issued_at + 540, "iss": str(app_id)},
             private_key,
             algorithm="RS256",
         )

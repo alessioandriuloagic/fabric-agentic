@@ -4,8 +4,8 @@
     "organization": "AlessioAndriuloDev",
     "project": "fabric-agentic",
     "tenant_domain": "agicdev.onmicrosoft.com",
-    "app_id": "application-id-for-aad",
-    "certificate_thumbprint": "cert-thumbprint-from-key-vault",
+    "app_id": "e74ca724-e306-4ff3-ae02-77ef7368e673",
+    "certificate_thumbprint": "89AB19F6EFD3CBE4CEB931F5E02A6833DD77E0F7",
     "dev_agent_display_name": "[fabric-agentic-dev-agent]"
   },
   "github": {
