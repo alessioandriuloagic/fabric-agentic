@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Corretto il flusso JWT della GitHub App: l'App ID numerico viene normalizzato a stringa
+  per il claim `iss`, come richiesto da PyJWT.
+
 - Implementata astrazione `WorkItemTracker` per supporto multi-backend tracker (issue #61):
   - Interfaccia `WorkItemTracker` con metodi comuni (new_items, waiting_input_items, comments, add_comment, set_state)
   - Adapter `GitHubIssuesTracker` per GitHub Issues via API REST + GraphQL
