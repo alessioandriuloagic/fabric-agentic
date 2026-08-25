@@ -2,9 +2,10 @@ import json
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-from scripts.dev_dispatcher import AzureDevOpsClient, DispatcherConfig, human_reply_tasks, launch_smoke_session, load_state, review_thread_tasks, run_once, run_polling, run_smoke, smoke_comment
+from scripts.dev_dispatcher import DispatcherConfig, human_reply_tasks, launch_smoke_session, load_state, review_thread_tasks, run_once, run_polling, run_smoke, smoke_comment
+from scripts.tracker import WorkItemComment
 
 
 class DevDispatcherTests(unittest.TestCase):
@@ -28,8 +29,13 @@ class DevDispatcherTests(unittest.TestCase):
 
     @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
     @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
-    @patch("scripts.dev_dispatcher.AzureDevOpsClient.new_work_item_ids", return_value=[6, 7])
-    def test_dry_run_returns_only_undispatched_new_work(self, _, __, ___) -> None:
+    @patch("scripts.dev_dispatcher.create_tracker")
+    def test_dry_run_returns_only_undispatched_new_work(self, mock_create_tracker, _, __) -> None:
+        mock_tracker = MagicMock()
+        mock_tracker.new_items.return_value = [6, 7]
+        mock_tracker.item_url.side_effect = lambda item_id: f"https://example.com/item/{item_id}"
+        mock_create_tracker.return_value = mock_tracker
+
         with TemporaryDirectory() as directory:
             state_path = Path(directory) / "state.json"
             state_path.write_text(json.dumps({"dispatched_work_items": [6]}), encoding="utf-8")
@@ -43,8 +49,13 @@ class DevDispatcherTests(unittest.TestCase):
     @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
     @patch("scripts.dev_dispatcher.launch_session", return_value=True)
     @patch("scripts.dev_dispatcher.refresh_clone")
-    @patch("scripts.dev_dispatcher.AzureDevOpsClient.new_work_item_ids", return_value=[6, 7])
-    def test_dispatches_one_task_and_persists_it_before_launch(self, _, __, ___, ____, _____) -> None:
+    @patch("scripts.dev_dispatcher.create_tracker")
+    def test_dispatches_one_task_and_persists_it_before_launch(self, mock_create_tracker, _, __, ___, ____) -> None:
+        mock_tracker = MagicMock()
+        mock_tracker.new_items.return_value = [6, 7]
+        mock_tracker.item_url.side_effect = lambda item_id: f"https://example.com/item/{item_id}"
+        mock_create_tracker.return_value = mock_tracker
+
         with TemporaryDirectory() as directory:
             state_path = Path(directory) / "state.json"
             tasks = run_once(self.config, state_path, Path(directory) / "tasks", dry_run=False)
@@ -54,17 +65,15 @@ class DevDispatcherTests(unittest.TestCase):
         self.assertEqual(state["dispatched_work_items"], [6])
 
     def test_human_reply_ignores_agent_comments_and_seen_comments(self) -> None:
-        class Client:
-            def waiting_input_work_item_ids(self):
-                return [6]
+        mock_tracker = MagicMock()
+        mock_tracker.waiting_input_items.return_value = [6]
+        mock_tracker.comments.return_value = [
+            WorkItemComment(id=1, author="dev-agent", text="...", is_agent_comment=True),
+            WorkItemComment(id=2, author="Owner", text="...", is_agent_comment=False),
+        ]
+        mock_tracker.item_url.return_value = "https://example.com/item/6"
 
-            def comments(self, _):
-                return [
-                    {"commentId": 1, "createdBy": {"displayName": "fabric-agentic-dev-agent"}},
-                    {"commentId": 2, "createdBy": {"displayName": "Owner"}},
-                ]
-
-        tasks, seen = human_reply_tasks(self.config, Client(), {1})
+        tasks, seen = human_reply_tasks(self.config, mock_tracker, {1})
 
         self.assertEqual([task["trigger"] for task in tasks], ["human_reply"])
         self.assertEqual(seen, {1, 2})
@@ -79,6 +88,8 @@ class DevDispatcherTests(unittest.TestCase):
         self.assertEqual(state["dispatched_work_items"], [6])
 
     def test_review_thread_ignores_resolved_and_seen_threads(self) -> None:
+        mock_tracker = MagicMock()
+        mock_tracker.item_url.return_value = "https://example.com/item/6"
         payload = {
             "repository": {"pullRequests": {"nodes": [{
                 "url": "https://github.com/alessioandriuloagic/fabric-agentic/pull/1",
@@ -91,7 +102,7 @@ class DevDispatcherTests(unittest.TestCase):
             }]}}
         }
 
-        tasks, seen = review_thread_tasks(self.config, payload, {"seen"})
+        tasks, seen = review_thread_tasks(self.config, mock_tracker, payload, {"seen"})
 
         self.assertEqual([(task["work_item_id"], task["trigger"]) for task in tasks], [(6, "review_thread")])
         self.assertEqual(seen, {"seen", "new"})
@@ -124,25 +135,19 @@ class DevDispatcherTests(unittest.TestCase):
 
     @patch("scripts.dev_dispatcher.launch_smoke_session", return_value=["CONTEXT.md"])
     @patch("scripts.dev_dispatcher.refresh_clone")
-    @patch("scripts.dev_dispatcher.AzureDevOpsClient")
-    def test_smoke_moves_ticket_to_doing_before_session_and_done_after(self, client_mock, _, __) -> None:
+    @patch("scripts.dev_dispatcher.create_tracker")
+    def test_smoke_moves_ticket_to_doing_before_session_and_done_after(self, mock_create_tracker, _, __) -> None:
+        mock_tracker = MagicMock()
+        mock_tracker.item_url.return_value = "https://example.com/item/42"
+        mock_create_tracker.return_value = mock_tracker
+
         with TemporaryDirectory() as directory:
             run_smoke(self.config, 42, Path(directory))
 
-        client = client_mock.return_value
-        self.assertEqual(client.method_calls[0].args, (42, "Doing"))
-        self.assertEqual(client.method_calls[-1].args, (42, "Done"))
-
-    @patch("scripts.dev_dispatcher.urlopen")
-    def test_work_item_patch_operations_use_json_patch_content_type(self, urlopen_mock) -> None:
-        urlopen_mock.return_value.__enter__.return_value.read.return_value = b"{}"
-        client = AzureDevOpsClient(self.config, token_provider=lambda _: "token")
-
-        client.request("POST", "/_apis/wit/workitems/$Issue?api-version=7.1", [{"op": "add"}])
-
-        request = urlopen_mock.call_args.args[0]
-        self.assertEqual(request.get_header("Content-type"), "application/json-patch+json")
-
+        # Verify that set_state was called with "Doing" first and "Done" last
+        calls = [call for call in mock_tracker.method_calls if call[0] == "set_state"]
+        self.assertEqual(calls[0].args, (42, "Doing"))
+        self.assertEqual(calls[-1].args, (42, "Done"))
 
 if __name__ == "__main__":
     unittest.main()

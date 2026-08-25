@@ -8,8 +8,8 @@
 
 | Campo | Valore |
 |---|---|
-| Versione | 0.8 |
-| Ultimo aggiornamento | 2026-08-21 |
+| Versione | 0.9 |
+| Ultimo aggiornamento | 2026-08-25 |
 | Documenti collegati | `docs/prd/PRD-agentic-cicd-fabric.md`, `docs/adr/` |
 
 ---
@@ -48,6 +48,22 @@
 
 **Regola di scrittura**: nei documenti e nei ticket la parola "pipeline" non compare mai da
 sola. Sempre qualificata.
+
+---
+
+## 1-ter. Dispatcher e Work-Item Tracker (tracking backend)
+
+| Termine | Definizione |
+|---|---|
+| **Dispatcher** (`scripts/dev_dispatcher.py`) | Script deterministico in polling che monitora il tracker (Azure Boards o GitHub Issues) e accoda le sessioni Dev Agent. **Non usa LLM: da fermo il costo è zero.** Si configura via `configuration/dispatcher.json` con campo `tracker_type`. |
+| **WorkItemTracker** | Interfaccia astratta (`scripts/tracker.py`) che astrae le operazioni di ciclo di vita del work item. Supporta backend multipli. |
+| **Work-item** | Elemento atomico di lavoro nel tracker (Work Item in Azure Boards, Issue in GitHub). Ha `id`, `state`, titolo, commenti. |
+| **Work-item state** | Stato del work item: `To Do`, `Doing`, `Done` (comune a entrambi i tracker). |
+| **Tracker backend** | Implementazione concreta di `WorkItemTracker`: `AzureDevOpsTracker` (default) o `GitHubIssuesTracker`. |
+| **AzureDevOpsTracker** | Adapter per Azure DevOps. Usa REST API + WIQL queries. Identità di dispatch via service principal (certificate-based). |
+| **GitHubIssuesTracker** | Adapter per GitHub Issues. Usa REST API + GraphQL. Identità di dispatch via GitHub App (federated OIDC). |
+| **Device-of-record tag** | Tag/label sul work item che qualifica quale agente detiene il lavoro. Default: `dev-agent` (Azure) e label `dev-agent` (GitHub). |
+| **Waiting-input tag** | Tag/label aggiunto quando il work item è in `Doing` e attende feedback umano (commento da non-agente). Permette al dispatcher di discriminare tra agente bloccato e agente attivo. |
 
 ---
 

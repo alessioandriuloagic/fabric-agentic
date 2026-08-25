@@ -20,9 +20,7 @@ from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 from scripts.github_app_auth import create_installation_token
-
-
-ADO_SCOPE = "https://app.vssps.visualstudio.com"
+from scripts.tracker import AzureDevOpsTracker, GitHubIssuesTracker, WorkItemTracker
 
 
 class DispatcherError(Exception):
@@ -39,12 +37,13 @@ class DispatcherConfig:
     dev_agent_display_name: str
     github_owner: str
     github_repository: str
-    github_app_id: str
-    github_installation_id: str
+    github_app_id: int
+    github_installation_id: int
     github_private_key_path: Path
     repository_path: Path
     claude_command: str
     poll_seconds: int
+    tracker_type: str = "azure_devops"  # "azure_devops" or "github_issues"
 
 
 def load_config(config_path: Path) -> DispatcherConfig:
@@ -59,18 +58,43 @@ def load_config(config_path: Path) -> DispatcherConfig:
             dev_agent_display_name=config["azure_devops"]["dev_agent_display_name"],
             github_owner=config["github"]["owner"],
             github_repository=config["github"]["repository"],
-            github_app_id=config["github"]["app_id"],
-            github_installation_id=config["github"]["installation_id"],
+            github_app_id=int(config["github"]["app_id"]),
+            github_installation_id=int(config["github"]["installation_id"]),
             github_private_key_path=Path(config["github"]["private_key_path"]),
             repository_path=Path(config["agent"]["repository_path"]),
             claude_command=config["agent"]["claude_command"],
             poll_seconds=int(config["agent"]["poll_seconds"]),
+            tracker_type=config.get("dispatcher", {}).get("tracker_type", "azure_devops"),
         )
     except (KeyError, OSError, ValueError, TypeError) as error:
         raise DispatcherError("dispatcher configuration is invalid") from error
 
 
+def create_tracker(config: DispatcherConfig, ado_token_provider: Callable[[], str]) -> WorkItemTracker:
+    """Factory to create the configured work-item tracker."""
+    if config.tracker_type == "github_issues":
+        return GitHubIssuesTracker(
+            owner=config.github_owner,
+            repository=config.github_repository,
+            github_app_id=config.github_app_id,
+            github_installation_id=config.github_installation_id,
+            github_private_key_path=config.github_private_key_path,
+            agent_identity=config.dev_agent_display_name,
+        )
+    elif config.tracker_type == "azure_devops":
+        return AzureDevOpsTracker(
+            organization=config.organization,
+            project=config.project,
+            token_provider=ado_token_provider,
+            dev_agent_display_name=config.dev_agent_display_name,
+        )
+    else:
+        raise DispatcherError(f"Unknown tracker type: {config.tracker_type}")
+
+
 def acquire_ado_token(config: DispatcherConfig) -> str:
+    """Acquire Azure DevOps token via service principal certificate."""
+    ADO_SCOPE = "https://app.vssps.visualstudio.com"
     script = f"""
 $ErrorActionPreference = 'Stop'
 Connect-AzAccount -ServicePrincipal -ApplicationId '{config.ado_app_id}' -Tenant '{config.tenant_domain}' -CertificateThumbprint '{config.certificate_thumbprint}' -SkipContextPopulation -WarningAction SilentlyContinue | Out-Null
@@ -90,50 +114,6 @@ $token = if ($accessToken.Token -is [System.Security.SecureString]) {{
     if result.returncode != 0 or not result.stdout.strip():
         raise DispatcherError("Azure DevOps token acquisition failed")
     return result.stdout.strip()
-
-
-class AzureDevOpsClient:
-    def __init__(self, config: DispatcherConfig, token_provider: Callable[[DispatcherConfig], str] = acquire_ado_token):
-        self.config = config
-        self.token_provider = token_provider
-
-    def request(self, method: str, path: str, body: dict | list | None = None) -> dict:
-        token = self.token_provider(self.config)
-        content_type = "application/json-patch+json" if isinstance(body, list) else "application/json"
-        request = Request(
-            f"https://dev.azure.com/{self.config.organization}/{self.config.project}{path}",
-            data=json.dumps(body).encode("utf-8") if body is not None else None,
-            method=method,
-            headers={"Authorization": f"Bearer {token}", "Content-Type": content_type},
-        )
-        try:
-            with urlopen(request) as response:
-                return json.load(response)
-        except Exception as error:
-            raise DispatcherError("Azure DevOps request failed") from error
-
-    def new_work_item_ids(self) -> list[int]:
-        return self.work_item_ids("To Do", "[System.Tags] CONTAINS 'dev-agent'")
-
-    def waiting_input_work_item_ids(self) -> list[int]:
-        return self.work_item_ids("Doing", "[System.Tags] CONTAINS 'dev-agent' AND [System.Tags] CONTAINS 'waiting-input'")
-
-    def work_item_ids(self, state: str, tags_filter: str) -> list[int]:
-        query = {
-            "query": f"SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject] = @project AND [System.State] = '{state}' AND {tags_filter} ORDER BY [System.ChangedDate] ASC"
-        }
-        result = self.request("POST", "/_apis/wit/wiql?api-version=7.1", query)
-        return [int(item["id"]) for item in result.get("workItems", [])]
-
-    def comments(self, work_item_id: int) -> list[dict]:
-        result = self.request("GET", f"/_apis/wit/workItems/{work_item_id}/comments?order=asc&api-version=7.1-preview.4")
-        return result.get("comments", [])
-
-    def add_comment(self, work_item_id: int, text: str) -> None:
-        self.request("POST", f"/_apis/wit/workItems/{work_item_id}/comments?api-version=7.1-preview.4", {"text": text})
-
-    def set_state(self, work_item_id: int, state: str) -> None:
-        self.request("PATCH", f"/_apis/wit/workitems/{work_item_id}?api-version=7.1", [{"op": "add", "path": "/fields/System.State", "value": state}])
 
 
 def load_state(state_path: Path) -> dict:
@@ -159,27 +139,25 @@ def log_event(log_path: Path, event: str, **fields: object) -> None:
         log_file.write(json.dumps(payload) + "\n")
 
 
-def task_record(config: DispatcherConfig, work_item_id: int, trigger: str = "new_work", pull_request_url: str | None = None) -> dict:
+def task_record(config: DispatcherConfig, tracker: WorkItemTracker, work_item_id: int | str, trigger: str = "new_work", pull_request_url: str | None = None) -> dict:
     return {
         "work_item_id": work_item_id,
         "trigger": trigger,
-        "work_item_url": f"https://dev.azure.com/{config.organization}/{config.project}/_workitems/edit/{work_item_id}",
+        "work_item_url": tracker.item_url(work_item_id),
         "repository_path": str(config.repository_path),
         "pull_request_url": pull_request_url,
     }
 
 
-def human_reply_tasks(config: DispatcherConfig, client: AzureDevOpsClient, seen_comment_ids: set[int]) -> tuple[list[dict], set[int]]:
+def human_reply_tasks(config: DispatcherConfig, tracker: WorkItemTracker, seen_comment_ids: set[int | str]) -> tuple[list[dict], set[int | str]]:
     tasks = []
     observed = set(seen_comment_ids)
-    for work_item_id in client.waiting_input_work_item_ids():
-        for comment in client.comments(work_item_id):
-            comment_id = int(comment["commentId"])
-            author = comment.get("createdBy", {}).get("displayName", "")
-            if comment_id in observed or author == config.dev_agent_display_name:
+    for work_item_id in tracker.waiting_input_items():
+        for comment in tracker.comments(work_item_id):
+            if comment.is_agent_comment or comment.id in observed:
                 continue
-            observed.add(comment_id)
-            tasks.append(task_record(config, work_item_id, trigger="human_reply"))
+            observed.add(comment.id)
+            tasks.append(task_record(config, tracker, work_item_id, trigger="human_reply"))
     return tasks, observed
 
 
@@ -201,7 +179,7 @@ def github_graphql(config: DispatcherConfig, query: str, variables: dict) -> dic
     return result["data"]
 
 
-def review_thread_tasks(config: DispatcherConfig, payload: dict, seen_thread_ids: set[str]) -> tuple[list[dict], set[str]]:
+def review_thread_tasks(config: DispatcherConfig, tracker: WorkItemTracker, payload: dict, seen_thread_ids: set[str]) -> tuple[list[dict], set[str]]:
     tasks = []
     observed = set(seen_thread_ids)
     for pull_request in payload.get("repository", {}).get("pullRequests", {}).get("nodes", []):
@@ -213,7 +191,8 @@ def review_thread_tasks(config: DispatcherConfig, payload: dict, seen_thread_ids
             if thread["isResolved"] or thread_id in observed:
                 continue
             observed.add(thread_id)
-            tasks.append(task_record(config, int(match.group(1)), trigger="review_thread", pull_request_url=pull_request["url"]))
+            work_item_id = int(match.group(1))
+            tasks.append(task_record(config, tracker, work_item_id, trigger="review_thread", pull_request_url=pull_request["url"]))
     return tasks, observed
 
 
@@ -304,16 +283,18 @@ def smoke_comment(documents_read: list[str]) -> str:
     return f"[fabric-agentic-dev-agent]\nS0-14 smoke test completed.\n\nDOCUMENTI LETTI\n{documents}"
 
 
-def run_smoke(config: DispatcherConfig, work_item_id: int, task_directory: Path) -> list[str]:
-    client = AzureDevOpsClient(config)
-    client.set_state(work_item_id, "Doing")
+def run_smoke(config: DispatcherConfig, work_item_id: int | str, task_directory: Path) -> list[str]:
+    """Run smoke test on a single work item: Doing → (smoke) → Done."""
+    ado_token_provider = lambda: acquire_ado_token(config)
+    tracker = create_tracker(config, ado_token_provider)
+    tracker.set_state(work_item_id, "Doing")
     refresh_clone(config)
     task_directory.mkdir(parents=True, exist_ok=True)
     task_path = task_directory / f"smoke-{uuid.uuid4()}.json"
-    task_path.write_text(json.dumps(task_record(config, work_item_id), indent=2) + "\n", encoding="utf-8")
+    task_path.write_text(json.dumps(task_record(config, tracker, work_item_id), indent=2) + "\n", encoding="utf-8")
     documents = launch_smoke_session(config, task_path)
-    client.add_comment(work_item_id, smoke_comment(documents))
-    client.set_state(work_item_id, "Done")
+    tracker.add_comment(work_item_id, smoke_comment(documents))
+    tracker.set_state(work_item_id, "Done")
     return documents
 
 
@@ -333,13 +314,14 @@ query($owner: String!, $repository: String!) {
 
 
 def run_once(config: DispatcherConfig, state_path: Path, task_directory: Path, dry_run: bool) -> list[dict]:
-    client = AzureDevOpsClient(config)
+    ado_token_provider = lambda: acquire_ado_token(config)
+    tracker = create_tracker(config, ado_token_provider)
     state = load_state(state_path)
     dispatched = set(state.get("dispatched_work_items", []))
-    new_work = [task_record(config, work_item_id) for work_item_id in client.new_work_item_ids() if work_item_id not in dispatched]
-    human_replies, seen_comments = human_reply_tasks(config, client, set(state.get("seen_comment_ids", [])))
+    new_work = [task_record(config, tracker, work_item_id) for work_item_id in tracker.new_items() if work_item_id not in dispatched]
+    human_replies, seen_comments = human_reply_tasks(config, tracker, set(state.get("seen_comment_ids", [])))
     review_payload = github_graphql(config, REVIEW_THREADS_QUERY, {"owner": config.github_owner, "repository": config.github_repository})
-    review_threads, seen_threads = review_thread_tasks(config, review_payload, set(state.get("seen_review_thread_ids", [])))
+    review_threads, seen_threads = review_thread_tasks(config, tracker, review_payload, set(state.get("seen_review_thread_ids", [])))
     tasks = [*new_work, *human_replies, *review_threads]
     if not tasks or dry_run:
         if not dry_run:
