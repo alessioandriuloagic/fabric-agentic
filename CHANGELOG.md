@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Registrato il primo run Fabric del tracer `pagamenti`: 10 righe caricate e 10 in destinazione,
+  `pk_check` e riconciliazione passati, run `20260825T141929Z-70aacec7`, durata osservata 21 s.
+  Il costo monetario della capacity e il costo LLM non sono attribuibili dall'evidenza disponibile.
+
 - Aggiunto il notebook Fabric `nb_ingest_pagamenti` (issue #72): legge
   `Files/raw/pagamenti/pagamenti.csv` con schema esplicito in `FAILFAST`, tipizza `Data` come data
   e `Importo` come `decimal(18, 2)`, verifica l'unicità di `ID_Pagamento` prima di qualsiasi

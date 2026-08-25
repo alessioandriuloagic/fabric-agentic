@@ -384,9 +384,9 @@ stato scritto nel repository o nei log.
 > Le due verifiche anti-loop non sono opzionali: sono le due cause più probabili di consumo
 > token incontrollato, e si manifestano solo in esercizio se non le cerchi ora.
 
-**Stato 2026-08-21**: trigger A/B/C, anti-loop, loop configurabile a 30 secondi e logging locale
-implementati. `--once --dry-run` ha rilevato il work item `#6` senza avviare Claude né modificare
-Azure Boards/GitHub. Smoke S0-14 con sessione reale resta aperto.
+**Stato 2026-08-25**: trigger A/B/C, anti-loop, loop configurabile a 30 secondi e logging locale
+implementati. `--once --dry-run` è stato verificato su Azure DevOps e GitHub Issues; S0-14 è verde
+con il ciclo reale GitHub e il tracer `pagamenti` ha completato il primo flusso agentico.
 
 ---
 
@@ -664,7 +664,7 @@ item `6`. Il workspace risultava già allineato al branch; il rail ha restituito
 
 ---
 
-### S1-04 · Ticket agentico: onboarding CRM `accounts`
+### S1-04 · Ticket agentico: ingestion `pagamenti`
 
 | | |
 |---|---|
@@ -673,12 +673,17 @@ item `6`. Il workspace risultava già allineato al branch; il rail ha restituito
 | **Dipendenze** | S1-00, S1-02, S1-03, S0-14 |
 | **RF** | RF-10..RF-20, RF-50, RF-84 |
 
-**Obiettivo**: il primo ticket reale del progetto, eseguito interamente dall'agente su dati open
-data/sintetici nel feature workspace.
+**Obiettivo**: il primo ticket reale del progetto, eseguito dall'agente su dati sintetici nel
+workspace `ws_agentic_dev`.
+
+**Esito 2026-08-25**: il notebook `nb_ingest_pagamenti` è stato pubblicato ed eseguito con
+successo. Run ID `20260825T141929Z-70aacec7`: 10 righe caricate, 10 righe in destinazione,
+`pk_check: passed`, `reconciliation: passed`. La durata osservata è 21 s; il costo monetario
+della capacity non è attribuibile dal run e non viene stimato. La PR #78 è stata mergiata.
 
 **Descrizione del ticket** *(da scrivere secondo `docs/functional/02`)*
 
-> **Obiettivo**: il dataset CRM `accounts` è disponibile nel layer Bronze del feature
+> **Obiettivo**: il dataset sintetico `pagamenti` è disponibile nel layer Bronze del feature
 > workspace, con carico verificato e configurazione dichiarativa.
 >
 > **Criteri di accettazione**
@@ -686,15 +691,15 @@ data/sintetici nel feature workspace.
 - Trigger B: nuovo commento **umano** su work item in *Doing* con tag `waiting-input`
 - Trigger C: thread **non risolti** sulla PR dell'agente
 > - Il feature workspace è ottenuto tramite `branch_out` e allineato tramite `sync_workspace`
-> - Source system: `crm_demo`; connettore: CRM/Dataverse; dataset: `accounts`
-> - Fabric Connection: `b838644d-afd9-4ec3-973d-e36ed85ad167`
-> - Chiave primaria: `accountid`; carico incremental; watermark: `modifiedon`
+> - Source system: `pagamenti_demo`; connettore: File/CSV; dataset: `pagamenti`
+> - Sorgente: `attachments/72/pagamenti.csv`
+> - Chiave primaria: `ID_Pagamento`; watermark: `Data`
 > - Chiavi primarie, modalità di carico, watermark ed endpoint sono dichiarati nella configurazione
 > - Il carico è eseguito nel feature workspace e le evidenze qualità sono allegate alla PR
 > - La documentazione della sorgente e del dataset è aggiornata
 > - `CHANGELOG.md` contiene la voce
 >
-> **Fuori scope**: `ws_agentic_dev`, `test`, `prod`, semantic model, report e modifiche al
+> **Fuori scope**: `test`, `prod`, semantic model, report e modifiche al
 > framework condiviso. Il ticket non parte finché S1-00 non è chiuso.
 
 **Criteri di accettazione del work item (lato sistema)**
@@ -729,7 +734,7 @@ data/sintetici nel feature workspace.
 > Le decisioni prese a voce durante questo primo ciclo e non scritte **si ripresenteranno
 > identiche** al ticket successivo. La retrospettiva serve esattamente a impedirlo.
 
-**Esito 2026-08-24**: completata in `docs/technical/10-retrospettiva-s1-04.md`. Il ciclo ha
+**Esito 2026-08-25**: completata in `docs/technical/10-retrospettiva-s1-04.md`. Il ciclo ha
 confermato KPI-7 a zero e nessun difetto post-merge osservato; KPI-1, KPI-2, KPI-3 e KPI-5 restano
 parziali o non misurabili per gap di strumentazione esplicitamente registrati. Gli interventi
 tecnici umani necessari sono stati classificati come difetti del sistema e corretti nei rail.
