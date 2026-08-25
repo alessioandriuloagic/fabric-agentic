@@ -1,5 +1,6 @@
 import json
 import unittest
+from dataclasses import replace
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import MagicMock, patch
@@ -58,11 +59,31 @@ class DevDispatcherTests(unittest.TestCase):
         mock_urlopen.return_value = response
 
         with TemporaryDirectory() as temp_dir:
-            context_path = stage_work_item_context(mock_tracker, 42, Path(temp_dir))
+            context_path = stage_work_item_context(self.config, mock_tracker, 42, Path(temp_dir))
 
             self.assertIsNotNone(context_path)
             self.assertIn("Transcript", context_path.read_text(encoding="utf-8"))
             self.assertEqual((context_path.parent / "attachment-1").read_bytes(), b"attachment-data")
+
+    def test_stages_repository_attachments_without_remote_download(self) -> None:
+        mock_tracker = MagicMock()
+        mock_tracker.context.return_value = {
+            "title": "Call transcript",
+            "body": "Transcript",
+            "attachments": ["https://github.com/user-attachments/files/remote"],
+        }
+
+        with TemporaryDirectory() as temp_dir:
+            repository_path = Path(temp_dir) / "repository"
+            attachment_directory = repository_path / "attachments" / "72"
+            attachment_directory.mkdir(parents=True)
+            (attachment_directory / "call.txt").write_text("local attachment", encoding="utf-8")
+            config = replace(self.config, repository_path=repository_path)
+
+            context_path = stage_work_item_context(config, mock_tracker, 72, Path(temp_dir) / "tasks")
+
+            self.assertIn(str(attachment_directory / "call.txt"), context_path.read_text(encoding="utf-8"))
+            mock_tracker.download_attachment.assert_not_called()
 
     @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
     @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
