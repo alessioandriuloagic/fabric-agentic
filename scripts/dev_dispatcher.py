@@ -139,14 +139,40 @@ def log_event(log_path: Path, event: str, **fields: object) -> None:
         log_file.write(json.dumps(payload) + "\n")
 
 
-def task_record(config: DispatcherConfig, tracker: WorkItemTracker, work_item_id: int | str, trigger: str = "new_work", pull_request_url: str | None = None) -> dict:
-    return {
+def stage_work_item_context(tracker: WorkItemTracker, work_item_id: int | str, task_directory: Path) -> Path | None:
+    context = tracker.context(work_item_id)
+    if not context.get("body") and not context.get("attachments"):
+        return None
+    context_directory = task_directory / f"work-item-{work_item_id}"
+    context_directory.mkdir(parents=True, exist_ok=True)
+    context_path = context_directory / "issue-context.md"
+    lines = [f"# {context.get('title', '')}", "", str(context.get("body", "")), ""]
+    for index, attachment_url in enumerate(context.get("attachments", []), start=1):
+        attachment_path = context_directory / f"attachment-{index}"
+        try:
+            with urlopen(attachment_url) as response:
+                content = response.read(MAX_ATTACHMENT_BYTES + 1)
+            if len(content) > MAX_ATTACHMENT_BYTES:
+                raise DispatcherError("work-item attachment is too large")
+            attachment_path.write_bytes(content)
+        except Exception as error:
+            raise DispatcherError("work-item attachment download failed") from error
+        lines.extend([f"## Attachment {index}", str(attachment_path), ""])
+    context_path.write_text("\n".join(lines), encoding="utf-8")
+    return context_path
+
+
+def task_record(config: DispatcherConfig, tracker: WorkItemTracker, work_item_id: int | str, trigger: str = "new_work", pull_request_url: str | None = None, context_path: Path | None = None) -> dict:
+    record = {
         "work_item_id": work_item_id,
         "trigger": trigger,
         "work_item_url": tracker.item_url(work_item_id),
         "repository_path": str(config.repository_path),
         "pull_request_url": pull_request_url,
     }
+    if context_path is not None:
+        record["issue_context_path"] = str(context_path)
+    return record
 
 
 def human_reply_tasks(config: DispatcherConfig, tracker: WorkItemTracker, seen_comment_ids: set[int | str]) -> tuple[list[dict], set[int | str]]:
@@ -239,6 +265,8 @@ SMOKE_OUTPUT_SCHEMA = {
     "required": ["documents_read"],
     "properties": {"documents_read": {"type": "array", "items": {"type": "string"}, "minItems": 1}},
 }
+
+MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024
 
 
 def launch_smoke_session(config: DispatcherConfig, task_path: Path) -> list[str]:
@@ -333,6 +361,8 @@ def run_once(config: DispatcherConfig, state_path: Path, task_directory: Path, d
     task = tasks[0]
     refresh_clone(config)
     task_directory.mkdir(parents=True, exist_ok=True)
+    context_path = stage_work_item_context(tracker, task["work_item_id"], task_directory)
+    task = task_record(config, tracker, task["work_item_id"], trigger=task["trigger"], pull_request_url=task.get("pull_request_url"), context_path=context_path)
     task_path = task_directory / f"{uuid.uuid4()}.json"
     task_path.write_text(json.dumps(task, indent=2) + "\n", encoding="utf-8")
     state["dispatched_work_items"] = [*dispatched, task["work_item_id"]]

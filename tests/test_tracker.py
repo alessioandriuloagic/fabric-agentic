@@ -167,6 +167,19 @@ class GitHubIssuesTrackerTests(unittest.TestCase):
         self.assertIn("test-repo", url)
         self.assertIn("/issues/42", url)
 
+    @patch.object(GitHubIssuesTracker, "_rest")
+    def test_context_returns_issue_body_and_allowlisted_attachments(self, mock_rest) -> None:
+        mock_rest.return_value = {
+            "title": "Call transcript",
+            "body": "Transcript\nhttps://github.com/user-attachments/assets/file-1\nhttps://example.com/ignored",
+        }
+
+        context = self.tracker.context(42)
+
+        self.assertEqual(context["title"], "Call transcript")
+        self.assertEqual(context["body"], mock_rest.return_value["body"])
+        self.assertEqual(context["attachments"], ["https://github.com/user-attachments/assets/file-1"])
+
     @patch("scripts.tracker.create_installation_token")
     @patch("scripts.tracker.urlopen")
     def test_add_comment_sends_via_rest_api(self, mock_urlopen, mock_token_fn) -> None:

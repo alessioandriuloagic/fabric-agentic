@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Aggiunto il passaggio del contesto GitHub al task record: body dell'issue e allegati
+  `github.com/user-attachments` vengono messi nella directory temporanea del task, con limite
+  dimensionale per file e senza esporre token nei log.
+
 - Corretto il flusso JWT della GitHub App: l'App ID numerico viene normalizzato a stringa
   per il claim `iss`, come richiesto da PyJWT.
 

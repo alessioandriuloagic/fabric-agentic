@@ -69,6 +69,10 @@ class WorkItemTracker(ABC):
         """Return the full URL to the work item."""
         pass
 
+    def context(self, item_id: int | str) -> dict:
+        """Return safe work-item context for the agent handoff."""
+        return {"title": "", "body": "", "attachments": []}
+
 
 class AzureDevOpsTracker(WorkItemTracker):
     """Azure Boards implementation of WorkItemTracker."""
@@ -251,6 +255,13 @@ class GitHubIssuesTracker(WorkItemTracker):
                 )
             )
         return comments
+
+    def context(self, item_id: int | str) -> dict:
+        """Return issue body and allowlisted GitHub user-attachment URLs."""
+        issue = self._rest("GET", f"/repos/{self.owner}/{self.repository}/issues/{int(item_id)}")
+        body = issue.get("body") or ""
+        attachments = sorted(set(re.findall(r"https://github\.com/user-attachments/[^)\s]+", body)))
+        return {"title": issue.get("title", ""), "body": body, "attachments": attachments}
 
     def add_comment(self, item_id: int | str, text: str) -> None:
         """Add a comment to an issue."""

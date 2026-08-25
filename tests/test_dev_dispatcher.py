@@ -4,7 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import MagicMock, patch
 
-from scripts.dev_dispatcher import DispatcherConfig, human_reply_tasks, launch_smoke_session, load_state, review_thread_tasks, run_once, run_polling, run_smoke, smoke_comment
+from scripts.dev_dispatcher import DispatcherConfig, human_reply_tasks, launch_smoke_session, load_state, review_thread_tasks, run_once, run_polling, run_smoke, smoke_comment, stage_work_item_context
 from scripts.tracker import WorkItemComment
 
 
@@ -44,6 +44,25 @@ class DevDispatcherTests(unittest.TestCase):
 
         self.assertEqual([task["work_item_id"] for task in tasks], [7])
         self.assertEqual(tasks[0]["trigger"], "new_work")
+
+    @patch("scripts.dev_dispatcher.urlopen")
+    def test_stages_issue_context_and_attachment(self, mock_urlopen) -> None:
+        mock_tracker = MagicMock()
+        mock_tracker.context.return_value = {
+            "title": "Call transcript",
+            "body": "Transcript",
+            "attachments": ["https://github.com/user-attachments/assets/file-1"],
+        }
+        response = MagicMock()
+        response.__enter__.return_value.read.return_value = b"attachment-data"
+        mock_urlopen.return_value = response
+
+        with TemporaryDirectory() as temp_dir:
+            context_path = stage_work_item_context(mock_tracker, 42, Path(temp_dir))
+
+            self.assertIsNotNone(context_path)
+            self.assertIn("Transcript", context_path.read_text(encoding="utf-8"))
+            self.assertEqual((context_path.parent / "attachment-1").read_bytes(), b"attachment-data")
 
     @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
     @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
