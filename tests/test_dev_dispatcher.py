@@ -83,6 +83,25 @@ class DevDispatcherTests(unittest.TestCase):
         self.assertEqual([task["work_item_id"] for task in tasks], [6])
         self.assertEqual(state["dispatched_work_items"], [6])
 
+    @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
+    @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
+    @patch("scripts.dev_dispatcher.launch_session", return_value=False)
+    @patch("scripts.dev_dispatcher.refresh_clone")
+    @patch("scripts.dev_dispatcher.create_tracker")
+    def test_failed_session_raises_after_persisting_dispatch(self, mock_create_tracker, _, __, ___, ____) -> None:
+        mock_tracker = MagicMock()
+        mock_tracker.new_items.return_value = [6]
+        mock_tracker.item_url.return_value = "https://example.com/item/6"
+        mock_create_tracker.return_value = mock_tracker
+
+        with TemporaryDirectory() as directory:
+            state_path = Path(directory) / "state.json"
+            with self.assertRaisesRegex(Exception, "Dev Agent session failed"):
+                run_once(self.config, state_path, Path(directory) / "tasks", dry_run=False)
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(state["dispatched_work_items"], [6])
+
     def test_human_reply_ignores_agent_comments_and_seen_comments(self) -> None:
         mock_tracker = MagicMock()
         mock_tracker.waiting_input_items.return_value = [6]

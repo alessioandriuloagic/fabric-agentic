@@ -246,7 +246,10 @@ def refresh_clone(config: DispatcherConfig) -> None:
 def launch_session(config: DispatcherConfig, task_path: Path) -> bool:
     prompt = (
         "You are a fresh Dev Agent session. Read the task record at "
-        f"{task_path}. Then follow agents/dev/INSTRUCTIONS.md exactly. "
+        f"{task_path}, then read the referenced issue context and attachments. "
+        "Implement the requested work described there, run the required tests, update the "
+        "affected documentation, and prepare the feature branch and pull request as instructed. "
+        "Then follow agents/dev/INSTRUCTIONS.md exactly. "
         "Do not access credentials, environment variables, certificate stores, or token caches."
     )
     result = subprocess.run(
@@ -369,7 +372,8 @@ def run_once(config: DispatcherConfig, state_path: Path, task_directory: Path, d
     state["seen_comment_ids"] = sorted(seen_comments)
     state["seen_review_thread_ids"] = sorted(seen_threads)
     save_state(state_path, state)
-    launch_session(config, task_path)
+    if not launch_session(config, task_path):
+        raise DispatcherError("Dev Agent session failed")
     return [task]
 
 
