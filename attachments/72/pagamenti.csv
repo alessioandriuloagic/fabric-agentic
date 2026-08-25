@@ -1,0 +1,11 @@
+ID_Pagamento,Data,Cliente,Importo,Valuta,Metodo_Pagamento,Stato,Numero_Fattura,IBAN,Note
+PAG-0001,2026-01-05,Rossi Costruzioni Srl,1250.00,EUR,Bonifico,Completato,FAT-2026-001,IT60X0542811101000000123456,Acconto lavori gennaio
+PAG-0002,2026-01-12,Bianchi & Figli SpA,3400.50,EUR,Bonifico,Completato,FAT-2026-002,IT28W8000000292100645211151,Saldo fattura dicembre
+PAG-0003,2026-01-18,Verdi Impianti Srl,780.00,EUR,Carta di credito,In attesa,FAT-2026-003,IT02R0301503200000003581209,In verifica banca
+PAG-0004,2026-01-25,Ferrari Logistics,2150.75,EUR,Bonifico,Completato,FAT-2026-004,IT85M0300203280000401876123,
+PAG-0005,2026-02-02,Esposito Consulting,560.00,EUR,PayPal,Completato,FAT-2026-005,,Pagamento online
+PAG-0006,2026-02-10,Romano Trasporti Srl,4900.00,EUR,Bonifico,Rifiutato,FAT-2026-006,IT40S0542811101000000654321,Fondi insufficienti
+PAG-0007,2026-02-15,Colombo Tech Srl,1320.30,EUR,RID,Completato,FAT-2026-007,IT12F0100503200000000123456,Addebito diretto mensile
+PAG-0008,2026-02-20,Marino Real Estate,7600.00,EUR,Bonifico,In attesa,FAT-2026-008,IT77Q0623003200000000456789,Verifica documenti
+PAG-0009,2026-03-01,Greco Manifatture,990.20,EUR,Carta di debito,Completato,FAT-2026-009,,
+PAG-0010,2026-03-05,Bruno Energia Srl,2340.00,EUR,Bonifico,Completato,FAT-2026-010,IT91Z0503412345000000098765,Rata secondo trimestre
