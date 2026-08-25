@@ -233,11 +233,12 @@ revisione umana restano obbligatori, ma i 9 controlli pratici non sono marcati c
 > impersonarla né modificarne la definizione. Vedi ADR-0007 e ADR-0008.
 
 **Stato aggiornato 2026-08-25**: parzialmente verificato. L'owner conferma `Viewer` per il Dev
-Agent su `ws_agentic_dev` e nessun accesso Fabric per il Review Agent. La prova con il Service
-Principal Dev Agent ha ottenuto un token con tenant e audience corretti, ma la GET del workspace
-ha restituito HTTP `401`; quindi il ruolo non è ancora verificato end-to-end. Restano da verificare
-lo switch tenant `Service principals can use Fabric APIs`, l'associazione effettiva del SP e le
-prove negative di creazione/scrittura/avvio job.
+Agent su `ws_agentic_dev` e nessun accesso Fabric per il Review Agent. La prova API del Service
+Principal Dev Agent ha ottenuto un token con tenant e audience corretti e la GET del workspace
+ha restituito HTTP `200`: lettura Viewer verificata. Il setting `Service principals can create
+workspaces, connections, and deployment pipelines` risulta però abilitato per l'intera
+organizzazione, in contrasto con il least privilege richiesto: va ristretto al solo deploy SP
+prima delle prove di scrittura e creazione risorse.
 
 ---
 

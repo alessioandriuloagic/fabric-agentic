@@ -65,9 +65,10 @@ ha alcun accesso Fabric. Questa conferma non sostituisce le prove negative richi
 che il Dev Agent non possa creare workspace, scrivere item o avviare job.
 
 La prova API del Service Principal Dev Agent ha ottenuto un token nel tenant corretto con audience
-`https://api.fabric.microsoft.com`, ma la GET del workspace ha restituito HTTP `401`. Prima di
-continuare con le prove di autorizzazione va verificato lo switch tenant `Service principals can
-use Fabric APIs` e l'associazione effettiva del principal al workspace.
+`https://api.fabric.microsoft.com` e la GET del workspace ha restituito HTTP `200`: la lettura
+Viewer è verificata. Il setting tenant `Service principals can create workspaces, connections,
+and deployment pipelines` risulta abilitato per l'intera organizzazione; questo è più permissivo
+del modello S0-07 e va ristretto al solo deploy SP prima delle prove di scrittura.
 
 ### 3.1 Dev Agent
 

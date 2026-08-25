@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Registrato il risultato della prova S0-07 con il Service Principal Dev Agent: token con tenant e
-  audience corretti, ma GET del workspace Fabric respinta con HTTP `401`; Viewer e switch tenant
-  restano da verificare end-to-end.
+- Aggiornato il risultato della prova S0-07: il Service Principal Dev Agent legge il workspace
+  Fabric con HTTP `200`; il setting di creazione workspace/connection/deployment pipeline resta
+  però abilitato per l'intera organizzazione e va ristretto al deploy SP.
 
 - Registrata la verifica parziale dei permessi Fabric: Dev Agent `Viewer` su `ws_agentic_dev` e
   Review Agent senza accesso Fabric; restano le prove negative e gli switch tenant da verificare.
