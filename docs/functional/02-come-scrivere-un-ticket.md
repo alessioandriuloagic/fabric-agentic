@@ -38,12 +38,11 @@ delegare e cosa no.
 
 ### 3.0 Trascrizioni e allegati della call
 
-La trascrizione può essere incollata nel body dell'issue. Gli allegati vanno caricati direttamente
-nella issue GitHub, non come percorsi locali: il dispatcher li scarica nella directory temporanea
-del task e consegna al Dev Agent il file `issue-context.md` con il riferimento ai file locali.
+La trascrizione va riassunta nel body dell'issue. Gli allegati da far leggere al Dev Agent vanno
+committati nel repository sotto `attachments/<issue-number>/` e referenziati nella issue. Sono
+così disponibili nella clone isolata senza dipendere dal servizio `user-attachments` di GitHub.
 Usare solo materiali necessari al lavoro; non inserire segreti, token o dati personali non
-necessari. Gli allegati oltre 10 MiB o con URL esterni al dominio GitHub user-attachments vengono
-rifiutati.
+necessari. Ogni file deve restare sotto 10 MiB.
 
 ### 3.1 Sezioni obbligatorie (tutti i tipi)
 
