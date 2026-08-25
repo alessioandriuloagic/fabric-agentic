@@ -69,9 +69,9 @@ La prova API del Service Principal Dev Agent ha ottenuto un token nel tenant cor
 Viewer è verificata. Un POST di creazione workspace ha però restituito HTTP `201`; la risorsa di
 probe è stata eliminata immediatamente. Il setting tenant di creazione deve essere ristretto al
 gruppo `FabricAgentDeploy` prima di ripetere le prove di scrittura. Il portale Entra mostra il
-Dev Agent come membro diretto; la query CLI precedente aveva restituito erroneamente zero membri.
-Nonostante la membership, il probe successivo ha ancora restituito HTTP `201`, quindi la
-propagazione o la semantica dell'eccezione tenant resta da chiarire.
+Dev Agent come membro diretto. Nel probe successivo la GET workspace ha restituito HTTP `200`,
+mentre il POST di creazione è stato negato con HTTP `401` e non ha creato risorse; il blocco sembra
+applicato, ma va riconfermato con il Deploy SP e il codice `403` non è stato osservato.
 
 ### 3.1 Dev Agent
 
