@@ -58,6 +58,12 @@ Ne discendono due regole operative:
 
 ## 3. Matrice dei permessi
 
+### Verifica operativa 2026-08-25
+
+L'owner conferma che il Dev Agent ha ruolo `Viewer` su `ws_agentic_dev` e che il Review Agent non
+ha alcun accesso Fabric. Questa conferma non sostituisce le prove negative richieste per verificare
+che il Dev Agent non possa creare workspace, scrivere item o avviare job.
+
 ### 3.1 Dev Agent
 
 > **Rivisto dopo la review architetturale** (`07-architecture-review.md`, ADR-0008). Il Dev

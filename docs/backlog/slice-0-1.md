@@ -232,9 +232,11 @@ revisione umana restano obbligatori, ma i 9 controlli pratici non sono marcati c
 > La pipeline usa una distinta identità di deploy. Il Dev Agent può accodarla ma non può
 > impersonarla né modificarne la definizione. Vedi ADR-0007 e ADR-0008.
 
-**Stato 2026-08-25**: da completare con amministratore Fabric. La pubblicazione riuscita del
-notebook su `ws_agentic_dev` è stata eseguita dall'identità Azure CLI dell'owner e non costituisce
-prova dei permessi effettivi del Dev Agent o del Review Agent.
+**Stato aggiornato 2026-08-25**: parzialmente verificato. L'owner conferma `Viewer` per il Dev
+Agent su `ws_agentic_dev` e nessun accesso Fabric per il Review Agent. La pubblicazione del
+notebook è stata eseguita dall'identità Azure CLI dell'owner e non costituisce prova dei permessi
+del Dev Agent. Restano da eseguire le prove negative di creazione/scrittura/avvio job del Dev Agent,
+la verifica degli switch tenant e la registrazione dell'evidenza completa.
 
 ---
 
@@ -465,8 +467,10 @@ isolato e la credenziale Azure DevOps non interattiva del Dev Agent prima del di
 - Divieti espliciti: mai scrivere codice di feature, mai approvare con rilievi aperti
 - Regola: un rilievo non riconducibile alla checklist non è un rilievo
 
-**Stato 2026-08-25**: da completare. Nel repository è presente `agents/dev/`, ma non è ancora
-presente `agents/review/` con istruzioni versionate per il Review Agent.
+**Stato 2026-08-25**: istruzioni versionate create in `agents/review/INSTRUCTIONS.md`. Il
+contratto definisce lettura indipendente del diff, checklist A-F completa, formato dell'esito e
+divieti di scrittura, merge, accesso a Fabric e accesso a credenziali. Resta da provare il Review
+Agent in esercizio su una PR reale.
 
 ---
 

@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Registrata la verifica parziale dei permessi Fabric: Dev Agent `Viewer` su `ws_agentic_dev` e
+  Review Agent senza accesso Fabric; restano le prove negative e gli switch tenant da verificare.
+
+- Aggiunte le istruzioni versionate del Review Agent in `agents/review/INSTRUCTIONS.md`, con
+  checklist A-F, formato di voto e confini di sicurezza.
+
 - Aggiornato il backlog S0: S0-06 resta TODO per il limite di licenza GitHub; S0-07, S0-N1/N2
   e S0-12 restano da verificare o completare; S0-15 include la durata del run pagamenti e il
   costo monetario non attribuibile.
