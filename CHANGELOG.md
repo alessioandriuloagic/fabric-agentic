@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Aggiornato il backlog S0: S0-06 resta TODO per il limite di licenza GitHub; S0-07, S0-N1/N2
+  e S0-12 restano da verificare o completare; S0-15 include la durata del run pagamenti e il
+  costo monetario non attribuibile.
+
 - Registrato il primo run Fabric del tracer `pagamenti`: 10 righe caricate e 10 in destinazione,
   `pk_check` e riconciliazione passati, run `20260825T141929Z-70aacec7`, durata osservata 21 s.
   Il costo monetario della capacity e il costo LLM non sono attribuibili dall'evidenza disponibile.

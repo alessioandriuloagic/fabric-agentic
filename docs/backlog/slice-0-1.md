@@ -202,6 +202,10 @@ knowledge base.
 > **È l'item più importante dello Slice 0.** Una policy configurata e mai provata è una policy
 > di cui non sai nulla. Se questo item non è verde, nessun agente va avviato.
 
+**Stato 2026-08-25 — TODO futuro**: l'enforcement tecnico delle protection rules richiede un
+piano GitHub più alto non disponibile nell'attuale sottoscrizione. Il processo GitHub Flow e la
+revisione umana restano obbligatori, ma i 9 controlli pratici non sono marcati come verificati.
+
 ---
 
 ### S0-07 · Abilitare i permessi sulla piattaforma dati
@@ -227,6 +231,10 @@ knowledge base.
 
 > La pipeline usa una distinta identità di deploy. Il Dev Agent può accodarla ma non può
 > impersonarla né modificarne la definizione. Vedi ADR-0007 e ADR-0008.
+
+**Stato 2026-08-25**: da completare con amministratore Fabric. La pubblicazione riuscita del
+notebook su `ws_agentic_dev` è stata eseguita dall'identità Azure CLI dell'owner e non costituisce
+prova dei permessi effettivi del Dev Agent o del Review Agent.
 
 ---
 
@@ -267,6 +275,10 @@ knowledge base.
 - Check fuori YAML: Branch control, Required template e approvazioni per gli environment protetti
 - Service connection ed environment sono autorizzati solo alle pipeline nominate
 - Verifica: modifica YAML su feature branch non altera il run della pipeline privilegiata
+
+**Stato 2026-08-25**: da completare con prove di autorizzazione. Le definizioni YAML esistono,
+ma la separazione effettiva delle famiglie e i controlli fuori YAML non sono ancora stati
+verificati con l'identità del Dev Agent.
 
 ---
 
@@ -453,6 +465,9 @@ isolato e la credenziale Azure DevOps non interattiva del Dev Agent prima del di
 - Divieti espliciti: mai scrivere codice di feature, mai approvare con rilievi aperti
 - Regola: un rilievo non riconducibile alla checklist non è un rilievo
 
+**Stato 2026-08-25**: da completare. Nel repository è presente `agents/dev/`, ma non è ancora
+presente `agents/review/` con istruzioni versionate per il Review Agent.
+
 ---
 
 ### S0-13 · Checklist di review, versione 1
@@ -527,6 +542,10 @@ S0-14 è verde.
 - Tempo-uomo attuale per un onboarding manuale di un dataset, rilevato o stimato con metodo dichiarato
 - Consumo token del sistema in idle, misurato: **deve risultare ≈ 0**
 - Modalità di raccolta dei KPI documentata
+
+**Esito aggiornato 2026-08-25**: il run Fabric `20260825T141929Z-70aacec7` ha richiesto 21 s e
+ha caricato 10 righe con riconciliazione passata. Il costo monetario della capacity e il costo
+LLM non sono attribuibili dall'evidenza disponibile; il tempo-uomo manuale resta da rilevare.
 
 **Esito parziale 2026-08-21**: costo idle misurato con due cicli senza task: 0 sessioni Claude,
 0 token e $0; durate 9.985 s e 14.406 s. Metodo e KPI residui in
