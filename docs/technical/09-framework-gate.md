@@ -36,6 +36,10 @@ Il Dev Agent non deve creare configurazione, notebook o pipeline ad hoc per aggi
 S1-04 resta bloccato da S1-00: il framework CRM deve essere portato nella soluzione con
 provenienza riproducibile prima dell'onboarding.
 
+> Aggiornamento 2026-08-25: il divieto sopra riguarda l'aggiramento *implicito* del gate da parte
+> dell'agente. Non copre il caso in cui l'owner richieda esplicitamente un artefatto dedicato in
+> un ticket; quel caso è ora descritto nella sezione 9.
+
 ## 4. Decisione richiesta
 
 Decisione chiusa: il tracer usa CRM `account` con chiave `accountid` e watermark `modifiedon`.
@@ -191,3 +195,24 @@ L'errore Desktop di rendering persiste (`Cannot read properties of undefined (re
 Lo sviluppo Report Power BI è classificato come **TODO futuro** e rimosso dal percorso critico.
 La prossima priorità è l'integrazione GitHub Issues; non sono previste altre correzioni PBIP/PBIR
 in questa fase.
+
+## 9. Sorgente File `pagamenti` — work item #72
+
+Il work item #72 chiede esplicitamente un notebook dedicato che legga `pagamenti.csv` e scriva la
+tabella Delta `pagamenti` nel Lakehouse `lh_bronze_crm_demo`. Non chiede di estendere il framework
+metadata-driven, e il contratto `schemas/crm-source-v1.0.json` non è in grado di esprimere una
+sorgente File: ogni proprietà è vincolata con `const` al tracer CRM Dataverse.
+
+Stato della sorgente File, per evitare che il gate resti descritto in modo ambiguo:
+
+| Aspetto | Stato dopo #72 |
+|---|---|
+| Connettore File nel framework metadata-driven | **Ancora assente**. Nessun connettore, nessuno schema, nessuna configurazione |
+| Artefatto `nb_ingest_pagamenti` | Presente e versionato, con schema esplicito e merge idempotente |
+| Configurazione dichiarativa del dataset | Assente per scelta: `configuration/` e `schemas/` non sono stati allargati |
+| Classificazione | **B3 non risolto.** Il ticket lo scavalca per istruzione esplicita dell'owner, non lo chiude |
+
+Conseguenza operativa: l'artefatto di #72 è un'ingestion puntuale, non il secondo connettore
+previsto da `CONTEXT.md` sezione 7.1. Un eventuale terzo dataset File non deve essere aggiunto
+duplicando questo notebook; a quel punto serve la decisione architetturale con ADR prevista dal
+runbook di onboarding, sezione 1.
