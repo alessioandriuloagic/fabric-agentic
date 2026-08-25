@@ -144,6 +144,7 @@ discipline used for release version bumps above.
 
 ## Kaizen Learnings
 
+- **[2026-08-25] Dispatcher isolation requires a clone** → [kaizen/20260825-dispatcher-clone-isolation.md](kaizen/20260825-dispatcher-clone-isolation.md)
 - **[2026-08-24] PBIR visual container minimum** → [kaizen/20260824-pbir-visual-container.md](kaizen/20260824-pbir-visual-container.md)
 - **[2026-08-24] PBIR live model references** → [kaizen/20260824-pbir-live-references.md](kaizen/20260824-pbir-live-references.md)
 - **[2026-08-24] PBIP platform schema** → [kaizen/20260824-pbip-platform-schema.md](kaizen/20260824-pbip-platform-schema.md)
