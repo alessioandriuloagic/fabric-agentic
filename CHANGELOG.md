@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Il dispatcher ora solleva `DispatcherError` quando la sessione Dev Agent termina con exit code
+  non riuscito, evitando di registrare il ciclo come completato senza successo.
+
 - Aggiunto il passaggio del contesto GitHub al task record: body dell'issue e allegati
   `github.com/user-attachments` vengono messi nella directory temporanea del task, con limite
   dimensionale per file e senza esporre token nei log.
