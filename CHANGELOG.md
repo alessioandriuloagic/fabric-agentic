@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Registrata la verifica parziale dei permessi Fabric: Dev Agent `Viewer` su `ws_agentic_dev` e
+  Review Agent senza accesso Fabric; restano le prove negative e gli switch tenant da verificare.
+
 - Aggiunte le istruzioni versionate del Review Agent in `agents/review/INSTRUCTIONS.md`, con
   checklist A-F, formato di voto e confini di sicurezza.
 
