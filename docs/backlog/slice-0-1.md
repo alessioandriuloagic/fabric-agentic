@@ -232,11 +232,14 @@ revisione umana restano obbligatori, ma i 9 controlli pratici non sono marcati c
 > La pipeline usa una distinta identità di deploy. Il Dev Agent può accodarla ma non può
 > impersonarla né modificarne la definizione. Vedi ADR-0007 e ADR-0008.
 
-**Stato aggiornato 2026-08-25**: parzialmente verificato. L'owner conferma `Viewer` per il Dev
-Agent su `ws_agentic_dev` e nessun accesso Fabric per il Review Agent. La pubblicazione del
-notebook è stata eseguita dall'identità Azure CLI dell'owner e non costituisce prova dei permessi
-del Dev Agent. Restano da eseguire le prove negative di creazione/scrittura/avvio job del Dev Agent,
-la verifica degli switch tenant e la registrazione dell'evidenza completa.
+**Stato aggiornato 2026-08-25**: fallito sul least privilege. L'owner conferma `Viewer` per il Dev
+Agent su `ws_agentic_dev` e nessun accesso Fabric per il Review Agent. La GET del workspace ha
+restituito HTTP `200`, ma il POST di creazione workspace ha restituito HTTP `201`: il Dev Agent può
+ancora creare risorse. Il workspace di probe è stato eliminato immediatamente. Il setting tenant va
+ristretto al solo gruppo `FabricAgentDeploy` e la prova va ripetuta. Il portale Entra mostra
+`fabric-agentic-dev-agent` come membro diretto del gruppo; una query CLI precedente aveva
+restituito erroneamente un elenco vuoto. Nonostante la membership, il probe successivo ha ancora
+restituito HTTP `201`: la propagazione o la semantica dell'eccezione tenant resta da chiarire.
 
 ---
 

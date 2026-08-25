@@ -64,6 +64,15 @@ L'owner conferma che il Dev Agent ha ruolo `Viewer` su `ws_agentic_dev` e che il
 ha alcun accesso Fabric. Questa conferma non sostituisce le prove negative richieste per verificare
 che il Dev Agent non possa creare workspace, scrivere item o avviare job.
 
+La prova API del Service Principal Dev Agent ha ottenuto un token nel tenant corretto con audience
+`https://api.fabric.microsoft.com` e la GET del workspace ha restituito HTTP `200`: la lettura
+Viewer è verificata. Un POST di creazione workspace ha però restituito HTTP `201`; la risorsa di
+probe è stata eliminata immediatamente. Il setting tenant di creazione deve essere ristretto al
+gruppo `FabricAgentDeploy` prima di ripetere le prove di scrittura. Il portale Entra mostra il
+Dev Agent come membro diretto; la query CLI precedente aveva restituito erroneamente zero membri.
+Nonostante la membership, il probe successivo ha ancora restituito HTTP `201`, quindi la
+propagazione o la semantica dell'eccezione tenant resta da chiarire.
+
 ### 3.1 Dev Agent
 
 > **Rivisto dopo la review architetturale** (`07-architecture-review.md`, ADR-0008). Il Dev
