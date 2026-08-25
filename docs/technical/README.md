@@ -19,6 +19,7 @@ si descrive come sono implementate.
 | [07 — Architecture review](07-architecture-review.md) | Validazione del design contro la documentazione ufficiale e rischi architetturali |
 | [08 — KPI baseline](08-kpi-baseline.md) | Misure iniziali del dispatcher e metodo di raccolta dei KPI |
 | [09 — Framework gate](09-framework-gate.md) | Verifica B3 e decisione necessaria prima del primo onboarding agentico |
+| [10 — GitHub issue attachments](10-github-issue-attachments.md) | Ricerca ufficiale su allegati GitHub, installation token e permessi |
 
 ## Convenzione sulle affermazioni di piattaforma
 
