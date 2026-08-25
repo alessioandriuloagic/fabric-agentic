@@ -6,6 +6,8 @@ on:
       - "schemas/**"
       - "scripts/**"
       - "tests/**"
+      - "fabric/notebook/**"
+      - "attachments/**"
       - ".github/workflows/branch-out.yml"
       - ".github/workflows/sync-workspace.yml"
       - ".github/workflows/crm-preflight.yml"
@@ -17,6 +19,8 @@ on:
       - "schemas/**"
       - "scripts/**"
       - "tests/**"
+      - "fabric/notebook/**"
+      - "attachments/**"
       - ".github/workflows/branch-out.yml"
       - ".github/workflows/sync-workspace.yml"
       - ".github/workflows/crm-preflight.yml"
@@ -33,4 +37,4 @@ jobs:
       - name: Validate rail-result schema
         run: python scripts/validate_rail_result_schema.py
       - name: Test deterministic rail helpers
-        run: python -m unittest tests/test_branch_out.py tests/test_sync_workspace.py tests/test_crm_framework.py tests/test_fabric_artifacts.py tests/test_fabric_crm_preflight.py
+        run: python -m unittest tests/test_branch_out.py tests/test_sync_workspace.py tests/test_crm_framework.py tests/test_fabric_artifacts.py tests/test_fabric_crm_preflight.py tests/test_pagamenti_load.py

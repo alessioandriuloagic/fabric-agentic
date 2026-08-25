@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Aggiunto il notebook Fabric `nb_ingest_pagamenti` (issue #72): legge
+  `Files/raw/pagamenti/pagamenti.csv` con schema esplicito in `FAILFAST`, tipizza `Data` come data
+  e `Importo` come `decimal(18, 2)`, verifica l'unicità di `ID_Pagamento` prima di qualsiasi
+  scrittura e fa merge sulla tabella Delta `pagamenti` del Lakehouse `lh_bronze_crm_demo`, così una
+  riesecuzione aggiorna invece di duplicare. Aggiunti il runtime deterministico
+  `scripts/pagamenti_load.py`, i test `tests/test_pagamenti_load.py` e l'inventario
+  `docs/sources/pagamenti.md`. La sorgente File resta fuori dal framework metadata-driven: il
+  blocco B3 di `docs/technical/09-framework-gate.md` non è chiuso da questa modifica.
+
 - Aggiunta la cartella `attachments/<issue-number>/` come canale versionato e riproducibile per
   trascrizioni e file che il Dev Agent deve leggere.
 
