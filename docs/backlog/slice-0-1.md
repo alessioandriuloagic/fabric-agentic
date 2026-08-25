@@ -232,13 +232,11 @@ revisione umana restano obbligatori, ma i 9 controlli pratici non sono marcati c
 > La pipeline usa una distinta identità di deploy. Il Dev Agent può accodarla ma non può
 > impersonarla né modificarne la definizione. Vedi ADR-0007 e ADR-0008.
 
-**Stato aggiornato 2026-08-25**: parzialmente verificato. L'owner conferma `Viewer` per il Dev
-Agent su `ws_agentic_dev` e nessun accesso Fabric per il Review Agent. La prova API del Service
-Principal Dev Agent ha ottenuto un token con tenant e audience corretti e la GET del workspace
-ha restituito HTTP `200`: lettura Viewer verificata. Il setting `Service principals can create
-workspaces, connections, and deployment pipelines` risulta però abilitato per l'intera
-organizzazione, in contrasto con il least privilege richiesto: va ristretto al solo deploy SP
-prima delle prove di scrittura e creazione risorse.
+**Stato aggiornato 2026-08-25**: fallito sul least privilege. L'owner conferma `Viewer` per il Dev
+Agent su `ws_agentic_dev` e nessun accesso Fabric per il Review Agent. La GET del workspace ha
+restituito HTTP `200`, ma il POST di creazione workspace ha restituito HTTP `201`: il Dev Agent può
+ancora creare risorse. Il workspace di probe è stato eliminato immediatamente. Il setting tenant va
+ristretto al solo gruppo `FabricAgentDeploy` e la prova va ripetuta.
 
 ---
 

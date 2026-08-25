@@ -66,9 +66,9 @@ che il Dev Agent non possa creare workspace, scrivere item o avviare job.
 
 La prova API del Service Principal Dev Agent ha ottenuto un token nel tenant corretto con audience
 `https://api.fabric.microsoft.com` e la GET del workspace ha restituito HTTP `200`: la lettura
-Viewer è verificata. Il setting tenant `Service principals can create workspaces, connections,
-and deployment pipelines` risulta abilitato per l'intera organizzazione; questo è più permissivo
-del modello S0-07 e va ristretto al solo deploy SP prima delle prove di scrittura.
+Viewer è verificata. Un POST di creazione workspace ha però restituito HTTP `201`; la risorsa di
+probe è stata eliminata immediatamente. Il setting tenant di creazione deve essere ristretto al
+gruppo `FabricAgentDeploy` prima di ripetere le prove di scrittura.
 
 ### 3.1 Dev Agent
 
