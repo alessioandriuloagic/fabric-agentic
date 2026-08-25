@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Nuova prova S0-07 dopo la configurazione del gruppo: GET workspace Dev Agent HTTP `200`, POST
+  creazione workspace negato con HTTP `401`, nessuna risorsa creata. Il blocco sembra applicato;
+  resta da verificare il Deploy SP e il codice `403` atteso.
+
 - Registrato il fallimento del probe S0-07: il Dev Agent legge il workspace con HTTP `200`, ma può
   ancora creare un workspace con HTTP `201`; la risorsa temporanea è stata eliminata. Il setting
   di creazione va ristretto al gruppo `FabricAgentDeploy`. Il portale mostra il Dev Agent nel
