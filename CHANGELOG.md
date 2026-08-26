@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Verificato il Deploy SP OIDC: run manuale `32943998407` da `main` riuscito con lettura metadata
+  di `ws_agentic_dev` tramite `pipe_human_test_azure_oidc_dev`.
+
 - Applicato il naming delle famiglie GitHub Actions: workflow operativi `pipe_agent_*` e test
   manuale `pipe_human_*`; non esistono workflow schedulati nel perimetro corrente.
 
