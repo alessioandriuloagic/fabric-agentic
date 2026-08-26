@@ -681,6 +681,11 @@ Deploy SP, ma il rail ha restituito `technical_failure` allo stage `git_connecti
 branch o workspace. Prima di riavviare il rail va verificata la Configured Connection Git, inclusi
 repository/branch e il ruolo `User` del Deploy SP sulla connection.
 
+**Correzione 2026-08-26**: il workspace esistente `ws_agentic_feature_wi6` risulta già collegato
+a `feature/wi-6-smoke-branch-out`. Il rail confrontava però `organizationName` invece di
+`ownerName` per GitHub e classificava la connection esistente come incompatibile. Il confronto è
+stato corretto e richiede un nuovo run idempotente.
+
 ---
 
 ### S1-03 · Rail: sync workspace

@@ -231,8 +231,9 @@ def ensure_git_connection(workspace_id: str, branch_name: str) -> bool:
     if existing:
         details = existing.get("gitProviderDetails")
         if details:
+            owner = details.get("ownerName", details.get("organizationName"))
             if (
-                details.get("organizationName") != organization
+                owner != organization
                 or details.get("repositoryName") != repository
                 or details.get("branchName") != branch_name
             ):
