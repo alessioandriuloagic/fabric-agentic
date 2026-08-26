@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Aggiunto l'Issue Agent come orchestratore di avvio lavoro: delega i requisiti a `karl` e
+  l'architettura a `ralph`, produce un pacchetto approvabile e non crea work item prima
+  dell'approvazione umana.
+
 - Aggiunti il custom agent condiviso del Review Agent e il prompt parametrizzato per avviare una
   review indipendente A1-F4 su una pull request.
 
