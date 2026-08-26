@@ -7,9 +7,10 @@
 
 ## 1. Principio di fondo
 
-L'umano interviene in **due soli momenti**: quando scrive il ticket e quando preme merge.
-Tutto ciò che sta in mezzo è automatico — ma **niente di ciò che sta in mezzo può raggiungere
-`main` da solo**.
+L'umano interviene in **due soli momenti**: quando approva il ticket e quando preme merge.
+Il ticket può essere redatto dall'Issue Agent, ma **non diventa esecutivo senza approvazione
+umana**. Tutto ciò che sta in mezzo è automatico — ma **niente di ciò che sta in mezzo può
+raggiungere `main` da solo**.
 
 Corollario operativo: se ti accorgi di dover intervenire tecnicamente durante il ciclo (aprire
 un workspace, correggere una pipeline a mano, rilanciare un carico), **non è un contrattempo:
@@ -22,7 +23,8 @@ silenziosa.
 
 | Attore | Può | Non può |
 |---|---|---|
-| **Owner umano** | Scrivere ticket, rispondere ai blocchi, approvare, mergiare, promuovere verso prod | — |
+| **Owner umano** | Approvare il pacchetto di lavoro, scrivere o approvare il ticket, rispondere ai blocchi, approvare, mergiare, promuovere verso prod | — |
+| **Issue Agent** | Orchestrare `karl` e `ralph`, produrre il pacchetto di lavoro e i ticket proposti | Creare work item senza approvazione umana, scrivere codice di feature, accedere a Fabric |
 | **Dev Agent** | Creare branch e feature workspace tramite rail, sviluppare item Fabric in Git, testare nel feature workspace, aggiornare doc, aprire PR, rispondere ai rilievi | Mergiare, pushare su `main`, scrivere direttamente su Fabric, modificare i propri permessi |
 | **Review Agent** | Leggere il diff, verificare la checklist, commentare, votare | Scrivere codice di feature, accedere a Fabric, mergiare |
 | **Dispatcher** | Rilevare i trigger e avviare una sessione | Prendere decisioni: non usa LLM |
@@ -33,7 +35,7 @@ silenziosa.
 
 | Stato | Significato | Chi lo imposta |
 |---|---|---|
-| **To Do** | Ticket scritto. Con il tag dell'agente, è pronto per la presa in carico | Owner |
+| **To Do** | Ticket scritto. Con il tag dell'agente, è pronto per la presa in carico | Owner, o Issue Agent dopo approvazione umana |
 | **Doing** | Sessione dell'agente in corso o PR aperta e in review | Dev Agent |
 | **Doing** + tag `waiting-input` | L'agente è bloccato e ha posto una domanda sul ticket | Dev Agent |
 | **Done** | PR mergiata su `main` | Owner (al merge) |
@@ -47,7 +49,8 @@ L'agente non "riprova più tardi" e non tira a indovinare.
 
 ### Fase 1 — Presa in carico
 
-1. L'owner crea il work item in *To Do* con il tag riservato al Dev Agent.
+1. Il work item entra in *To Do* con il tag riservato al Dev Agent: lo crea l'owner, oppure
+   l'Issue Agent dopo l'approvazione umana del pacchetto di lavoro.
 2. Il dispatcher, in polling, rileva il ticket entro un ciclo (~30 secondi).
 3. Viene avviata una **sessione nuova e senza memoria** del Dev Agent.
 4. L'agente sposta il ticket in *Doing*.
@@ -133,7 +136,7 @@ Vedi [05 — Protocollo di escalation](05-protocollo-escalation.md).
 
 ```mermaid
 stateDiagram-v2
-    [*] --> ToDo: owner crea il ticket
+    [*] --> ToDo: owner crea il ticket, o Issue Agent dopo approvazione umana
     ToDo --> Doing: dispatcher rileva il tag
     Doing --> WaitingInput: specifica ambigua o errata
     WaitingInput --> Doing: risposta umana
