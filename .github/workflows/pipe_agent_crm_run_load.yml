@@ -1,4 +1,4 @@
-name: CRM run load
+name: pipe_agent_crm_run_load
 
 on:
   workflow_dispatch:

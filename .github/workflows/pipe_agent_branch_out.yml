@@ -1,4 +1,4 @@
-name: Sync workspace
+name: pipe_agent_branch_out
 
 on:
   workflow_dispatch:
@@ -13,11 +13,11 @@ on:
         type: string
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 jobs:
-  sync-workspace:
+  branch-out:
     runs-on: ubuntu-latest
     environment: dev
     steps:
@@ -25,6 +25,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           ref: main
+          fetch-depth: 0
 
       - name: Sign in to Azure with GitHub OIDC
         uses: azure/login@v2
@@ -33,14 +34,17 @@ jobs:
           tenant-id: ${{ vars.FABRIC_DEPLOY_TENANT_ID }}
           allow-no-subscriptions: true
 
-      - name: Synchronize feature workspace
-        id: sync
+      - name: Provision feature branch and workspace
+        id: provision
         continue-on-error: true
         env:
+          FABRIC_CAPACITY_ID: ${{ vars.FABRIC_CAPACITY_ID }}
+          FABRIC_OWNER_OBJECT_ID: ${{ vars.FABRIC_OWNER_OBJECT_ID }}
+          FABRIC_GIT_CONNECTION_ID: ${{ vars.FABRIC_GIT_CONNECTION_ID }}
           FABRIC_GIT_ORGANIZATION: ${{ vars.FABRIC_GIT_ORGANIZATION }}
           FABRIC_GIT_REPOSITORY: ${{ vars.FABRIC_GIT_REPOSITORY }}
         run: >-
-          python -m scripts.sync_workspace
+          python scripts/branch_out.py
           --work-item-id "${{ inputs.work_item_id }}"
           --slug "${{ inputs.slug }}"
 
@@ -53,5 +57,5 @@ jobs:
           if-no-files-found: error
 
       - name: Fail after publishing the rail result
-        if: steps.sync.outcome == 'failure'
+        if: steps.provision.outcome == 'failure'
         run: exit 1

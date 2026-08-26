@@ -1,4 +1,4 @@
-name: CRM preflight
+name: pipe_agent_crm_preflight
 
 on:
   workflow_dispatch:

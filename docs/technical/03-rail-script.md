@@ -70,7 +70,7 @@ nascondere una decisione dentro codice non tracciato.
 
 ### Implementazione iniziale
 
-Il workflow `.github/workflows/branch-out.yml` e il runner `scripts/branch_out.py` implementano
+Il workflow `.github/workflows/pipe_agent_branch_out.yml` e il runner `scripts/branch_out.py` implementano
 il primo rail reale. Il workflow viene avviato dalla definizione su `main`, usa esclusivamente
 l'environment GitHub `dev` e accetta soltanto `work_item_id` e `slug`; non accetta un ambiente di
 destinazione. L'owner, capacity e connessione Git sono configurazione dell'environment `dev`, non
@@ -231,7 +231,7 @@ L'esito distingue tre casi per una reazione diversa dell'agente:
 
 ### Implementazione iniziale
 
-Il workflow `.github/workflows/sync-workspace.yml` e il runner
+Il workflow `.github/workflows/pipe_agent_sync_workspace.yml` e il runner
 `scripts/sync_workspace.py` implementano S1-03. Come `branch_out`, il workflow viene eseguito
 da `main`, usa solo l'environment `dev` e riceve work item e slug, da cui deriva branch e
 workspace. Non accetta un target environment né un workspace arbitrario.

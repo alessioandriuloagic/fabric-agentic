@@ -69,7 +69,7 @@ questa sequenza senza fallback append.
 
 ## 6. Preflight deployabile
 
-Il workflow manuale `.github/workflows/crm-preflight.yml` usa l'identità OIDC di deploy su
+Il workflow manuale `.github/workflows/pipe_agent_crm_preflight.yml` usa l'identità OIDC di deploy su
 `dev`, deriva il feature workspace dal work item e crea/riusa `lh_bronze_crm_demo` e
 `nb_crm_preflight`. Avvia il job con `RunNotebook` e pubblica `crm-preflight-result.json`.
 Il notebook esegue una richiesta CRM `$top=0`; non legge righe account e non espone credenziali.

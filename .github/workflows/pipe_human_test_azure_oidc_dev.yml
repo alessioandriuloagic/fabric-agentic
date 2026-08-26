@@ -1,4 +1,4 @@
-name: Test Azure OIDC DEV
+name: pipe_human_test_azure_oidc_dev
 
 on:
   workflow_dispatch:
