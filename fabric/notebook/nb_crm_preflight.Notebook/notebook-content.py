@@ -14,7 +14,7 @@ import requests
 import notebookutils
 
 CONNECTION_ID = "b838644d-afd9-4ec3-973d-e36ed85ad167"
-ENVIRONMENT_URL = "https://org4009cd0e.crm4.dynamics.com"
+ENVIRONMENT_URL = "https://org12202591.crm4.dynamics.com"
 
 
 def resolve_access_token(connection_id: str) -> str:
