@@ -263,7 +263,9 @@ del Deploy SP e, se necessario, dopo la finestra completa di propagazione.
 operativi sono `pipe_agent_branch_out.yml`, `pipe_agent_sync_workspace.yml`,
 `pipe_agent_crm_preflight.yml` e `pipe_agent_crm_run_load.yml`; il test manuale OIDC è
 `pipe_human_test_azure_oidc_dev.yml`. Non esistono workflow schedulati, quindi non è stata creata
-una famiglia `pipe_sched_*`. Restano da verificare i permessi effettivi di dispatch e environment.
+una famiglia `pipe_sched_*`. Il run OIDC manuale `32943998407` da `main` ha verificato login
+Deploy SP e lettura metadata di `ws_agentic_dev`. Restano da verificare i permessi effettivi di
+dispatch e environment.
 
 ---
 
@@ -289,6 +291,9 @@ una famiglia `pipe_sched_*`. Restano da verificare i permessi effettivi di dispa
 privilegiati restano ancorati a `main` e senza `targetEnvironment`; protection rules, autorizzazioni
 di environment e prova d'immutabilità della definizione fuori YAML non sono ancora verificabili
 con il piano GitHub corrente.
+
+**Evidenza OIDC 2026-08-26**: il run GitHub Actions `32943998407` ha completato con successo
+l'autenticazione OIDC e la lettura metadata di `ws_agentic_dev` tramite il Deploy SP.
 
 ---
 
