@@ -18,6 +18,7 @@
 
 | Termine | Definizione |
 |---|---|
+| **Issue Agent** | Agente AI che orchestra `karl` (requisiti, KPI, UAT) e `ralph` (architettura, flussi, ambienti, CI/CD) e produce un pacchetto di lavoro approvabile con i ticket proposti. **Non crea work item senza approvazione umana, non scrive codice di feature.** Non ha accesso a Fabric. |
 | **Dev Agent** | Agente AI che esegue il ciclo di sviluppo end-to-end su un work item: branch, feature workspace, implementazione, test reale, documentazione, apertura PR. **Non merge mai.** |
 | **Review Agent** | Agente AI, di vendor diverso, che revisiona la PR contro una checklist chiusa. **Non scrive codice di feature, non merge.** Non ha accesso a Fabric. |
 | **Dispatcher** | Script deterministico in polling sul tracker. Rileva i trigger e avvia una sessione fresca dell'agente. **Non usa LLM**: da fermo il costo è zero. |

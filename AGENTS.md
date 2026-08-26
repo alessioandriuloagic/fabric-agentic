@@ -159,6 +159,11 @@ environments and CI/CD go to `@ralph`. It never creates a work item before the h
 package, never writes feature code, and never accesses Fabric or credentials. Unresolved points are
 reported under `Domande aperte` rather than guessed.
 
+It holds no `edit` permission: documentation and code changes are proposed as tickets and
+implemented by the Dev Agent through a pull request. Its remaining `execute` permission is bounded
+by instructions only, so like the Review Agent it needs a dedicated identity and runtime before it
+can be treated as a production control.
+
 End-to-end chain: `Issue Agent` (karl + ralph) -> human approval -> ticket -> `Dev Agent` -> PR ->
 `Review Agent` -> human merge.
 

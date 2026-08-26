@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Prima review reale del Review Agent sulla PR #94: checklist A1-F4 completa, tre rilievi aperti
+  (`E1`, `E5`, `F3`) e voto GitHub rifiutato perché l'agente non ha ancora un'identità distinta
+  dall'autore della PR.
+
 - Aggiunto l'Issue Agent come orchestratore di avvio lavoro: delega i requisiti a `karl` e
   l'architettura a `ralph`, produce un pacchetto approvabile e non crea work item prima
   dell'approvazione umana.
@@ -358,6 +362,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CONTEXT.md`: glossario di dominio, convenzioni di naming Fabric (prefissi per
   tipo item, workspace, cartelle per layer, task flow), convenzioni Git/tracker,
   convenzioni Power BI e principi non negoziabili.
+
+### Fixed
+
+- Chiusi i rilievi della review sulla PR #94: rimosso il permesso `edit` dall'Issue Agent, aggiunto
+  l'Issue Agent al glossario vincolante di `CONTEXT.md` e corretto il ciclo di vita del ticket, che
+  attribuiva la stesura al solo owner umano.
 
 ### Changed
 
