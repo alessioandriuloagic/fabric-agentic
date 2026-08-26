@@ -721,6 +721,12 @@ generico `Fabric long-running operation failed`. Il runner ora conserva soltanto
 dell'operazione, lo stato (`Failed`/`Cancelled`) e il codice tecnico Fabric, escludendo il
 response body; la suite mirata passa con 7 test.
 
+**Correzione binding Lakehouse 2026-08-26**: l'esecuzione successiva ha fallito nel notebook
+runtime (`Fabric notebook run failed`) e il notebook mostrava `No data sources added`. Il runner
+creava `lh_bronze_crm_demo` ma non lo passava alla definizione del notebook e non aggiornava la
+definizione quando l'item esisteva gia'. Il preflight ora associa esplicitamente il Lakehouse
+predefinito e aggiorna sempre la definizione prima dell'avvio; il test mirato passa con 7 test.
+
 ---
 
 ### S1-04 · Ticket agentico: ingestion `pagamenti`

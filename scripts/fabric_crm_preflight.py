@@ -144,7 +144,16 @@ def run_preflight(work_item_id: int) -> dict:
     client = FabricClient(access_token())
     workspace = find_workspace(client, work_item_id)
     lakehouse = client.ensure_item(workspace["id"], LAKEHOUSE_NAME, "Lakehouse")
-    notebook = client.ensure_item(workspace["id"], NOTEBOOK_NAME, "Notebook", notebook_definition(NOTEBOOK_DIRECTORY))
+    definition = notebook_definition(
+        NOTEBOOK_DIRECTORY,
+        {
+            "id": lakehouse["id"],
+            "displayName": lakehouse["displayName"],
+            "workspace_id": workspace["id"],
+        },
+    )
+    notebook = client.ensure_item(workspace["id"], NOTEBOOK_NAME, "Notebook", definition)
+    client.update_item_definition(workspace["id"], notebook["id"], definition)
     client.run_notebook(workspace["id"], notebook["id"])
     return {
         "outcome": "success",
