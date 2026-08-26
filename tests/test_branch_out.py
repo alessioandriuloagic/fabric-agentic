@@ -113,6 +113,32 @@ class BranchOutTests(unittest.TestCase):
             ),
         )
 
+    @patch.dict(
+        "os.environ",
+        {
+            "FABRIC_GIT_CONNECTION_ID": "connection-id",
+            "FABRIC_GIT_ORGANIZATION": "alessioandriuloagic",
+            "FABRIC_GIT_REPOSITORY": "fabric-agentic",
+        },
+    )
+    @patch(
+        "scripts.branch_out.fabric_optional",
+        return_value={
+            "gitProviderDetails": {
+                "ownerName": "alessioandriuloagic",
+                "gitProviderType": "GitHub",
+                "repositoryName": "fabric-agentic",
+                "branchName": "feature/wi-6-smoke-branch-out",
+            }
+        },
+    )
+    @patch("scripts.branch_out.fabric")
+    def test_existing_github_connection_is_reused(self, fabric_mock, _) -> None:
+        connection_created = ensure_git_connection("workspace-id", "feature/wi-6-smoke-branch-out")
+
+        self.assertFalse(connection_created)
+        fabric_mock.assert_not_called()
+
     @patch("scripts.branch_out.find_workspace", return_value={"id": "workspace-id", "capacityId": None})
     @patch("scripts.branch_out.fabric")
     def test_existing_workspace_without_capacity_is_assigned(self, fabric_mock, _) -> None:

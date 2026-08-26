@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Corretto il rail `branch_out` per riusare una Git connection GitHub esistente: ora confronta
+  `ownerName` (con fallback Azure DevOps) e non fallisce su feature workspace già collegati.
+
 - Registrato il run OIDC `pipe_agent_branch_out` `32945217566`: checkout e login Deploy SP
   riusciti, ma rail bloccato nello stage `git_connection` senza creare risorse.
 

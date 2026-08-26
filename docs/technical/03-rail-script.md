@@ -89,6 +89,10 @@ connessione, non lo considera un collegamento incompatibile.
 `failure_code` espone soltanto la classe tecnica sicura della richiesta rifiutata (`forbidden`,
 `unauthorized`, `bad_request`, `api_request_failed` o `unexpected`), mai il messaggio dell'API.
 
+Per GitHub l'idempotenza confronta `ownerName` della connessione esistente; per Azure DevOps usa
+il fallback `organizationName`. Questo evita di trattare un feature workspace GitHub già collegato
+alla branch richiesta come incompatibile.
+
 L'idempotenza è conservativa: al rilancio il rail riusa il branch e il workspace con lo stesso
 nome, completa un'assegnazione capacity mancante, non riassegna un owner già `Admin` e verifica
 che una connessione Git esistente punti allo stesso repository e branch. Una capacity diversa,
