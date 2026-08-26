@@ -32,6 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   e S0-12 restano da verificare o completare; S0-15 include la durata del run pagamenti e il
   costo monetario non attribuibile.
 
+- Aperto il ticket amministrativo GitHub #83 per verificare separazione e autorizzazioni delle
+  famiglie di pipeline S0-N1/S0-N2.
+
 - Registrato il primo run Fabric del tracer `pagamenti`: 10 righe caricate e 10 in destinazione,
   `pk_check` e riconciliazione passati, run `20260825T141929Z-70aacec7`, durata osservata 21 s.
   Il costo monetario della capacity e il costo LLM non sono attribuibili dall'evidenza disponibile.

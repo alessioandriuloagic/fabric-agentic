@@ -144,6 +144,7 @@ discipline used for release version bumps above.
 
 ## Kaizen Learnings
 
+- **[2026-08-25] Preserve existing changelog bullets** → [kaizen/20260825-preserve-changelog-bullets.md](kaizen/20260825-preserve-changelog-bullets.md)
 - **[2026-08-25] Verify group membership in the right context** → [kaizen/20260825-verify-group-membership-context.md](kaizen/20260825-verify-group-membership-context.md)
 - **[2026-08-25] Permission probes must be invalid** → [kaizen/20260825-permission-probe-must-be-invalid.md](kaizen/20260825-permission-probe-must-be-invalid.md)
 - **[2026-08-25] Dispatcher session must use the isolated clone** → [kaizen/20260825-dispatcher-cwd-isolation.md](kaizen/20260825-dispatcher-cwd-isolation.md)

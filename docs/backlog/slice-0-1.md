@@ -279,9 +279,9 @@ del Deploy SP e, se necessario, dopo la finestra completa di propagazione.
 - Service connection ed environment sono autorizzati solo alle pipeline nominate
 - Verifica: modifica YAML su feature branch non altera il run della pipeline privilegiata
 
-**Stato 2026-08-25**: da completare con prove di autorizzazione. Le definizioni YAML esistono,
-ma la separazione effettiva delle famiglie e i controlli fuori YAML non sono ancora stati
-verificati con l'identità del Dev Agent.
+**Stato 2026-08-25**: da completare con il ticket amministrativo GitHub #83. Le definizioni YAML
+esistono, ma la separazione effettiva delle famiglie e i controlli fuori YAML non sono ancora
+stati verificati con l'identità del Dev Agent.
 
 ---
 
