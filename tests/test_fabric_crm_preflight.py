@@ -12,6 +12,14 @@ class FabricCrmPreflightTests(unittest.TestCase):
         self.assertIn("python -m scripts.fabric_crm_preflight", workflow)
         self.assertIn("Ensure preflight result exists", workflow)
 
+    def test_preflight_notebook_uses_configured_dataverse_environment(self) -> None:
+        notebook = Path("fabric/notebook/nb_crm_preflight.Notebook/notebook-content.py").read_text(encoding="utf-8")
+        configuration = Path("configuration/crm_demo.json").read_text(encoding="utf-8")
+
+        self.assertIn('"https://org12202591.crm4.dynamics.com"', notebook)
+        self.assertNotIn("org4009cd0e", notebook)
+        self.assertIn('"environment_url": "https://org12202591.crm4.dynamics.com"', configuration)
+
     def test_derives_deterministic_feature_workspace_name(self) -> None:
         self.assertEqual(feature_workspace_name(42), "ws_agentic_feature_wi42")
         with self.assertRaises(FabricPreflightError):

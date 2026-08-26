@@ -708,6 +708,13 @@ stato corretto e richiede un nuovo run idempotente.
 item `6`. Il workspace risultava già allineato al branch; il rail ha restituito
 `already_aligned`, nessun item aggiornato e nessuna divergenza.
 
+**Correzione CRM preflight 2026-08-26**: il run `32955814916` ha fallito durante l'esecuzione
+del notebook `nb_crm_preflight`. Il notebook usava l'ambiente Dataverse errato
+`org4009cd0e`, mentre `configuration/crm_demo.json` e la connessione validata usano
+`org12202591`. L'endpoint e' stato corretto nel notebook e coperto da un test di regressione;
+il preflight deve essere rilanciato dal workflow ancorato a `main` dopo la pubblicazione della
+modifica.
+
 ---
 
 ### S1-04 · Ticket agentico: ingestion `pagamenti`
