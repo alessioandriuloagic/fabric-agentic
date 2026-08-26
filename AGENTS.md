@@ -142,8 +142,18 @@ discipline used for release version bumps above.
 
 <!-- Project-specific notes: add anything unique to this project below this line, inside the markers, and it will survive future /init-dai-project re-runs only if you keep it between them. -->
 
+## Review Agent
+
+The workspace custom agent `.github/agents/review-agent.agent.md` is the executable review
+contract. Start it with `.github/prompts/review-pr.prompt.md` and a PR number. It reviews one open
+PR per session against A1-F4, never accesses Fabric or edits files, and publishes one structured
+comment plus a vote. The Review Agent requires an independent runtime and GitHub identity before
+it can be considered a production control.
+
 ## Kaizen Learnings
 
+- **[2026-08-26] Usare lo schema ufficiale dei file .platform** → [kaizen/20260826-platform-schema-url.md](kaizen/20260826-platform-schema-url.md)
+- **[2026-08-26] Distinguere connessione Git e visibilita' workspace** → [kaizen/20260826-sync-workspace-identity-visibility.md](kaizen/20260826-sync-workspace-identity-visibility.md)
 - **[2026-08-25] Preserve existing changelog bullets** → [kaizen/20260825-preserve-changelog-bullets.md](kaizen/20260825-preserve-changelog-bullets.md)
 - **[2026-08-25] Verify group membership in the right context** → [kaizen/20260825-verify-group-membership-context.md](kaizen/20260825-verify-group-membership-context.md)
 - **[2026-08-25] Permission probes must be invalid** → [kaizen/20260825-permission-probe-must-be-invalid.md](kaizen/20260825-permission-probe-must-be-invalid.md)

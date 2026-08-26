@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Aggiunti il custom agent condiviso del Review Agent e il prompt parametrizzato per avviare una
+  review indipendente A1-F4 su una pull request.
+
 - Corretto il rail `branch_out` per riusare una Git connection GitHub esistente: ora confronta
   `ownerName` (con fallback Azure DevOps) e non fallisce su feature workspace già collegati.
 
