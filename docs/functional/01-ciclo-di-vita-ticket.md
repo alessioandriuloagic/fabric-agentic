@@ -35,7 +35,7 @@ silenziosa.
 
 | Stato | Significato | Chi lo imposta |
 |---|---|---|
-| **To Do** | Ticket scritto. Con il tag dell'agente, è pronto per la presa in carico | Owner |
+| **To Do** | Ticket scritto. Con il tag dell'agente, è pronto per la presa in carico | Owner, o Issue Agent dopo approvazione umana |
 | **Doing** | Sessione dell'agente in corso o PR aperta e in review | Dev Agent |
 | **Doing** + tag `waiting-input` | L'agente è bloccato e ha posto una domanda sul ticket | Dev Agent |
 | **Done** | PR mergiata su `main` | Owner (al merge) |
