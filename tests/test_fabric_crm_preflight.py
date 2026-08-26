@@ -20,6 +20,13 @@ class FabricCrmPreflightTests(unittest.TestCase):
         self.assertNotIn("org4009cd0e", notebook)
         self.assertIn('"environment_url": "https://org12202591.crm4.dynamics.com"', configuration)
 
+    def test_preflight_binds_and_updates_notebook_default_lakehouse(self) -> None:
+        source = Path("scripts/fabric_crm_preflight.py").read_text(encoding="utf-8")
+
+        self.assertIn('"workspace_id": workspace["id"]', source)
+        self.assertIn("notebook_definition(\n        NOTEBOOK_DIRECTORY,", source)
+        self.assertIn("client.update_item_definition(workspace[\"id\"], notebook[\"id\"], definition)", source)
+
     def test_derives_deterministic_feature_workspace_name(self) -> None:
         self.assertEqual(feature_workspace_name(42), "ws_agentic_feature_wi42")
         with self.assertRaises(FabricPreflightError):
