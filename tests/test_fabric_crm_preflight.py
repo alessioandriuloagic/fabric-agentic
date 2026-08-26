@@ -7,7 +7,7 @@ from scripts.fabric_crm_preflight import FabricClient, FabricPreflightError, fea
 
 class FabricCrmPreflightTests(unittest.TestCase):
     def test_workflow_runs_the_deployer_as_a_module(self) -> None:
-        workflow = Path(".github/workflows/crm-preflight.yml").read_text(encoding="utf-8")
+        workflow = Path(".github/workflows/pipe_agent_crm_preflight.yml").read_text(encoding="utf-8")
 
         self.assertIn("python -m scripts.fabric_crm_preflight", workflow)
         self.assertIn("Ensure preflight result exists", workflow)

@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Applicato il naming delle famiglie GitHub Actions: workflow operativi `pipe_agent_*` e test
+  manuale `pipe_human_*`; non esistono workflow schedulati nel perimetro corrente.
+
 - Nuova prova S0-07 dopo la configurazione del gruppo: GET workspace Dev Agent HTTP `200`, POST
   creazione workspace negato con HTTP `401`, nessuna risorsa creata. Il blocco sembra applicato;
   resta da verificare il Deploy SP e il codice `403` atteso.
@@ -269,7 +272,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Agent (`Stakeholder`); la work item #3 e' stata chiusa. Il provisioning Azure DevOps risulta
   `pending` e sara' verificato prima dell'uso operativo.
 - Creato `ws_agentic_dev`, assegnato il Dev Agent come `Contributor` senza permessi sulla capacity
-  e aggiunto il workflow manuale `test-azure-oidc-dev.yml` per verificare login OIDC e lettura dei
+  e aggiunto il workflow manuale `pipe_human_test_azure_oidc_dev.yml` per verificare login OIDC e lettura dei
   metadati del workspace.
 - Test OIDC completato con successo su `main` (run `32468016615`): login federato e lettura dei
   metadati di `ws_agentic_dev` verificati senza ruoli sulla subscription o sulla capacity.

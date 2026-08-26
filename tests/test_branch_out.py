@@ -55,7 +55,7 @@ class BranchOutTests(unittest.TestCase):
         fabric_mock.assert_called_once_with("GET", "/workspaces/workspace-id/roleAssignments")
 
     def test_workflow_is_limited_to_dev_without_target_environment_input(self) -> None:
-        workflow = Path(".github/workflows/branch-out.yml").read_text(encoding="utf-8")
+        workflow = Path(".github/workflows/pipe_agent_branch_out.yml").read_text(encoding="utf-8")
 
         self.assertIn("environment: dev", workflow)
         self.assertIn("vars.FABRIC_DEPLOY_CLIENT_ID", workflow)

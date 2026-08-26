@@ -259,6 +259,12 @@ del Deploy SP e, se necessario, dopo la finestra completa di propagazione.
 - Il Dev Agent non appartiene al gruppo `Contributors`, che concede `Queue builds` per default
 - Tentativo pratico di accodare `pipe_human_*` dal Dev Agent → **rifiutato**
 
+**Stato aggiornato 2026-08-26**: naming applicato nei workflow GitHub Actions. I quattro workflow
+operativi sono `pipe_agent_branch_out.yml`, `pipe_agent_sync_workspace.yml`,
+`pipe_agent_crm_preflight.yml` e `pipe_agent_crm_run_load.yml`; il test manuale OIDC è
+`pipe_human_test_azure_oidc_dev.yml`. Non esistono workflow schedulati, quindi non è stata creata
+una famiglia `pipe_sched_*`. Restano da verificare i permessi effettivi di dispatch e environment.
+
 ---
 
 ### S0-N2 · Proteggere le pipeline privilegiate
@@ -279,9 +285,10 @@ del Deploy SP e, se necessario, dopo la finestra completa di propagazione.
 - Service connection ed environment sono autorizzati solo alle pipeline nominate
 - Verifica: modifica YAML su feature branch non altera il run della pipeline privilegiata
 
-**Stato 2026-08-25**: da completare con il ticket amministrativo GitHub #83. Le definizioni YAML
-esistono, ma la separazione effettiva delle famiglie e i controlli fuori YAML non sono ancora
-stati verificati con l'identità del Dev Agent.
+**Stato aggiornato 2026-08-26**: da completare con il ticket amministrativo GitHub #83. I workflow
+privilegiati restano ancorati a `main` e senza `targetEnvironment`; protection rules, autorizzazioni
+di environment e prova d'immutabilità della definizione fuori YAML non sono ancora verificabili
+con il piano GitHub corrente.
 
 ---
 

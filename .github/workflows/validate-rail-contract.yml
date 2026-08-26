@@ -8,9 +8,9 @@ on:
       - "tests/**"
       - "fabric/notebook/**"
       - "attachments/**"
-      - ".github/workflows/branch-out.yml"
-      - ".github/workflows/sync-workspace.yml"
-      - ".github/workflows/crm-preflight.yml"
+      - ".github/workflows/pipe_agent_branch_out.yml"
+      - ".github/workflows/pipe_agent_sync_workspace.yml"
+      - ".github/workflows/pipe_agent_crm_preflight.yml"
       - ".github/workflows/validate-rail-contract.yml"
   push:
     branches:
@@ -21,9 +21,9 @@ on:
       - "tests/**"
       - "fabric/notebook/**"
       - "attachments/**"
-      - ".github/workflows/branch-out.yml"
-      - ".github/workflows/sync-workspace.yml"
-      - ".github/workflows/crm-preflight.yml"
+      - ".github/workflows/pipe_agent_branch_out.yml"
+      - ".github/workflows/pipe_agent_sync_workspace.yml"
+      - ".github/workflows/pipe_agent_crm_preflight.yml"
       - ".github/workflows/validate-rail-contract.yml"
 
 permissions:
