@@ -150,6 +150,18 @@ PR per session against A1-F4, never accesses Fabric or edits files, and publishe
 comment plus a vote. The Review Agent requires an independent runtime and GitHub identity before
 it can be considered a production control.
 
+## Issue Agent
+
+The workspace custom agent `.github/agents/issue-agent.agent.md` turns a project kickoff or a raw
+requirement into an approvable work package. Start it with `.github/prompts/define-work.prompt.md`.
+It orchestrates instead of analysing: requirements, KPI and UAT go to `@karl`, architecture, flows,
+environments and CI/CD go to `@ralph`. It never creates a work item before the human approves the
+package, never writes feature code, and never accesses Fabric or credentials. Unresolved points are
+reported under `Domande aperte` rather than guessed.
+
+End-to-end chain: `Issue Agent` (karl + ralph) -> human approval -> ticket -> `Dev Agent` -> PR ->
+`Review Agent` -> human merge.
+
 ## Kaizen Learnings
 
 - **[2026-08-26] Usare lo schema ufficiale dei file .platform** → [kaizen/20260826-platform-schema-url.md](kaizen/20260826-platform-schema-url.md)
