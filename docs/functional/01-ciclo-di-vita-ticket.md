@@ -136,7 +136,7 @@ Vedi [05 — Protocollo di escalation](05-protocollo-escalation.md).
 
 ```mermaid
 stateDiagram-v2
-    [*] --> ToDo: owner crea il ticket
+    [*] --> ToDo: owner crea il ticket, o Issue Agent dopo approvazione umana
     ToDo --> Doing: dispatcher rileva il tag
     Doing --> WaitingInput: specifica ambigua o errata
     WaitingInput --> Doing: risposta umana
