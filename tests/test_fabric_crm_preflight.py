@@ -48,7 +48,18 @@ class FabricCrmPreflightTests(unittest.TestCase):
         FabricClient.run_notebook(client, "workspace-id", "notebook-id")
 
         client.request.assert_called_once_with("POST", "/workspaces/workspace-id/items/notebook-id/jobs/instances?jobType=RunNotebook")
-        client.wait_lro.assert_called_once_with("https://api.fabric.microsoft.com/v1/operations/test")
+        client.wait_lro.assert_called_once_with(
+            "https://api.fabric.microsoft.com/v1/operations/test", "notebook run"
+        )
+
+    def test_wait_lro_reports_safe_failure_code(self) -> None:
+        client = FabricClient("token", sleep=lambda _: None)
+        client.request = Mock(side_effect=[
+            (200, {}, {"status": "Failed", "error": {"errorCode": "NotebookRunFailed", "message": "secret"}}),
+        ])
+
+        with self.assertRaisesRegex(FabricPreflightError, r"notebook run failed with status Failed \(NotebookRunFailed\)"):
+            client.wait_lro("https://api.fabric.microsoft.com/v1/operations/test", "notebook run")
 
 
 if __name__ == "__main__":

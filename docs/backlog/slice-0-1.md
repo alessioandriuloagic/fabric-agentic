@@ -715,6 +715,12 @@ del notebook `nb_crm_preflight`. Il notebook usava l'ambiente Dataverse errato
 il preflight deve essere rilanciato dal workflow ancorato a `main` dopo la pubblicazione della
 modifica.
 
+**Diagnostica preflight 2026-08-26**: il run `32956308346` ha confermato un fallimento durante
+la run del notebook anche con l'endpoint corretto, ma l'artefatto esponeva solo il messaggio
+generico `Fabric long-running operation failed`. Il runner ora conserva soltanto il nome
+dell'operazione, lo stato (`Failed`/`Cancelled`) e il codice tecnico Fabric, escludendo il
+response body; la suite mirata passa con 7 test.
+
 ---
 
 ### S1-04 · Ticket agentico: ingestion `pagamenti`

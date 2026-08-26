@@ -68,16 +68,20 @@ class FabricClient:
         except Exception as error:
             raise FabricPreflightError("Fabric API request failed") from error
 
-    def wait_lro(self, location: str) -> None:
+    def wait_lro(self, location: str, operation_name: str) -> None:
         for _ in range(20):
             status, _, body = self.request("GET", location)
             operation_status = body.get("status")
             if status == 200 and operation_status in {"Succeeded", "Completed"}:
                 return
             if operation_status in {"Failed", "Cancelled"}:
-                raise FabricPreflightError("Fabric long-running operation failed")
+                error = body.get("error") if isinstance(body.get("error"), dict) else {}
+                error_code = error.get("errorCode") or error.get("code") or "unknown"
+                raise FabricPreflightError(
+                    f"Fabric {operation_name} failed with status {operation_status} ({error_code})"
+                )
             self.sleep(5)
-        raise FabricPreflightError("Fabric long-running operation timed out")
+        raise FabricPreflightError(f"Fabric {operation_name} timed out")
 
     def list_items(self, workspace_id: str, item_type: str) -> list[dict]:
         _, _, body = self.request("GET", f"/workspaces/{workspace_id}/items?type={item_type}")
@@ -97,7 +101,7 @@ class FabricClient:
             location = headers.get("Location") or headers.get("location")
             if not location:
                 raise FabricPreflightError("Fabric item creation did not return an operation location")
-            self.wait_lro(location)
+            self.wait_lro(location, "item creation")
             matches = [item for item in self.list_items(workspace_id, item_type) if item.get("displayName") == display_name]
             if len(matches) != 1:
                 raise FabricPreflightError("Fabric item creation could not be resolved")
@@ -112,7 +116,7 @@ class FabricClient:
             location = headers.get("Location") or headers.get("location")
             if not location:
                 raise FabricPreflightError("Fabric item update did not return an operation location")
-            self.wait_lro(location)
+            self.wait_lro(location, "item definition update")
         elif status != 200:
             raise FabricPreflightError("Fabric item update failed")
 
@@ -123,7 +127,7 @@ class FabricClient:
         location = headers.get("Location") or headers.get("location")
         if not location:
             raise FabricPreflightError("Notebook job did not return an operation location")
-        self.wait_lro(location)
+        self.wait_lro(location, "notebook run")
 
 
 def find_workspace(client: FabricClient, work_item_id: int) -> dict:
