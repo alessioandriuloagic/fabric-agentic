@@ -727,6 +727,12 @@ creava `lh_bronze_crm_demo` ma non lo passava alla definizione del notebook e no
 definizione quando l'item esisteva gia'. Il preflight ora associa esplicitamente il Lakehouse
 predefinito e aggiorna sempre la definizione prima dell'avvio; il test mirato passa con 7 test.
 
+**Correzione credenziale CRM 2026-08-26**: il runtime Fabric ora risolve la connection
+`0955671c-f31e-4137-84c0-240776eaeb6f` e restituisce un oggetto `DatasourceCredential` la cui
+proprieta' `credential` e' una stringa token. Il notebook preflight usa tale stringa come bearer
+token, senza tentare un secondo scambio client-secret e senza stamparne il valore. La configurazione
+CRM e il notebook sono stati allineati al nuovo ID.
+
 ---
 
 ### S1-04 · Ticket agentico: ingestion `pagamenti`

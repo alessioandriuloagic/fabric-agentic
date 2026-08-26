@@ -16,9 +16,18 @@ class FabricCrmPreflightTests(unittest.TestCase):
         notebook = Path("fabric/notebook/nb_crm_preflight.Notebook/notebook-content.py").read_text(encoding="utf-8")
         configuration = Path("configuration/crm_demo.json").read_text(encoding="utf-8")
 
+        self.assertIn('"0955671c-f31e-4137-84c0-240776eaeb6f"', notebook)
         self.assertIn('"https://org12202591.crm4.dynamics.com"', notebook)
         self.assertNotIn("org4009cd0e", notebook)
+        self.assertIn('"connection_id": "0955671c-f31e-4137-84c0-240776eaeb6f"', configuration)
         self.assertIn('"environment_url": "https://org12202591.crm4.dynamics.com"', configuration)
+
+    def test_preflight_uses_datasource_credential_string(self) -> None:
+        notebook = Path("fabric/notebook/nb_crm_preflight.Notebook/notebook-content.py").read_text(encoding="utf-8")
+
+        self.assertIn('getattr(credential, "credential", None)', notebook)
+        self.assertNotIn("clientSecret", notebook)
+        self.assertNotIn("print(credential", notebook)
 
     def test_preflight_binds_and_updates_notebook_default_lakehouse(self) -> None:
         source = Path("scripts/fabric_crm_preflight.py").read_text(encoding="utf-8")

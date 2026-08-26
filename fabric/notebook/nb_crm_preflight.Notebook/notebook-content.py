@@ -13,17 +13,15 @@ import json
 import requests
 import notebookutils
 
-CONNECTION_ID = "b838644d-afd9-4ec3-973d-e36ed85ad167"
+CONNECTION_ID = "0955671c-f31e-4137-84c0-240776eaeb6f"
 ENVIRONMENT_URL = "https://org12202591.crm4.dynamics.com"
 
 
 def resolve_access_token(connection_id: str) -> str:
     credential = notebookutils.connections.getCredential(connection_id)
-    if isinstance(credential, dict):
-        for key in ("accessToken", "access_token", "token"):
-            value = credential.get(key)
-            if isinstance(value, str) and value:
-                return value
+    value = getattr(credential, "credential", None)
+    if isinstance(value, str) and value:
+        return value
     raise RuntimeError("CRM Fabric Connection did not provide a supported access token")
 
 
