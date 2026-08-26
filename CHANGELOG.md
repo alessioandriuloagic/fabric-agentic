@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Registrato il run OIDC `pipe_agent_branch_out` `32945217566`: checkout e login Deploy SP
+  riusciti, ma rail bloccato nello stage `git_connection` senza creare risorse.
+
 - Verificato il Deploy SP OIDC: run manuale `32943998407` da `main` riuscito con lettura metadata
   di `ws_agentic_dev` tramite `pipe_human_test_azure_oidc_dev`.
 

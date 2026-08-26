@@ -676,6 +676,11 @@ tracciabilità PR; Azure Boards resta il tracker legacy da dismettere.
 item `6`. Il rail ha riusato branch e workspace deterministici, confermato l'assegnazione alla
 capacity, collegato Git e sincronizzato; l'artefatto `rail-result.json` ha `outcome: success`.
 
+**Riprova 2026-08-26**: il run `32945217566` ha confermato checkout da `main` e login OIDC del
+Deploy SP, ma il rail ha restituito `technical_failure` allo stage `git_connection`, senza creare
+branch o workspace. Prima di riavviare il rail va verificata la Configured Connection Git, inclusi
+repository/branch e il ruolo `User` del Deploy SP sulla connection.
+
 ---
 
 ### S1-03 · Rail: sync workspace
