@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Aggiunto il dispatcher deterministico del Review Agent: discovery delle PR aperte, filtro draft e
+  head SHA già revisionati, dry-run senza scritture, lock di sessione e handoff al publisher #97.
+
+- Registrata la prova negativa #98 dell'identità Review Agent: lettura repository HTTP `200`,
+  tentativo `contents:write` su ref di probe negato con HTTP `403` e tentativo di merge della PR
+  usa-e-getta #109 negato con HTTP `403`, entrambi senza effetti permanenti.
+
 - Versionati i due kaizen del 2026-08-26 già referenziati da `AGENTS.md`, i cui link puntavano a
   file inesistenti, e registrata nel backlog Slice 0/1 la cronologia diagnostica del rail
   `sync_workspace` e delle riparazioni degli artifact Fabric.

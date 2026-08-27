@@ -72,6 +72,18 @@ metadati JSONL sicuri (ID work item, trigger, esito, durata) nel perimetro local
 token, credenziali o output della sessione. Resta da verificare il lancio operativo controllato
 con lo smoke S0-14.
 
+`scripts/review_dispatcher.py` è il dispatcher locale del Review Agent. La modalità
+`--once --dry-run` interroga le PR aperte tramite la GitHub App dedicata, ignora le PR in draft e
+gli head SHA già revisionati dall'identità applicativa, e non avvia sessioni né scrive su GitHub.
+La configurazione e la clone sono esterne al repository; lo state locale indicizza numero PR e
+head SHA. La modalità operativa crea un solo task, avvia una sessione nuova nella clone Review e
+consegna l'esito al publisher di #97; un lock locale impedisce sessioni concorrenti.
+
+**Verifica sul campo 2026-08-27**: eseguito `--once --dry-run` contro il repository reale dalla
+clone dedicata; risultato `{"tasks": []}`, exit code `0`. Non sono stati creati state file, task
+directory o lock. La clone viene aggiornata separatamente quando la PR del dispatcher sarà
+integrata in `main`.
+
 ### Smoke S0-14
 
 La modalità `--smoke-work-item-id <id>` avvia una singola sessione Claude con il solo tool
