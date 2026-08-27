@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Chiuso il ticket #98 e riallineato il backlog: prove Review Agent di scrittura negata (`403`),
+  voto consentito e merge negato (`403`) registrate senza side effect.
+
 - Aggiunto il broker di credenziali localhost per la sessione Dev Agent: Git e `gh` ricevono il
   token solo nei rispettivi helper, mentre il modello non riceve token nell'ambiente o nei
   parametri; il push resta limitato ai branch `feature/*`.
