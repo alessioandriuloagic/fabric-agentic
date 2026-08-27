@@ -11,6 +11,10 @@ from urllib.request import Request, urlopen
 from scripts.github_app_auth import create_installation_token
 
 
+# GitHub GraphQL filters issues by any of the given labels, so the conjunction is enforced here.
+WAITING_INPUT_LABELS = frozenset({"dev-agent", "waiting-input"})
+
+
 class TrackerError(Exception):
     """Raised without including credentials or response bodies."""
 
@@ -224,20 +228,30 @@ class GitHubIssuesTracker(WorkItemTracker):
         return [issue["number"] for issue in result.get("repository", {}).get("issues", {}).get("nodes", [])]
 
     def waiting_input_items(self) -> list[int]:
-        """Return issue numbers with labels 'dev-agent' AND 'waiting-input' in state."""
+        """Return issue numbers carrying both 'dev-agent' and 'waiting-input'."""
         query = """
             query ($owner: String!, $repo: String!) {
               repository(owner: $owner, name: $repo) {
                 issues(first: 100, states: OPEN, labels: ["dev-agent", "waiting-input"], orderBy: {field: UPDATED_AT, direction: ASC}) {
                   nodes {
                     number
+                    labels(first: 50) {
+                      nodes {
+                        name
+                      }
+                    }
                   }
                 }
               }
             }
         """
         result = self._graphql(query, {"owner": self.owner, "repo": self.repository})
-        return [issue["number"] for issue in result.get("repository", {}).get("issues", {}).get("nodes", [])]
+        waiting = []
+        for issue in result.get("repository", {}).get("issues", {}).get("nodes", []):
+            names = {label.get("name") for label in issue.get("labels", {}).get("nodes", [])}
+            if WAITING_INPUT_LABELS <= names:
+                waiting.append(issue["number"])
+        return waiting
 
     def comments(self, item_id: int | str) -> list[WorkItemComment]:
         """Return all comments on an issue."""

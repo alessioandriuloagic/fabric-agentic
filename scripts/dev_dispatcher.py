@@ -250,7 +250,41 @@ def refresh_clone(config: DispatcherConfig) -> None:
             raise DispatcherError("isolated repository refresh failed")
 
 
-def launch_session(config: DispatcherConfig, task_path: Path) -> bool:
+@dataclass(frozen=True)
+class SessionOutcome:
+    returncode: int
+    is_error: bool
+    session_id: str | None
+    num_turns: int | None
+    changed_repository: bool
+
+    @property
+    def succeeded(self) -> bool:
+        return self.returncode == 0 and not self.is_error
+
+
+def repository_changed(config: DispatcherConfig) -> bool:
+    """Report whether the session left work behind, as uncommitted files or a feature branch."""
+    status = subprocess.run(
+        ["git", "-C", str(config.repository_path), "status", "--porcelain"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if status.returncode != 0:
+        return False
+    if status.stdout.strip():
+        return True
+    branch = subprocess.run(
+        ["git", "-C", str(config.repository_path), "rev-parse", "--abbrev-ref", "HEAD"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return branch.returncode == 0 and branch.stdout.strip() not in ("", "main")
+
+
+def launch_session(config: DispatcherConfig, task_path: Path) -> SessionOutcome:
     prompt = (
         "You are a fresh Dev Agent session. Read the task record at "
         f"{task_path}, then read the referenced issue context and attachments. "
@@ -276,7 +310,19 @@ def launch_session(config: DispatcherConfig, task_path: Path) -> bool:
         text=True,
         check=False,
     )
-    return result.returncode == 0
+    try:
+        payload = json.loads(result.stdout) if result.stdout.strip() else {}
+    except json.JSONDecodeError:
+        payload = {}
+    if not isinstance(payload, dict):
+        payload = {}
+    return SessionOutcome(
+        returncode=result.returncode,
+        is_error=bool(payload.get("is_error", False)),
+        session_id=payload.get("session_id"),
+        num_turns=payload.get("num_turns"),
+        changed_repository=repository_changed(config),
+    )
 
 
 SMOKE_OUTPUT_SCHEMA = {
@@ -361,7 +407,7 @@ query($owner: String!, $repository: String!) {
 """
 
 
-def run_once(config: DispatcherConfig, state_path: Path, task_directory: Path, dry_run: bool) -> list[dict]:
+def run_once(config: DispatcherConfig, state_path: Path, task_directory: Path, dry_run: bool, log_path: Path | None = None) -> list[dict]:
     ado_token_provider = lambda: acquire_ado_token(config)
     tracker = create_tracker(config, ado_token_provider)
     state = load_state(state_path)
@@ -389,7 +435,19 @@ def run_once(config: DispatcherConfig, state_path: Path, task_directory: Path, d
     state["seen_comment_ids"] = sorted(seen_comments)
     state["seen_review_thread_ids"] = sorted(seen_threads)
     save_state(state_path, state)
-    if not launch_session(config, task_path):
+    outcome = launch_session(config, task_path)
+    if log_path is not None:
+        log_event(
+            log_path,
+            "session_completed",
+            work_item_id=task["work_item_id"],
+            returncode=outcome.returncode,
+            is_error=outcome.is_error,
+            session_id=outcome.session_id,
+            num_turns=outcome.num_turns,
+            changed_repository=outcome.changed_repository,
+        )
+    if not outcome.succeeded:
         raise DispatcherError("Dev Agent session failed")
     return [task]
 
@@ -406,7 +464,7 @@ def run_polling(
     while cycles is None or completed_cycles < cycles:
         started_at = time.monotonic()
         try:
-            tasks = run_once(config, state_path, task_directory, dry_run=False)
+            tasks = run_once(config, state_path, task_directory, dry_run=False, log_path=log_path)
             log_event(
                 log_path,
                 "poll_completed",
@@ -453,7 +511,7 @@ def main() -> int:
             documents = run_smoke(config, args.smoke_work_item_id, args.tasks)
             log_event(args.log, "smoke_completed", work_item_id=args.smoke_work_item_id, documents_read=documents)
         else:
-            tasks = run_once(config, args.state, args.tasks, args.dry_run)
+            tasks = run_once(config, args.state, args.tasks, args.dry_run, log_path=args.log)
             log_event(args.log, "dry_run_completed" if args.dry_run else "once_completed", task_count=len(tasks), work_item_ids=[task["work_item_id"] for task in tasks], triggers=[task["trigger"] for task in tasks])
             if args.dry_run:
                 print(json.dumps({"tasks": tasks}))
