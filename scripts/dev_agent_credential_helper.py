@@ -26,9 +26,21 @@ def main() -> int:
         return 0
     if mode == "gh":
         real_gh = sys.argv[2]
+        if len(sys.argv) >= 4 and sys.argv[3:5] == ["pr", "merge"]:
+            return 1
         environment = os.environ.copy()
         environment["GH_TOKEN"] = request_token("gh")
         result = subprocess.run([real_gh, *sys.argv[3:]], env=environment, check=False)
+        return result.returncode
+    if mode == "git-command":
+        real_git = sys.argv[2]
+        git_arguments = sys.argv[3:]
+        if git_arguments and git_arguments[0] == "push" and any(
+            target in {"main", "refs/heads/main", "HEAD:main", "HEAD:refs/heads/main"}
+            for target in git_arguments[1:]
+        ):
+            return 1
+        result = subprocess.run([real_git, *git_arguments], check=False)
         return result.returncode
     return 1
 
