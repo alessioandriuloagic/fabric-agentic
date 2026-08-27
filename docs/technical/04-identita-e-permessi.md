@@ -152,7 +152,8 @@ PEM è stato stampato o registrato.
 sostituisce i probe runtime su scrittura, creazione item o avvio job.
 
 **Probe runtime 2026-08-27**: con il contesto Azure autenticato come `fabric-agentic-dev-agent`
-nel tenant Agic Dev, la GET di `ws_agentic_dev` ha restituito HTTP `200`. La POST di creazione
+nel tenant Agic Dev, la GET di `ws_agentic_dev`, l'elenco dei workspace, l'elenco degli item e
+la lettura delle istanze job del notebook hanno restituito HTTP `200`. La POST di creazione
 workspace con payload volutamente invalido `{}` ha restituito HTTP `401`, senza creare risorse.
 Un tentativo di creazione item con tipo invalido ha restituito HTTP `400` e un avvio job su item
 inesistente HTTP `404`: entrambi sono probe non conclusivi per il permesso di scrittura. La lettura

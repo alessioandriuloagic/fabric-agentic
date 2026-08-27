@@ -239,8 +239,9 @@ revisione umana restano obbligatori, ma i 9 controlli pratici non sono marcati c
 **Stato aggiornato 2026-08-27**: membership del workspace verificata dalla UI. `fabric-agentic-deploy`
 risulta `Contributor`, `fabric-agentic-dev-agent` risulta `Viewer` e il Review Agent non compare.
 Il contesto Azure locale è autenticato come `fabric-agentic-dev-agent` nel tenant Agic Dev: la GET
-di `ws_agentic_dev` ha restituito HTTP `200` e la creazione workspace con payload `{}` è stata
-rifiutata con HTTP `401`, senza creare risorse. Restano da verificare runtime e switch tenant; il
+di `ws_agentic_dev`, l'elenco workspace, l'elenco item e la lettura delle istanze job hanno
+restituito HTTP `200`; la creazione workspace con payload `{}` è stata rifiutata con HTTP `401`,
+senza creare risorse. Restano da verificare runtime di scrittura e switch tenant; il
 codice `401` va riconfermato con il test del Deploy SP e, se necessario, dopo la finestra completa
 di propagazione.
 
