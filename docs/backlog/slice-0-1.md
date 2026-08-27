@@ -236,7 +236,9 @@ revisione umana restano obbligatori, ma i 9 controlli pratici non sono marcati c
 > La pipeline usa una distinta identità di deploy. Il Dev Agent può accodarla ma non può
 > impersonarla né modificarne la definizione. Vedi ADR-0007 e ADR-0008.
 
-**Stato aggiornato 2026-08-25**: parzialmente verificato. L'owner conferma `Viewer` per il Dev
+**Stato aggiornato 2026-08-27**: membership del workspace verificata dalla UI. `fabric-agentic-deploy`
+risulta `Contributor`, `fabric-agentic-dev-agent` risulta `Viewer` e il Review Agent non compare.
+Restano da verificare runtime e switch tenant. L'owner conferma `Viewer` per il Dev
 Agent su `ws_agentic_dev` e nessun accesso Fabric per il Review Agent. Dopo la configurazione del
 gruppo `FabricAgentDeploy`, la GET del workspace ha restituito HTTP `200` e il POST di creazione
 workspace è stato negato con HTTP `401`; nessuna risorsa probe è stata creata. Il blocco effettivo

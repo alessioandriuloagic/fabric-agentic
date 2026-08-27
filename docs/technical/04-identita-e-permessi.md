@@ -146,6 +146,11 @@ sono state poi chiuse e rimosse con l'identità umana, senza merge.
 La private key è stata solo caricata dal percorso locale protetto; nessun token, JWT o contenuto
 PEM è stato stampato o registrato.
 
+**Evidenza workspace 2026-08-27**: la UI del workspace mostra `fabric-agentic-deploy` come
+`Contributor`, `fabric-agentic-dev-agent` come `Viewer` e nessuna assegnazione per
+`fabric-agentic-review-agent`. Questa evidenza conferma i ruoli/membership del workspace; non
+sostituisce i probe runtime su scrittura, creazione item o avvio job.
+
 #### Sul ruolo `Viewer` — condizione d'uso
 
 Il `Viewer` è l'unico ruolo Fabric realmente di sola lettura: non può eseguire, scrivere,

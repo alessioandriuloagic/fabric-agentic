@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Registrata l'evidenza UI dei ruoli S0-07: `fabric-agentic-deploy` è `Contributor`,
+  `fabric-agentic-dev-agent` è `Viewer` e il Review Agent non è assegnato al workspace.
+
 - Chiuso il ticket #98 e riallineato il backlog: prove Review Agent di scrittura negata (`403`),
   voto consentito e merge negato (`403`) registrate senza side effect.
 
