@@ -130,6 +130,22 @@ applicato, ma va riconfermato con il Deploy SP e il codice `403` non è stato os
 | **Variabili d'ambiente / cache token / archivio certificati** | **NEGATO** | Deny attivo anche in modalità non interattiva |
 | **Modifica di permessi, policy, identità** | **NEGATO** | Vedi sezione 5 |
 
+### Verifica pratica 2026-08-27 — Review Agent
+
+La prova runtime con l'installation token della GitHub App `fabric-agentic-review-agent` ha
+restituito `GET /repos/alessioandriuloagic/fabric-agentic` **HTTP 200** e il tentativo di
+creare un ref tramite `POST /repos/alessioandriuloagic/fabric-agentic/git/refs`
+**HTTP 403**. Il payload usava lo SHA volutamente inesistente `000000...000`; il ref
+`refs/heads/review-agent-negative-probe-20260827` non è stato creato. Il divieto di
+`contents:write` è quindi dimostrato senza side effect.
+
+Per il merge è stata aperta la PR usa-e-getta #109 dalla branch
+`review-agent-merge-probe-20260827`. Il tentativo `PUT /repos/alessioandriuloagic/fabric-agentic/pulls/109/merge`
+con la stessa identità ha restituito **HTTP 403**, `merged: false`; la PR e la branch di probe
+sono state poi chiuse e rimosse con l'identità umana, senza merge.
+La private key è stata solo caricata dal percorso locale protetto; nessun token, JWT o contenuto
+PEM è stato stampato o registrato.
+
 #### Sul ruolo `Viewer` — condizione d'uso
 
 Il `Viewer` è l'unico ruolo Fabric realmente di sola lettura: non può eseguire, scrivere,

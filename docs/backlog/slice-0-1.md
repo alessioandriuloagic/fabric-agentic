@@ -202,7 +202,10 @@ knowledge base.
 > **È l'item più importante dello Slice 0.** Una policy configurata e mai provata è una policy
 > di cui non sai nulla. Se questo item non è verde, nessun agente va avviato.
 
-**Stato 2026-08-25 — TODO futuro**: l'enforcement tecnico delle protection rules richiede un
+**Stato 2026-08-27 — parziale**: la prova runtime del Review Agent ha confermato il divieto di
+scrittura sul repository con `POST /git/refs` → HTTP `403`, senza creare il ref di probe, e il
+divieto di merge con `PUT /pulls/109/merge` → HTTP `403`, `merged: false`, su una PR usa-e-getta
+poi chiusa e rimossa. Gli altri controlli restano non verificati. L'enforcement tecnico delle protection rules richiede un
 piano GitHub più alto non disponibile nell'attuale sottoscrizione. Il processo GitHub Flow e la
 revisione umana restano obbligatori, ma i 9 controlli pratici non sono marcati come verificati.
 
