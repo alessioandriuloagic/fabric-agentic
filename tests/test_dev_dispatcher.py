@@ -185,6 +185,29 @@ class DevDispatcherTests(unittest.TestCase):
         self.assertEqual(result.stdout.splitlines()[1], "installation-token")
         self.assertNotIn("installation-token", json.dumps(environment))
 
+    def test_broker_wrappers_reject_main_push_and_merge(self) -> None:
+        with credential_broker_environment("installation-token") as environment:
+            main_push = subprocess.run(
+                ["git", "push", "--dry-run", "origin", "HEAD:refs/heads/main"],
+                env=environment,
+                capture_output=True,
+                check=False,
+            )
+            merge = subprocess.run(
+                ["gh", "pr", "merge", "117"],
+                env=environment,
+                capture_output=True,
+                check=False,
+            )
+
+        self.assertNotEqual(main_push.returncode, 0)
+        self.assertNotEqual(merge.returncode, 0)
+
+    def test_delivery_allowlist_excludes_merge_command(self) -> None:
+        command = build_session_command(self.config, Path("/tasks/work-item-97/task.json"))
+
+        self.assertNotIn("Bash(gh pr merge *)", command)
+
     @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
     @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
     @patch("scripts.dev_dispatcher.launch_session", return_value=SessionOutcome(returncode=1, is_error=True, session_id=None, num_turns=None, changed_repository=False))

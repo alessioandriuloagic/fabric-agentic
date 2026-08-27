@@ -86,7 +86,9 @@ fornita da un broker localhost avviato dal dispatcher: il token resta nella memo
 mentre helper temporanei per Git e `gh` lo richiedono per singola operazione. Il token non entra nel
 comando Claude, nelle variabili `GH_TOKEN`/`GITHUB_TOKEN`, nei file del repository o nei log. Il
 push autorizzato è solo verso `refs/heads/feature/*`; il merge e il push su `main` restano fuori
-dall'allowlist.
+dall'allowlist. Su Windows il broker installa inoltre un `pre-push` hook in una directory
+temporanea esterna al repository e lo impone con configurazione Git di processo: anche il vero
+`git.exe` rifiuta il ref `main` prima del remote.
 
 `scripts/review_dispatcher.py` è il dispatcher locale del Review Agent. La modalità
 `--once --dry-run` interroga le PR aperte tramite la GitHub App dedicata, ignora le PR in draft e

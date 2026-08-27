@@ -68,12 +68,27 @@ def credential_broker_environment(token: str) -> Iterator[dict[str, str]]:
             f'@echo off\n"{sys.executable}" "{Path(__file__).with_name("dev_agent_credential_helper.py")}" gh "{real_gh}" %*\n',
             encoding="utf-8",
         )
+        hooks_directory = Path(directory) / "git-hooks"
+        hooks_directory.mkdir()
+        (hooks_directory / "pre-push").write_text(
+            "#!/bin/sh\n"
+            "while read local_ref local_oid remote_ref remote_oid; do\n"
+            "  case \"$remote_ref\" in\n"
+            "    refs/heads/main) exit 1 ;;\n"
+            "  esac\n"
+            "done\n"
+            "exit 0\n",
+            encoding="utf-8",
+        )
         environment = os.environ.copy()
         environment.pop("GH_TOKEN", None)
         environment.pop("GITHUB_TOKEN", None)
         environment["GIT_ASKPASS"] = str(helper)
         environment["GIT_TERMINAL_PROMPT"] = "0"
         environment["FABRIC_AGENT_CREDENTIAL_BROKER"] = f"127.0.0.1:{broker.server_address[1]}"
+        environment["GIT_CONFIG_COUNT"] = "1"
+        environment["GIT_CONFIG_KEY_0"] = "core.hooksPath"
+        environment["GIT_CONFIG_VALUE_0"] = str(hooks_directory)
         environment["PATH"] = f"{directory}{os.pathsep}{environment.get('PATH', '')}"
         try:
             yield environment

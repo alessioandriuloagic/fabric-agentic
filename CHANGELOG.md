@@ -14,8 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   parametri; il push resta limitato ai branch `feature/*`.
 
 - Aggiunta la allowlist esplicita per la sessione Dev Agent: test, branch, commit, push solo verso
-  `feature/*` e apertura PR, senza bypass dei permessi; resta da implementare il credential helper
-  esterno necessario alla consegna autonoma reale.
+  `feature/*` e apertura PR, senza bypass dei permessi; il credential broker e la guardia
+  `pre-push` impediscono anche l'accesso a `main`.
 
 - Resa diagnosticabile la sessione Dev Agent a vuoto: il dispatcher registra `productive`,
   `no_work` o `failed` nell'evento `session_completed`, con test di regressione e senza loggare
