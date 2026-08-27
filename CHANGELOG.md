@@ -365,6 +365,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Il dispatcher concede alla sessione Dev Agent l'accesso alla directory del task record tramite
+  `--add-dir`. Senza di esso la sessione partiva dentro il clone isolato e non poteva leggere il
+  proprio task record, terminando con codice `0` senza implementare nulla.
+
 - Chiusi i rilievi della review sulla PR #94: rimosso il permesso `edit` dall'Issue Agent, aggiunto
   l'Issue Agent al glossario vincolante di `CONTEXT.md` e corretto il ciclo di vita del ticket, che
   attribuiva la stesura al solo owner umano.

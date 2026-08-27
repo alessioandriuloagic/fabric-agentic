@@ -260,7 +260,17 @@ def launch_session(config: DispatcherConfig, task_path: Path) -> bool:
         "Do not access credentials, environment variables, certificate stores, or token caches."
     )
     result = subprocess.run(
-        [config.claude_command, "-p", prompt, "--output-format", "json", "--permission-mode", "acceptEdits"],
+        [
+            config.claude_command,
+            "-p",
+            prompt,
+            "--add-dir",
+            str(task_path.parent),
+            "--output-format",
+            "json",
+            "--permission-mode",
+            "acceptEdits",
+        ],
         cwd=config.repository_path,
         capture_output=True,
         text=True,

@@ -5,7 +5,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import MagicMock, patch
 
-from scripts.dev_dispatcher import DispatcherConfig, human_reply_tasks, launch_smoke_session, load_state, review_thread_tasks, run_once, run_polling, run_smoke, smoke_comment, stage_work_item_context
+from scripts.dev_dispatcher import DispatcherConfig, human_reply_tasks, launch_session, launch_smoke_session, load_state, review_thread_tasks, run_once, run_polling, run_smoke, smoke_comment, stage_work_item_context
 from scripts.tracker import WorkItemComment
 
 
@@ -27,6 +27,18 @@ class DevDispatcherTests(unittest.TestCase):
             claude_command="claude",
             poll_seconds=30,
         )
+
+    @patch("scripts.dev_dispatcher.subprocess.run")
+    def test_session_can_read_the_task_record_outside_the_clone(self, mock_run) -> None:
+        mock_run.return_value = MagicMock(returncode=0)
+        task_path = Path("/tasks/work-item-97/task.json")
+
+        self.assertTrue(launch_session(self.config, task_path))
+
+        command = mock_run.call_args.args[0]
+        self.assertIn("--add-dir", command)
+        self.assertEqual(command[command.index("--add-dir") + 1], str(task_path.parent))
+        self.assertEqual(mock_run.call_args.kwargs["cwd"], self.config.repository_path)
 
     @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
     @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
