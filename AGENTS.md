@@ -146,9 +146,11 @@ discipline used for release version bumps above.
 
 The workspace custom agent `.github/agents/review-agent.agent.md` is the executable review
 contract. Start it with `.github/prompts/review-pr.prompt.md` and a PR number. It reviews one open
-PR per session against A1-F4, never accesses Fabric or edits files, and publishes one structured
-comment plus a vote. The Review Agent requires an independent runtime and GitHub identity before
-it can be considered a production control.
+PR per session against A1-F4, never accesses Fabric or edits files, and emits one structured
+outcome. It does not publish the vote: `scripts/review_vote_publish.py` validates that outcome and
+sends the single review submission with the Review Agent identity, so the model never holds the
+token. The Review Agent requires an independent runtime before it can be considered a production
+control.
 
 ## Issue Agent
 

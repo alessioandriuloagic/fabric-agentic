@@ -365,6 +365,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Il voto di review diventa un oggetto GitHub reale: `scripts/review_vote_publish.py` valida l'esito
+  A1-F4 prodotto dalla sessione e invia **una sola** review submission con l'identità applicativa del
+  Review Agent. `VOTO: APPROVATO` produce `APPROVE`, `VOTO: NON APPROVATO` produce `REQUEST_CHANGES`;
+  un esito malformato termina con errore prima di coniare qualunque token, quindi non esistono voti
+  parziali. L'operazione è idempotente sulla coppia (numero PR, head sha) e il publisher rifiuta
+  l'esecuzione da una copia non allineata a `main` o con modifiche non committate. Il token è coniato
+  al momento e resta solo in memoria del processo: la sessione di review non conia token, non firma
+  il JWT e non conosce il percorso della private key. Prima il voto veniva tentato con l'identità
+  umana dell'owner e GitHub lo rifiutava (`Review Can not request changes on your own pull request`
+  su PR #94 e #95, con `gh pr view <n> --json reviews` vuoto). Aggiornati di conseguenza
+  `agents/review/INSTRUCTIONS.md`, il custom agent e il prompt del Review Agent,
+  `docs/technical/03-rail-script.md` e `docs/technical/04-identita-e-permessi.md`, che registra anche
+  il rischio accettato sulla collocazione della private key.
+
 - `waiting_input_items` impone la congiunzione delle label: il filtro GraphQL di GitHub si comporta
   come OR, quindi la congiunzione fra `dev-agent` e `waiting-input` viene ora applicata lato client.
   Prima ogni issue con la sola `dev-agent` risultava in attesa di risposta umana.

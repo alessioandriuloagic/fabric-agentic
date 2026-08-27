@@ -9,7 +9,7 @@
 | Campo | Valore |
 |---|---|
 | Versione | 0.9 |
-| Ultimo aggiornamento | 2026-08-25 |
+| Ultimo aggiornamento | 2026-08-27 |
 | Documenti collegati | `docs/prd/PRD-agentic-cicd-fabric.md`, `docs/adr/` |
 
 ---
@@ -22,7 +22,7 @@
 | **Dev Agent** | Agente AI che esegue il ciclo di sviluppo end-to-end su un work item: branch, feature workspace, implementazione, test reale, documentazione, apertura PR. **Non merge mai.** |
 | **Review Agent** | Agente AI, di vendor diverso, che revisiona la PR contro una checklist chiusa. **Non scrive codice di feature, non merge.** Non ha accesso a Fabric. |
 | **Dispatcher** | Script deterministico in polling sul tracker. Rileva i trigger e avvia una sessione fresca dell'agente. **Non usa LLM**: da fermo il costo è zero. |
-| **Rail (script deterministico)** | Script versionato che esegue un'operazione procedurale ripetitiva al posto dell'LLM. Gli agenti orchestrano, i rail eseguono. Nel nostro caso **un rail invoca una pipeline CI/CD**, non chiama direttamente le API |
+| **Rail (script deterministico)** | Script versionato che esegue un'operazione procedurale ripetitiva al posto dell'LLM. Gli agenti orchestrano, i rail eseguono. I rail che toccano Fabric **invocano una pipeline CI/CD**, non chiamano direttamente le API; il rail che pubblica il voto di review chiama invece l'API GitHub con l'identità applicativa del Review Agent, perché il modello non deve tenere il token |
 | **Rail-result** | Artefatto a schema versionato prodotto da ogni pipeline agentica. È il **canale primario** con cui l'agente conosce l'esito di un'esecuzione |
 | **ExecutionCredential** | Credenziale tecnica di un cliente usata esclusivamente dalle pipeline CI/CD. Può essere SP OIDC, SP con secret o utenza di servizio in Key Vault; non è mai disponibile al modello |
 | **Diagnose data** | Rail che analizza sorgente, Bronze o Silver e restituisce al modello solo evidenze aggregate o mascherate |
