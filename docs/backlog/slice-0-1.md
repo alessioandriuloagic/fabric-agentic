@@ -189,15 +189,15 @@ knowledge base.
 
 **Criteri di accettazione — verifica pratica** *(obbligatoria — 9 controlli)*
 - [ ] Push su `main` con l'identità del Dev Agent → **rifiutato**
-- [ ] Push su `main` con l'identità del Review Agent → **rifiutato**
+- [x] Push su `main` con l'identità del Review Agent → **rifiutato** — prova #98, HTTP `403`
 - [ ] Merge con l'identità del Dev Agent → **rifiutato**
 - [ ] Creazione workspace da Dev Agent con identità Fabric → **rifiutato**
 - [ ] Scrittura su workspace Fabric da Dev Agent → **rifiutato**
 - [ ] Accodamento pipeline human-only da Dev Agent → **rifiutato**
 - [ ] Accodamento pipeline agentica da Dev Agent → **consentito**
 - [ ] Review Agent non vede alcun workspace Fabric → **elenco vuoto**
-- [ ] Review Agent riesce a votare una PR → **consentito**
-- [ ] Esito delle prove registrato nel work item
+- [x] Review Agent riesce a votare una PR → **consentito** — verificato su PR #105
+- [x] Esito delle prove registrato nel work item — issue #98
 
 > **È l'item più importante dello Slice 0.** Una policy configurata e mai provata è una policy
 > di cui non sai nulla. Se questo item non è verde, nessun agente va avviato.
@@ -205,7 +205,8 @@ knowledge base.
 **Stato 2026-08-27 — parziale**: la prova runtime del Review Agent ha confermato il divieto di
 scrittura sul repository con `POST /git/refs` → HTTP `403`, senza creare il ref di probe, e il
 divieto di merge con `PUT /pulls/109/merge` → HTTP `403`, `merged: false`, su una PR usa-e-getta
-poi chiusa e rimossa. Gli altri controlli restano non verificati. L'enforcement tecnico delle protection rules richiede un
+poi chiusa e rimossa. I controlli Review Agent relativi a push, voto e registrazione dell'esito
+sono ora spuntati; gli altri controlli restano non verificati. L'enforcement tecnico delle protection rules richiede un
 piano GitHub più alto non disponibile nell'attuale sottoscrizione. Il processo GitHub Flow e la
 revisione umana restano obbligatori, ma i 9 controlli pratici non sono marcati come verificati.
 
