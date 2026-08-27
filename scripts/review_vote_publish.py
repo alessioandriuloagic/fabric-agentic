@@ -37,7 +37,7 @@ VOTE_EVENTS = {"APPROVATO": "APPROVE", "NON APPROVATO": "REQUEST_CHANGES"}
 # The session separates a result from its reason with "-" or "—"; both are accepted, nothing else.
 ITEM_PREFIX = re.compile(r"^[A-Z]\d+\b")
 ITEM_LINE = re.compile(
-    r"^(?P<item>[A-Z]\d+)\s+(?P<result>NON APPLICABILE|PASSATO|RILIEVO)\s*(?:[-—]\s*(?P<detail>.+))?$"
+    r"^(?P<item>[A-Z]\d+)\s+(?P<result>NON APPLICABILE|PASSATO|RILIEVO|CORRETTO)\s*(?:[-—]\s*(?P<detail>.+))?$"
 )
 VOTE_LINE = re.compile(
     r"^VOTO:\s*(?P<vote>NON APPROVATO|APPROVATO)\s*(?:[-—]\s*(?P<detail>.+))?$"
