@@ -5,7 +5,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import MagicMock, patch
 
-from scripts.dev_dispatcher import DispatcherConfig, SessionOutcome, human_reply_tasks, launch_session, launch_smoke_session, load_state, review_thread_tasks, run_once, run_polling, run_smoke, smoke_comment, stage_work_item_context
+from scripts.dev_dispatcher import DispatcherConfig, SessionOutcome, build_session_command, human_reply_tasks, launch_session, launch_smoke_session, load_state, review_thread_tasks, run_once, run_polling, run_smoke, smoke_comment, stage_work_item_context
 from scripts.tracker import WorkItemComment
 
 
@@ -42,6 +42,18 @@ class DevDispatcherTests(unittest.TestCase):
         self.assertEqual(mock_run.call_args.kwargs["cwd"], self.config.repository_path)
         self.assertTrue(outcome.succeeded)
         self.assertEqual(outcome.session_id, "abc")
+
+    def test_session_command_has_explicit_delivery_allowlist_without_bypass(self) -> None:
+        command = build_session_command(self.config, Path("/tasks/work-item-97/task.json"))
+
+        self.assertIn("--permission-mode", command)
+        self.assertEqual(command[command.index("--permission-mode") + 1], "dontAsk")
+        self.assertIn("--allowedTools", command)
+        allowed_tools = command[command.index("--allowedTools") + 1:]
+        self.assertIn("Bash(git push origin HEAD:refs/heads/feature/*)", allowed_tools)
+        self.assertIn("Bash(gh pr create *)", allowed_tools)
+        self.assertNotIn("--dangerously-skip-permissions", command)
+        self.assertNotIn("Bash(git push *)", allowed_tools)
 
     @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
     @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
