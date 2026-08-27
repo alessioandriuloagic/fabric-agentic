@@ -8,9 +8,11 @@
 ## 1. Come funziona
 
 - La checklist è **versionata**: modificarla richiede una PR, come per il codice.
-- Il Review Agent produce un esito per **ogni** voce: `PASSATO`, `RILIEVO` o `NON APPLICABILE`.
+- Il Review Agent produce un esito per **ogni** voce: `PASSATO`, `RILIEVO`, `NON APPLICABILE` o
+    `CORRETTO` alla re-review.
 - `NON APPLICABILE` va motivato. Un `NON APPLICABILE` non motivato è esso stesso un rilievo.
-- Anche **un solo** `RILIEVO` impedisce l'approvazione.
+- Anche **un solo** `RILIEVO` impedisce l'approvazione. `CORRETTO` documenta la chiusura di un
+    rilievo precedente e non conta come rilievo aperto.
 - Alla re-review, le voci già corrette assumono lo stato `CORRETTO`.
 
 ### Cosa il Review Agent può e non può

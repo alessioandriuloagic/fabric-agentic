@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Allineato il rail di pubblicazione alla checklist: lo stato `CORRETTO` è accettato nelle
+  re-review, non conta come rilievo aperto ed è coperto da un test di contratto sugli stati.
+
 - Aggiunto il dispatcher deterministico del Review Agent: discovery delle PR aperte, filtro draft e
   head SHA già revisionati, dry-run senza scritture, lock di sessione e handoff al publisher #97.
 

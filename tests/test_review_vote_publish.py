@@ -22,6 +22,7 @@ HEAD_SHA = "9c1d4f0a7b2e5c8d3f6a1b4e7c0d3f6a9b2e5c8d"
 APP_SLUG = "fabric-agentic-review-agent"
 BOT_LOGIN = f"{APP_SLUG}[bot]"
 CHECKLIST_PATH = Path(__file__).resolve().parents[1] / "docs" / "functional" / "04-checklist-review.md"
+CHECKLIST_RESULTS = {"PASSATO", "RILIEVO", "NON APPLICABILE", "CORRETTO"}
 
 
 def outcome_text(results: dict | None = None, vote: str = "VOTO: APPROVATO") -> str:
@@ -226,6 +227,13 @@ class ReviewVotePublishTests(unittest.TestCase):
         text = outcome_text({"D2": "D2 QUASI PASSATO"})
         self.assertRejects(text, "checklist line 'D2' is malformed")
 
+    def test_accepts_a_corrected_checklist_item(self) -> None:
+        text = outcome_text({"D2": "D2 CORRETTO - rilievo corretto nella re-review"})
+
+        outcome = self.publish(text, FakeGitHub())
+
+        self.assertEqual(outcome["status"], "published")
+
     def test_rejects_non_applicabile_without_a_reason(self) -> None:
         text = outcome_text({"C2": "C2 NON APPLICABILE"})
         self.assertRejects(text, "'C2' is NON APPLICABILE without a reason")
@@ -352,6 +360,12 @@ class ReviewVotePublishTests(unittest.TestCase):
         )
 
         self.assertEqual(tuple(rows), CHECKLIST_ITEMS)
+
+    def test_the_publisher_accepts_all_states_declared_by_the_checklist(self) -> None:
+        checklist = CHECKLIST_PATH.read_text(encoding="utf-8")
+        declared_states = set(re.findall(r"`(PASSATO|RILIEVO|NON APPLICABILE|CORRETTO)`", checklist))
+
+        self.assertEqual(declared_states, CHECKLIST_RESULTS)
 
 
 if __name__ == "__main__":
