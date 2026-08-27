@@ -63,7 +63,6 @@ def credential_broker_environment(token: str) -> Iterator[dict[str, str]]:
             encoding="utf-8",
         )
         real_gh = shutil.which("gh") or "gh"
-        real_git = shutil.which("git") or "git"
         gh_wrapper = Path(directory) / "gh.cmd"
         gh_wrapper.write_text(
             f'@echo off\n"{sys.executable}" "{Path(__file__).with_name("dev_agent_credential_helper.py")}" gh "{real_gh}" %*\n',
