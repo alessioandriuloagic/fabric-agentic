@@ -134,6 +134,28 @@ class GitHubIssuesTrackerTests(unittest.TestCase):
 
     @patch("scripts.tracker.create_installation_token")
     @patch("scripts.tracker.urlopen")
+    def test_waiting_input_requires_both_labels(self, mock_urlopen, mock_token_fn) -> None:
+        mock_token_fn.return_value.token = "github-token-redacted"
+        mock_response = MagicMock()
+        mock_response.__enter__.return_value.read.return_value = json.dumps({
+            "data": {
+                "repository": {
+                    "issues": {
+                        "nodes": [
+                            {"number": 97, "labels": {"nodes": [{"name": "dev-agent"}]}},
+                            {"number": 98, "labels": {"nodes": [{"name": "waiting-input"}]}},
+                            {"number": 99, "labels": {"nodes": [{"name": "dev-agent"}, {"name": "waiting-input"}]}},
+                        ]
+                    }
+                }
+            }
+        }).encode("utf-8")
+        mock_urlopen.return_value = mock_response
+
+        self.assertEqual(self.tracker.waiting_input_items(), [99])
+
+    @patch("scripts.tracker.create_installation_token")
+    @patch("scripts.tracker.urlopen")
     def test_comments_normalizes_github_comments(self, mock_urlopen, mock_token_fn) -> None:
         mock_token_fn.return_value.token = "github-token-redacted"
         mock_response = MagicMock()

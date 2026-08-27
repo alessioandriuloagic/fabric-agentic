@@ -365,6 +365,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `waiting_input_items` impone la congiunzione delle label: il filtro GraphQL di GitHub si comporta
+  come OR, quindi la congiunzione fra `dev-agent` e `waiting-input` viene ora applicata lato client.
+  Prima ogni issue con la sola `dev-agent` risultava in attesa di risposta umana.
+
+- Il dispatcher registra l'esito della sessione Dev Agent con `session_completed`, includendo
+  `returncode`, `is_error`, `session_id`, `num_turns` e `changed_repository`. Una sessione che non
+  lascia lavoro nel clone non e' piu' indistinguibile da una riuscita.
+
 - Il dispatcher concede alla sessione Dev Agent l'accesso alla directory del task record tramite
   `--add-dir`. Senza di esso la sessione partiva dentro il clone isolato e non poteva leggere il
   proprio task record, terminando con codice `0` senza implementare nulla.
