@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Aggiunto `ADR-0013`: identità GitHub dedicata al Review Agent e pubblicazione del voto tramite
+  rail deterministico, con le alternative scartate e i limiti accettati.
+
 - Prima review reale del Review Agent sulla PR #94: checklist A1-F4 completa, tre rilievi aperti
   (`E1`, `E5`, `F3`) e voto GitHub rifiutato perché l'agente non ha ancora un'identità distinta
   dall'autore della PR.

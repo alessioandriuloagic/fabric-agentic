@@ -19,7 +19,8 @@
 |---|---|
 | Leggere il diff sulla propria copia del repo | Accedere a Fabric |
 | Leggere la knowledge base e la documentazione ufficiale | Eseguire carichi o script di build |
-| Commentare e votare | Modificare il codice di feature |
+| Emettere l'esito strutturato e il voto | Pubblicare da sé: la submission la invia il rail deterministico |
+| — | Modificare il codice di feature |
 
 > Il Review Agent **non si fida della descrizione della PR**: verifica il diff. E poiché non
 > può produrre evidenze, un'evidenza mancante è sempre un rilievo — non può andarsela a prendere.
@@ -94,7 +95,8 @@
 
 ## 3. Formato dell'esito
 
-Il Review Agent pubblica sulla PR un unico commento strutturato:
+Il Review Agent emette un unico esito strutturato, che il rail `scripts/review_vote_publish.py`
+pubblica sulla PR come singola review con l'identità dedicata:
 
 ```
 ESITO REVIEW — <identificativo PR> — iterazione <n>
