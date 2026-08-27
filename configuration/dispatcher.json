@@ -21,6 +21,6 @@
     "poll_seconds": 30
   },
   "dispatcher": {
-    "tracker_type": "azure_devops"
+    "tracker_type": "github_issues"
   }
 }

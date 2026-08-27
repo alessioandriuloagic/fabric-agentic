@@ -371,6 +371,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Il tracker predefinito del dispatcher passa da `azure_devops` a `github_issues`: GitHub Issues
+  diventa il backend operativo dei work item e Azure Boards resta legacy. Verificato con un
+  `--once --dry-run` sul tracker GitHub.
+
 - PRD allineato allo scope MVP e ADR-0003: Open-Meteo è la sorgente REST di test; le cartelle
   sono automatizzabili, mentre il task flow resta un passo manuale documentato.
 - ADR-0002 marcato **superato** da ADR-0007: resta valido il rifiuto delle Fabric
