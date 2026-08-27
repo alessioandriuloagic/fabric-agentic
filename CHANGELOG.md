@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Registrati i probe S0-07 del 2026-08-27: Dev Agent legge `ws_agentic_dev` con HTTP `200`, la
+  creazione workspace è rifiutata con HTTP `401`; i probe item/job e tenant settings restano non
+  conclusivi o non leggibili nel contesto disponibile.
+
 - Registrata l'evidenza UI dei ruoli S0-07: `fabric-agentic-deploy` è `Contributor`,
   `fabric-agentic-dev-agent` è `Viewer` e il Review Agent non è assegnato al workspace.
 
