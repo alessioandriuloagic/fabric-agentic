@@ -49,10 +49,43 @@ Ne discendono due regole operative:
 | Credenziale GitHub Dev Agent | GitHub App installata sul solo repository `alessioandriuloagic/fabric-agentic`. Il dispatcher firma un JWT con una private key PEM locale protetta da ACL e ottiene un installation token breve; App ID e Installation ID non sono segreti, la private key non entra nel repository o nei log |
 | Token GitHub Dev Agent | `scripts/github_app_auth.py` firma un JWT valido nove minuti e ottiene un installation token solo in memoria. Il comando `verify` può mostrare i repository autorizzati, mai token o contenuto PEM |
 | Verifica PEM GitHub App | Il record della key nella UI GitHub prova solo che la key e' registrata. Prima di avviare il dispatcher, il file PEM locale deve esistere, avere ACL dell'owner, dimensione plausibile e caricarsi per la firma JWT; non si stampa o archivia mai il suo contenuto o hash |
+| Credenziale GitHub Review Agent | GitHub App **distinta** da quella del Dev Agent, `fabric-agentic-review-agent`, App ID `4735692`, Installation ID `156937328`, installata sullo stesso repository con i soli permessi `contents:read`, `issues:read`, `metadata:read`, `pull_requests:write`. App ID e Installation ID non sono segreti; la private key PEM è in `%USERPROFILE%\.fabric-agentic\review-agent\github-app-private-key.pem`, con ACL dell'owner, e resta fuori dal repository, dai log e dal runtime del modello |
+| Token GitHub Review Agent | `scripts/review_vote_publish.py` conia l'installation token al momento della pubblicazione, riusando `scripts/github_app_auth.py`, e lo tiene solo in memoria di processo. La sessione di review non conia token, non firma il JWT e non conosce il percorso della key |
 
 > L'ultimo punto è spesso trascurato: abilitare la creazione di workspace via identità applicativa
 > a livello di tenant senza restringerla a un gruppo significa concederla a **tutte** le
 > applicazioni del tenant, non solo alle nostre.
+
+### 2.1 Identità GitHub del Review Agent
+
+Il voto di review è un oggetto GitHub, non un testo: GitHub rifiuta `REQUEST_CHANGES` sulla propria
+pull request. Finché la sessione girava con l'identità umana dell'owner il voto non poteva esistere
+(`Review Can not request changes on your own pull request`, osservato su PR #94 e #95, con
+`gh pr view <n> --json reviews` vuoto in entrambi i casi). L'identità applicativa dedicata rende il
+voto registrabile e attribuibile.
+
+| Aspetto | Regola |
+|---|---|
+| Chi vota | L'identità applicativa del Review Agent, mai l'owner umano e mai l'identità del Dev Agent |
+| Chi pubblica | Il publisher deterministico `scripts/review_vote_publish.py`, non il modello |
+| Cosa riceve il modello | Nulla di credenziale: produce l'esito A1-F4 e termina |
+| Dove vive la key | File PEM fuori dal repository, con ACL ristretta, come per il Dev Agent |
+
+#### Rischio accettato — collocazione della private key
+
+La private key del Review Agent **può risiedere sotto lo stesso utente Windows del Dev Agent**. In
+quella configurazione la separazione fra le due identità è dichiarativa: un processo che gira con
+quell'utente può leggere entrambe le key, quindi la separazione dei permessi GitHub non è sostenuta
+da un confine tecnico.
+
+> **Questa è una mitigazione dichiarata come rischio accettato dall'owner, non un isolamento
+> tecnico.** La risoluzione reale è un utente OS separato o un host separato per il Review Agent.
+> Fino ad allora l'ACL sul file e la separazione dei processi valgono come misura organizzativa,
+> e vanno rilette a ogni revisione periodica (sezione 7).
+
+È lo stesso principio della sezione 1 applicato a noi stessi: ciò che un processo può tecnicamente
+leggere, prima o poi lo leggerà. Registrarlo come rischio accettato lo rende revisionabile; ometterlo
+lo renderebbe invisibile.
 
 ---
 
@@ -115,7 +148,7 @@ pipeline, non nei permessi.
 
 | Ambito | Permesso | Note |
 |---|---|---|
-| Repo soluzione | **Sola lettura** + commento e voto | Rimosso dai contributori: la sola lettura va garantita, non solo dichiarata |
+| Repo soluzione | **Sola lettura** + commento e voto | Rimosso dai contributori: la sola lettura va garantita, non solo dichiarata. Il voto è inviato dal publisher deterministico con l'identità applicativa del Review Agent (sezione 2.1), non dalla sessione |
 | Knowledge base | Sola lettura | Verifica che la documentazione sia aggiornata |
 | Work item | Sola lettura + commento | Non modifica lo stato |
 | **Qualsiasi accesso a Fabric** | **NEGATO** | Nessun ruolo su workspace o capacity |

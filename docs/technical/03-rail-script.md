@@ -259,6 +259,48 @@ aggiornato: il rail non ha eseguito scritture quando il workspace era già allin
 
 ---
 
+## 6-bis. Contratto — Review vote publish
+
+**Scopo**: trasformare l'esito A1-F4 prodotto dalla sessione di review in **una sola** review
+submission su GitHub, con l'identità applicativa del Review Agent.
+
+| Aspetto | Contratto |
+|---|---|
+| **Input** | Percorso dell'esito strutturato, owner/repository, numero della pull request, App ID, Installation ID e percorso della private key del Review Agent |
+| **Innesco** | Il runner della sessione di review, mai il modello |
+| **Passi** | 1. Verifica la copia di pubblicazione<br>2. Valida l'esito A1-F4<br>3. Conia l'installation token<br>4. Legge il head sha della PR e le review esistenti<br>5. Invia una `POST /repos/{owner}/{repo}/pulls/{number}/reviews` |
+| **Output** | JSON con numero PR, head sha, event, numero di rilievi e stato `published` o `already_published` |
+| **Successo** | Esiste esattamente una review submission dell'identità del Review Agent per quel head sha |
+| **Idempotenza** | Sulla coppia (numero PR, head sha): una seconda esecuzione sullo stesso head sha non crea una seconda review |
+| **Fallimento tipico** | Esito malformato, copia non allineata a `main`, App non installata o permessi insufficienti |
+
+L'implementazione è `scripts/review_vote_publish.py`.
+
+**Validazione dell'esito**: ogni voce da A1 a F4 presente esattamente una volta, valore in
+`PASSATO` / `RILIEVO` / `NON APPLICABILE`, motivazione obbligatoria per ogni `NON APPLICABILE` e
+riga `VOTO` coerente con il numero di rilievi. La checklist è quella chiusa di
+[`04-checklist-review.md`](../functional/04-checklist-review.md): il publisher non ne aggiunge voci.
+
+**Mappatura del voto**: `VOTO: APPROVATO` produce `APPROVE`, `VOTO: NON APPROVATO` produce
+`REQUEST_CHANGES`. Nessun altro event è ammesso. Un esito non valido termina con errore **prima**
+di coniare qualunque token: non esistono voti parziali.
+
+**Vincolo sulla copia di pubblicazione**: il publisher rifiuta l'esecuzione se la copia da cui gira
+non è su `main`, ha modifiche non committate o non è allineata a `origin/main`. È lo stesso
+principio dell'ancoraggio a `main` delle pipeline agentiche: il codice che pubblica un voto non può
+essere quello che il branch in review sta modificando.
+
+**Segreti**: il token è coniato al momento, vive solo in memoria del processo e non compare in
+stdout, nel body della review o in file di stato — il publisher non ne scrive alcuno, perché
+l'idempotenza si legge da GitHub. La sessione di review non conia token e non conosce il percorso
+della private key; vedi [`04-identita-e-permessi.md`](04-identita-e-permessi.md) sezione 2.1.
+
+> Non contraddice la sezione 8: il publisher non è un rail che il Review Agent può invocare per
+> produrre evidenze. È il rail che **esegue** il suo voto, e gira fuori dalla sessione proprio
+> perché il modello non deve poter maneggiare la credenziale con cui il voto viene firmato.
+
+---
+
 ## 7. Evoluzione dei rail
 
 | Situazione | Azione |

@@ -9,7 +9,7 @@
 | Campo | Valore |
 |---|---|
 | Versione | 0.9 |
-| Ultimo aggiornamento | 2026-08-25 |
+| Ultimo aggiornamento | 2026-08-27 |
 | Documenti collegati | `docs/prd/PRD-agentic-cicd-fabric.md`, `docs/adr/` |
 
 ---
@@ -22,7 +22,7 @@
 | **Dev Agent** | Agente AI che esegue il ciclo di sviluppo end-to-end su un work item: branch, feature workspace, implementazione, test reale, documentazione, apertura PR. **Non merge mai.** |
 | **Review Agent** | Agente AI, di vendor diverso, che revisiona la PR contro una checklist chiusa. **Non scrive codice di feature, non merge.** Non ha accesso a Fabric. |
 | **Dispatcher** | Script deterministico in polling sul tracker. Rileva i trigger e avvia una sessione fresca dell'agente. **Non usa LLM**: da fermo il costo è zero. |
-| **Rail (script deterministico)** | Script versionato che esegue un'operazione procedurale ripetitiva al posto dell'LLM. Gli agenti orchestrano, i rail eseguono. Nel nostro caso **un rail invoca una pipeline CI/CD**, non chiama direttamente le API |
+| **Rail (script deterministico)** | Script versionato che esegue un'operazione procedurale ripetitiva al posto dell'LLM. Gli agenti orchestrano, i rail eseguono. I rail che toccano Fabric **invocano una pipeline CI/CD**, non chiamano direttamente le API; il rail che pubblica il voto di review chiama invece l'API GitHub con l'identità applicativa del Review Agent, perché il modello non deve tenere il token |
 | **Rail-result** | Artefatto a schema versionato prodotto da ogni pipeline agentica. È il **canale primario** con cui l'agente conosce l'esito di un'esecuzione |
 | **ExecutionCredential** | Credenziale tecnica di un cliente usata esclusivamente dalle pipeline CI/CD. Può essere SP OIDC, SP con secret o utenza di servizio in Key Vault; non è mai disponibile al modello |
 | **Diagnose data** | Rail che analizza sorgente, Bronze o Silver e restituisce al modello solo evidenze aggregate o mascherate |
@@ -284,6 +284,7 @@ Altro Lakehouse Fabric (shortcut) · Database / DWH · CRM (Dataverse) · ShareP
 | Dev Agent Azure DevOps credential | Certificato client non esportabile nel certificate store `CurrentUser\My`, thumbprint `89AB19F6EFD3CBE4CEB931F5E02A6833DD77E0F7`, registrato sull'app fino al 2027-08-21. Verificato token Entra per `https://app.vssps.visualstudio.com/.default` e lettura del progetto `fabric-agentic`; Az.Accounts usa il tenant domain `agicdev.onmicrosoft.com` |
 | Dev Agent GitHub App | `fabric-agentic-dev-agent`, App ID `4672750`, Installation ID `155470382`; installata sul solo repository previsto. La private key PEM è in `%USERPROFILE%\.fabric-agentic\dev-agent\github-app-private-key.pem`, directory ACL limitata all'owner. Il provider locale ha verificato l'emissione di un installation token breve e lo scope del solo repository |
 | Review Agent app ID | `a6d3e2af-92e5-447a-bb1e-9a466e1bdaed` (`fabric-agentic-review-agent`) |
+| Review Agent GitHub App | `fabric-agentic-review-agent`, App ID `4735692`, Installation ID `156937328`; distinta dall'App del Dev Agent e installata sul solo repository previsto. Permessi verificati via API: `contents:read`, `issues:read`, `metadata:read`, `pull_requests:write`. La private key PEM è in `%USERPROFILE%\.fabric-agentic\review-agent\github-app-private-key.pem`, directory ACL limitata all'owner |
 | Deploy app ID | `33e53b67-3872-4bc0-8d20-ed76a3c85ae7` (`fabric-agentic-deploy`); service principal senza secret, federated credential e Configured Connection Git predisposte. Assegnazione feature workspace verificata con il pattern IP: Azure RBAC `Contributor` sulla capacity e Object ID `db9d4adb-db6a-4238-8e75-c69d21b1b37e` in `properties.administration.members` |
 | Workspace DEV | `ws_agentic_dev` — `abb3a689-6a8a-4a98-88da-b3f7c6de05c5`; ricreato il 2026-08-21 e assegnato a `fabricalessiodev` |
 | Workspace TEST | `ws_agentic_test` — `782a3048-e181-4138-bb2c-e87f4c75f013`; creato il 2026-08-24 e assegnato alla capacity `fabricalessiodev` (`8626d394-40c1-4872-a1f1-25b8cfcbf6ad`), SKU F2 Active. Semantic Model `CRM Demo` creato: `c405057b-6ebe-4043-8126-a23d035fab33`; sviluppo Report PBIR sospeso come TODO futuro per errore renderer live |
