@@ -81,9 +81,12 @@ integrale di Claude.
 La sessione Dev Agent usa una allowlist versionata in `DEV_AGENT_ALLOWED_TOOLS`: consente lettura,
 modifica, test, branch, commit, push esclusivamente verso `refs/heads/feature/*` e apertura di
 pull request. Usa `dontAsk`, non `acceptEdits` e non `bypassPermissions`; il comando viene costruito
-da `build_session_command` e verificato dai test. La credenziale necessaria al push e a `gh` non è
-ancora fornita al processo: la consegna autonoma completa richiede un wrapper esterno che inietti
-la credenziale senza renderla leggibile al modello.
+da `build_session_command` e verificato dai test. La credenziale necessaria al push e a `gh` viene
+fornita da un broker localhost avviato dal dispatcher: il token resta nella memoria del dispatcher,
+mentre helper temporanei per Git e `gh` lo richiedono per singola operazione. Il token non entra nel
+comando Claude, nelle variabili `GH_TOKEN`/`GITHUB_TOKEN`, nei file del repository o nei log. Il
+push autorizzato è solo verso `refs/heads/feature/*`; il merge e il push su `main` restano fuori
+dall'allowlist.
 
 `scripts/review_dispatcher.py` è il dispatcher locale del Review Agent. La modalità
 `--once --dry-run` interroga le PR aperte tramite la GitHub App dedicata, ignora le PR in draft e
