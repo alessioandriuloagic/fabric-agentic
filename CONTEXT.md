@@ -289,7 +289,9 @@ Altro Lakehouse Fabric (shortcut) · Database / DWH · CRM (Dataverse) · ShareP
 | Workspace DEV | `ws_agentic_dev` — `abb3a689-6a8a-4a98-88da-b3f7c6de05c5`; ricreato il 2026-08-21 e assegnato a `fabricalessiodev` |
 | Workspace TEST | `ws_agentic_test` — `782a3048-e181-4138-bb2c-e87f4c75f013`; creato il 2026-08-24 e assegnato alla capacity `fabricalessiodev` (`8626d394-40c1-4872-a1f1-25b8cfcbf6ad`), SKU F2 Active. Semantic Model `CRM Demo` creato: `c405057b-6ebe-4043-8126-a23d035fab33`; sviluppo Report PBIR sospeso come TODO futuro per errore renderer live |
 | Ambienti non provisionati | Workspace `prod` e relative credenziali/configurazione restano non provisionati; nel workspace `test` il Semantic Model esiste, il Report resta TODO e manca la credenziale dedicata |
-| Ruolo Dev Agent nel workspace DEV | `Contributor`; nessun ruolo sulla capacity |
+| Ruolo Dev Agent nel workspace DEV | `Viewer`; nessun ruolo sulla capacity; verificato dalla UI del workspace |
+| Ruolo Deploy nel workspace DEV | `Contributor`; service principal `fabric-agentic-deploy`, verificato dalla UI del workspace |
+| Ruolo Review Agent nel workspace DEV | Assente; nessun ruolo visibile nel workspace, verificato dalla UI |
 | Federated credential OIDC | GitHub environment `dev`, subject con Organization ID `218064009` e Repository ID `1340835193`; test riuscito senza ruolo subscription |
 | GitHub environments | `dev`, `test`, `prod` presenti; protection rules non disponibili sul piano GitHub Free |
 | Governance Git | Branch dedicato obbligatorio, PR verso `main`, review e merge umano; vedi ADR-0010 |
