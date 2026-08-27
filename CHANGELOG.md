@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Verificata end-to-end la consegna autonoma del Dev Agent con la probe usa-e-getta #116: la
+  sessione dispatchata ha creato il branch `feature/wi-116-dev-delivery-smoke`, versionato
+  l'allegato sotto `attachments/116/`, eseguito la suite `pytest` e aperto la PR verso `main`
+  senza intervento umano, senza toccare `main` e senza accedere a credenziali o a Fabric.
+
 - Aggiunto il broker di credenziali localhost per la sessione Dev Agent: Git e `gh` ricevono il
   token solo nei rispettivi helper, mentre il modello non riceve token nell'ambiente o nei
   parametri; il push resta limitato ai branch `feature/*`.
