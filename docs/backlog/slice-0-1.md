@@ -692,7 +692,8 @@ OIDC e lo step applicativo, ma ha prodotto `technical_failure` con `workspace_id
 workspace tramite `/workspaces`; la schermata Fabric che mostra GitHub e il branch corretto
 conferma la configurazione Git dell'utente, ma non la visibilita' del workspace per l'identita'
 OIDC. S1-03 resta aperto: serve verificare l'accesso API del Deploy SP al workspace e migliorare
-la classificazione dello stage `workspace` prima di un nuovo run.
+la classificazione dello stage `workspace` prima di un nuovo run. **Superato**: la causa era il
+workspace non ripulito, e il rail e' stato poi validato dal run `32955618009` registrato in S1-03.
 
 **Evidenza membership 2026-08-26**: nel pannello Manage access di `ws_agentic_feature_wi6`
 il service principal `fabric-agentic-deploy` risulta presente con ruolo `Contributor`. La
@@ -728,11 +729,6 @@ l'esecuzione in `ws_agentic_dev`. `Update from Git` nel workspace feature va rip
 rimosse dalla feature branch collegata; i notebook CRM restano su `main` e non vengono rimossi
 dal progetto DEV. Il workspace feature non contiene piu' artifact notebook da sincronizzare.
 
-**Esito finale sync 2026-08-26**: dopo la pulizia del workspace, il run GitHub Actions
-`32955618009` ha restituito `outcome: success`, workspace `ws_agentic_feature_wi6` risolto,
-`status: synchronized`, `updated_items: []` e nessun `failure_stage` o `failure_code`.
-Il rail `sync_workspace` e' quindi validato sul work item `6` in stato pulito.
-
 ---
 
 ### S1-03 · Rail: sync workspace
@@ -754,6 +750,11 @@ Il rail `sync_workspace` e' quindi validato sul work item `6` in stato pulito.
 **Esito 2026-08-21**: verificato con successo dal run GitHub Actions `32488530726` sul work
 item `6`. Il workspace risultava già allineato al branch; il rail ha restituito
 `already_aligned`, nessun item aggiornato e nessuna divergenza.
+
+**Esito finale 2026-08-26**: dopo la pulizia degli artifact corrotti nel workspace, il run
+`32955618009` ha restituito `outcome: success`, workspace `ws_agentic_feature_wi6` risolto,
+`status: synchronized`, `updated_items: []` e nessun `failure_stage` o `failure_code`. Il rail
+`sync_workspace` e' quindi validato sul work item `6` a partire da uno stato pulito.
 
 **Correzione CRM preflight 2026-08-26**: il run `32955814916` ha fallito durante l'esecuzione
 del notebook `nb_crm_preflight`. Il notebook usava l'ambiente Dataverse errato

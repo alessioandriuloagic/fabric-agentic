@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Versionati i due kaizen del 2026-08-26 già referenziati da `AGENTS.md`, i cui link puntavano a
+  file inesistenti, e registrata nel backlog Slice 0/1 la cronologia diagnostica del rail
+  `sync_workspace` e delle riparazioni degli artifact Fabric.
+
 - Aggiunto `ADR-0013`: identità GitHub dedicata al Review Agent e pubblicazione del voto tramite
   rail deterministico, con le alternative scartate e i limiti accettati.
 
@@ -113,7 +117,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ricreate in Desktop dopo la verifica degli oggetti effettivamente esposti dal modello remoto.
 
 - Corretto lo schema `$schema` dei file `.platform` PBIP/PBIR al formato Git Integration richiesto
-  da Power BI Desktop (`gitIntegration/platformProperties/2.0.0`).
+  da Power BI Desktop (`gitIntegration/platformProperties/2.0.0`). **Superato il 2026-08-26**: per
+  la sincronizzazione Git di Fabric vale `platform/platformProperties.json` con `version` alla
+  radice.
 
 - Corretto il layout dei file `.platform` Power BI: `version` è ora dentro `config`, insieme a
   `logicalId`, come richiesto dal validatore PBIP di Desktop.

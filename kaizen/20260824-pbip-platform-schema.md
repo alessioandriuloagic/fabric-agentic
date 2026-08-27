@@ -15,6 +15,13 @@ Usare lo schema Git Integration in `.platform` sia per Report sia per Semantic M
 `config.version` e `config.logicalId` obbligatori.
 Validare il progetto con Power BI Desktop dopo ogni correzione del manifest o degli artifact.
 
+## Superato per Fabric Git integration
+
+Il 2026-08-26 Fabric ha rifiutato quello schema con `Missing or corrupted system files`. Per la
+sincronizzazione Git di Fabric vale `platform/platformProperties.json` con `version` alla radice,
+come documentato in Microsoft Learn. Vedi `kaizen/20260826-platform-schema-url.md`. La regola qui
+sopra resta valida solo come cronaca di cio' che Power BI Desktop accettava in quel contesto.
+
 ## Versioni metadata PBIR
 
 I file `version.json` e `pages.json` sono metadata e richiedono rispettivamente gli schema
