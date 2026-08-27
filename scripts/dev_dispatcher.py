@@ -12,10 +12,15 @@ import subprocess
 import sys
 import time
 import uuid
+import socketserver
+import tempfile
+import shutil
+import threading
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Iterator
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
@@ -25,6 +30,57 @@ from scripts.tracker import AzureDevOpsTracker, GitHubIssuesTracker, WorkItemTra
 
 class DispatcherError(Exception):
     """Raised without including credentials or response bodies."""
+
+
+class CredentialBrokerHandler(socketserver.StreamRequestHandler):
+    def handle(self) -> None:
+        try:
+            request = json.loads(self.rfile.readline().decode("utf-8"))
+            if request.get("kind") not in {"git", "gh"}:
+                raise ValueError
+            self.wfile.write(json.dumps({"token": self.server.token}).encode("utf-8"))
+        except (AttributeError, json.JSONDecodeError, ValueError):
+            self.wfile.write(b'{"error":"invalid credential request"}')
+
+
+class CredentialBroker(socketserver.ThreadingTCPServer):
+    allow_reuse_address = False
+
+    def __init__(self, token: str):
+        super().__init__(("127.0.0.1", 0), CredentialBrokerHandler)
+        self.token = token
+
+
+@contextmanager
+def credential_broker_environment(token: str) -> Iterator[dict[str, str]]:
+    broker = CredentialBroker(token)
+    broker_thread = threading.Thread(target=broker.serve_forever, daemon=True)
+    broker_thread.start()
+    with tempfile.TemporaryDirectory(prefix="fabric-agentic-credentials-") as directory:
+        helper = Path(directory) / "credential-helper.cmd"
+        helper.write_text(
+            f'@echo off\n"{sys.executable}" "{Path(__file__).with_name("dev_agent_credential_helper.py")}" git %*\n',
+            encoding="utf-8",
+        )
+        real_gh = shutil.which("gh") or "gh"
+        gh_wrapper = Path(directory) / "gh.cmd"
+        gh_wrapper.write_text(
+            f'@echo off\n"{sys.executable}" "{Path(__file__).with_name("dev_agent_credential_helper.py")}" gh "{real_gh}" %*\n',
+            encoding="utf-8",
+        )
+        environment = os.environ.copy()
+        environment.pop("GH_TOKEN", None)
+        environment.pop("GITHUB_TOKEN", None)
+        environment["GIT_ASKPASS"] = str(helper)
+        environment["GIT_TERMINAL_PROMPT"] = "0"
+        environment["FABRIC_AGENT_CREDENTIAL_BROKER"] = f"127.0.0.1:{broker.server_address[1]}"
+        environment["PATH"] = f"{directory}{os.pathsep}{environment.get('PATH', '')}"
+        try:
+            yield environment
+        finally:
+            broker.shutdown()
+            broker.server_close()
+            broker_thread.join(timeout=2)
 
 
 @dataclass(frozen=True)
@@ -331,13 +387,20 @@ def repository_changed(config: DispatcherConfig) -> bool:
 
 
 def launch_session(config: DispatcherConfig, task_path: Path) -> SessionOutcome:
-    result = subprocess.run(
-        build_session_command(config, task_path),
-        cwd=config.repository_path,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    token = create_installation_token(
+        config.github_app_id,
+        config.github_installation_id,
+        config.github_private_key_path,
+    ).token
+    with credential_broker_environment(token) as environment:
+        result = subprocess.run(
+            build_session_command(config, task_path),
+            cwd=config.repository_path,
+            capture_output=True,
+            text=True,
+            env=environment,
+            check=False,
+        )
     try:
         payload = json.loads(result.stdout) if result.stdout.strip() else {}
     except json.JSONDecodeError:

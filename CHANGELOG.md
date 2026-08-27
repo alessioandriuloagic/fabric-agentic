@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Aggiunto il broker di credenziali localhost per la sessione Dev Agent: Git e `gh` ricevono il
+  token solo nei rispettivi helper, mentre il modello non riceve token nell'ambiente o nei
+  parametri; il push resta limitato ai branch `feature/*`.
+
 - Aggiunta la allowlist esplicita per la sessione Dev Agent: test, branch, commit, push solo verso
   `feature/*` e apertura PR, senza bypass dei permessi; resta da implementare il credential helper
   esterno necessario alla consegna autonoma reale.

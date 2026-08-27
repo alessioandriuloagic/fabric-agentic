@@ -1,11 +1,13 @@
 import json
+import subprocess
+import sys
 import unittest
 from dataclasses import replace
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import MagicMock, patch
 
-from scripts.dev_dispatcher import DispatcherConfig, SessionOutcome, build_session_command, human_reply_tasks, launch_session, launch_smoke_session, load_state, review_thread_tasks, run_once, run_polling, run_smoke, smoke_comment, stage_work_item_context
+from scripts.dev_dispatcher import DispatcherConfig, SessionOutcome, build_session_command, credential_broker_environment, human_reply_tasks, launch_session, launch_smoke_session, load_state, review_thread_tasks, run_once, run_polling, run_smoke, smoke_comment, stage_work_item_context
 from scripts.tracker import WorkItemComment
 
 
@@ -29,8 +31,10 @@ class DevDispatcherTests(unittest.TestCase):
         )
 
     @patch("scripts.dev_dispatcher.repository_changed", return_value=True)
+    @patch("scripts.dev_dispatcher.create_installation_token")
     @patch("scripts.dev_dispatcher.subprocess.run")
-    def test_session_can_read_the_task_record_outside_the_clone(self, mock_run, _) -> None:
+    def test_session_can_read_the_task_record_outside_the_clone(self, mock_run, mock_token, _) -> None:
+        mock_token.return_value.token = "installation-token"
         mock_run.return_value = MagicMock(returncode=0, stdout='{"is_error": false, "session_id": "abc", "num_turns": 4}')
         task_path = Path("/tasks/work-item-97/task.json")
 
@@ -42,6 +46,10 @@ class DevDispatcherTests(unittest.TestCase):
         self.assertEqual(mock_run.call_args.kwargs["cwd"], self.config.repository_path)
         self.assertTrue(outcome.succeeded)
         self.assertEqual(outcome.session_id, "abc")
+        environment = mock_run.call_args.kwargs["env"]
+        self.assertNotIn("GH_TOKEN", environment)
+        self.assertNotIn("GITHUB_TOKEN", environment)
+        self.assertIn("FABRIC_AGENT_CREDENTIAL_BROKER", environment)
 
     def test_session_command_has_explicit_delivery_allowlist_without_bypass(self) -> None:
         command = build_session_command(self.config, Path("/tasks/work-item-97/task.json"))
@@ -159,6 +167,23 @@ class DevDispatcherTests(unittest.TestCase):
 
         self.assertEqual(productive.outcome, "productive")
         self.assertEqual(failed.outcome, "failed")
+
+    def test_git_helper_receives_credential_only_through_local_broker(self) -> None:
+        helper = Path(__file__).resolve().parents[1] / "scripts" / "dev_agent_credential_helper.py"
+
+        with credential_broker_environment("installation-token") as environment:
+            result = subprocess.run(
+                [sys.executable, str(helper), "git", "Username for https://github.com:"],
+                env=environment,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout.splitlines()[0], "x-access-token")
+        self.assertEqual(result.stdout.splitlines()[1], "installation-token")
+        self.assertNotIn("installation-token", json.dumps(environment))
 
     @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
     @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
