@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Integrata l'evidenza S0-07 di lettura API del Dev Agent: workspace, item e istanze job leggibili
+  con HTTP `200`; i probe di scrittura restano separati perché quelli invalidi non dimostrano il
+  permesso.
+
 - Registrati i probe S0-07 del 2026-08-27: Dev Agent legge `ws_agentic_dev` con HTTP `200`, la
   creazione workspace è rifiutata con HTTP `401`; i probe item/job e tenant settings restano non
   conclusivi o non leggibili nel contesto disponibile.
