@@ -151,6 +151,14 @@ PEM è stato stampato o registrato.
 `fabric-agentic-review-agent`. Questa evidenza conferma i ruoli/membership del workspace; non
 sostituisce i probe runtime su scrittura, creazione item o avvio job.
 
+**Probe runtime 2026-08-27**: con il contesto Azure autenticato come `fabric-agentic-dev-agent`
+nel tenant Agic Dev, la GET di `ws_agentic_dev` ha restituito HTTP `200`. La POST di creazione
+workspace con payload volutamente invalido `{}` ha restituito HTTP `401`, senza creare risorse.
+Un tentativo di creazione item con tipo invalido ha restituito HTTP `400` e un avvio job su item
+inesistente HTTP `404`: entrambi sono probe non conclusivi per il permesso di scrittura. La lettura
+di `admin/tenantsettings` con audience Power BI ha restituito HTTP `404`; gli switch tenant restano
+da verificare dal portale amministrativo corretto.
+
 #### Sul ruolo `Viewer` — condizione d'uso
 
 Il `Viewer` è l'unico ruolo Fabric realmente di sola lettura: non può eseguire, scrivere,
