@@ -139,6 +139,14 @@ class DevDispatcherTests(unittest.TestCase):
         self.assertEqual(len(sessions), 1)
         self.assertEqual(sessions[0]["work_item_id"], 97)
         self.assertFalse(sessions[0]["changed_repository"])
+        self.assertEqual(sessions[0]["outcome"], "no_work")
+
+    def test_session_outcome_classifies_productive_and_failed_runs(self) -> None:
+        productive = SessionOutcome(0, False, "abc", 2, True)
+        failed = SessionOutcome(1, True, None, None, False)
+
+        self.assertEqual(productive.outcome, "productive")
+        self.assertEqual(failed.outcome, "failed")
 
     @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
     @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))

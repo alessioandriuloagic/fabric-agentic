@@ -14,7 +14,9 @@ avvia una sessione **solo quando c'è effettivamente qualcosa da fare**.
 
 Il risultato della sessione viene verificato: un exit code non riuscito produce un errore esplicito
 (`Dev Agent session failed`) dopo la persistenza del dispatch. Il ciclo non viene quindi registrato
-come completato con successo e lo stato conserva l'ID già assegnato per evitare duplicazioni.
+come completato con successo e lo stato conserva l'ID già assegnato per evitare duplicazioni. Il
+log della sessione classifica inoltre l'esito come `productive`, `no_work` o `failed`, così una
+sessione terminata senza modificare la clone non è più indistinguibile da una riuscita produttiva.
 
 Per GitHub il handoff include il body dell'issue. Gli allegati destinati all'automazione sono
 versionati in `attachments/<issue-number>/` e vengono letti direttamente dalla clone isolata;
@@ -71,6 +73,10 @@ risolti e già osservati. Il comando `--poll` esegue il ciclo alla frequenza con
 metadati JSONL sicuri (ID work item, trigger, esito, durata) nel perimetro locale; non registra
 token, credenziali o output della sessione. Resta da verificare il lancio operativo controllato
 con lo smoke S0-14.
+
+La classificazione viene scritta nell'evento `session_completed` insieme a exit code, errore,
+identificativo sessione, numero di turni e `changed_repository`; non viene registrato l'output
+integrale di Claude.
 
 `scripts/review_dispatcher.py` è il dispatcher locale del Review Agent. La modalità
 `--once --dry-run` interroga le PR aperte tramite la GitHub App dedicata, ignora le PR in draft e

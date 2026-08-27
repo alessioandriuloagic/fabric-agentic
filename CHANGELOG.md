@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Resa diagnosticabile la sessione Dev Agent a vuoto: il dispatcher registra `productive`,
+  `no_work` o `failed` nell'evento `session_completed`, con test di regressione e senza loggare
+  l'output integrale della sessione.
+
 - Allineato il rail di pubblicazione alla checklist: lo stato `CORRETTO` è accettato nelle
   re-review, non conta come rilievo aperto ed è coperto da un test di contratto sugli stati.
 
