@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "github": {
+    "owner": "alessioandriuloagic",
+    "repository": "fabric-agentic",
+    "app_id": 4735692,
+    "installation_id": 156937328,
+    "private_key_path": "%USERPROFILE%/.fabric-agentic/review-agent/github-app-private-key.pem"
+  },
+  "agent": {
+    "repository_path": "%USERPROFILE%/.fabric-agentic/review-agent/repository",
+    "claude_command": "claude",
+    "publisher_path": "scripts/review_vote_publish.py",
+    "poll_seconds": 30
+  }
+}

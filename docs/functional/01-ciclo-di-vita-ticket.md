@@ -103,7 +103,8 @@ Vedi [05 — Protocollo di escalation](05-protocollo-escalation.md).
 ### Fase 6 — Pull request
 
 16. Apre la PR, allegando l'**evidenza dell'esecuzione**: esito, conteggi, identificativo del run.
-17. Assegna il Review Agent come revisore.
+17. Il dispatcher del Review Agent rileva la PR secondo il trigger configurato; non serve assegnare
+    manualmente un revisore né applicare un label.
 18. La sessione termina. Il dispatcher torna in polling.
 
 ### Fase 7 — Review indipendente
