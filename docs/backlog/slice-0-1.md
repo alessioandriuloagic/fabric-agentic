@@ -686,6 +686,49 @@ a `feature/wi-6-smoke-branch-out`. Il rail confrontava però `organizationName` 
 `ownerName` per GitHub e classificava la connection esistente come incompatibile. Il confronto è
 stato corretto e richiede un nuovo run idempotente.
 
+**Verifica sync 2026-08-26**: il run `32951020367` (attempt 2) ha completato checkout `main`,
+OIDC e lo step applicativo, ma ha prodotto `technical_failure` con `workspace_id: null`,
+`failure_stage: unknown` e `failure_code: bad_request`. Il runner non ha quindi risolto il
+workspace tramite `/workspaces`; la schermata Fabric che mostra GitHub e il branch corretto
+conferma la configurazione Git dell'utente, ma non la visibilita' del workspace per l'identita'
+OIDC. S1-03 resta aperto: serve verificare l'accesso API del Deploy SP al workspace e migliorare
+la classificazione dello stage `workspace` prima di un nuovo run. **Superato**: la causa era il
+workspace non ripulito, e il rail e' stato poi validato dal run `32955618009` registrato in S1-03.
+
+**Evidenza membership 2026-08-26**: nel pannello Manage access di `ws_agentic_feature_wi6`
+il service principal `fabric-agentic-deploy` risulta presente con ruolo `Contributor`. La
+membership conferma l'accesso applicativo al workspace, ma non spiega ancora perche' la ricerca
+via `/workspaces` del run non lo abbia restituito; resta da verificare il comportamento API e,
+come controllo discriminante, un `Update from Git` manuale nel medesimo workspace.
+
+**Riparazione system files 2026-08-26**: il branch collegato conteneva i cinque artifact, ma i
+`.platform` di `CRM Demo.Report` e `CRM Demo.SemanticModel` non avevano il campo root obbligatorio
+`version: "2.0"`; i notebook lo avevano gia'. Il campo e' stato aggiunto ai due artifact Power BI
+e validato insieme a `logicalId` e JSON parsing. La correzione deve essere pubblicata sulla branch
+feature prima di ripetere `Update from Git`.
+
+**Seconda riparazione system files 2026-08-26**: l'errore e' rimasto dopo l'aggiunta della versione
+root. Tutti i cinque `.platform` usavano inoltre uno `$schema` non conforme al formato Fabric V2
+documentato. Il riferimento e' stato uniformato a
+`https://developer.microsoft.com/json-schemas/fabric/platform/platformProperties.json`, mantenendo
+versione root e `logicalId`; i cinque file passano il parsing JSON e il controllo strutturale.
+
+**Rimozione Power BI 2026-08-26**: su richiesta sono stati eliminati dal Git provider il report
+`CRM Demo`, il semantic model `CRM Demo` e il contenitore `CRM Demo.pbip`, inclusi i rispettivi
+file di definizione. I tre notebook Fabric restano nel branch. Dopo il push va ripetuto `Update
+from Git` nel workspace per applicare la rimozione degli artifact Power BI.
+
+**Allineamento workspace feature 2026-08-26**: `nb_ingest_pagamenti` appartiene a
+`ws_agentic_dev`, non a `ws_agentic_feature_wi6`. La directory del notebook e' stata quindi
+rimossa dalla feature branch collegata, mentre il notebook resta nel progetto principale per
+l'esecuzione in `ws_agentic_dev`. `Update from Git` nel workspace feature va ripetuto dopo il push.
+
+**Rimozione notebook CRM dalla feature branch 2026-08-26**: dopo la rigenerazione dei file
+`.platform`, Fabric ha continuato a segnalare `nb_crm_load.Notebook` e
+`nb_crm_preflight.Notebook` come system files corrotti. Le due directory sono state quindi
+rimosse dalla feature branch collegata; i notebook CRM restano su `main` e non vengono rimossi
+dal progetto DEV. Il workspace feature non contiene piu' artifact notebook da sincronizzare.
+
 ---
 
 ### S1-03 · Rail: sync workspace
@@ -707,6 +750,11 @@ stato corretto e richiede un nuovo run idempotente.
 **Esito 2026-08-21**: verificato con successo dal run GitHub Actions `32488530726` sul work
 item `6`. Il workspace risultava già allineato al branch; il rail ha restituito
 `already_aligned`, nessun item aggiornato e nessuna divergenza.
+
+**Esito finale 2026-08-26**: dopo la pulizia degli artifact corrotti nel workspace, il run
+`32955618009` ha restituito `outcome: success`, workspace `ws_agentic_feature_wi6` risolto,
+`status: synchronized`, `updated_items: []` e nessun `failure_stage` o `failure_code`. Il rail
+`sync_workspace` e' quindi validato sul work item `6` a partire da uno stato pulito.
 
 **Correzione CRM preflight 2026-08-26**: il run `32955814916` ha fallito durante l'esecuzione
 del notebook `nb_crm_preflight`. Il notebook usava l'ambiente Dataverse errato
