@@ -78,6 +78,13 @@ La classificazione viene scritta nell'evento `session_completed` insieme a exit 
 identificativo sessione, numero di turni e `changed_repository`; non viene registrato l'output
 integrale di Claude.
 
+La sessione Dev Agent usa una allowlist versionata in `DEV_AGENT_ALLOWED_TOOLS`: consente lettura,
+modifica, test, branch, commit, push esclusivamente verso `refs/heads/feature/*` e apertura di
+pull request. Usa `dontAsk`, non `acceptEdits` e non `bypassPermissions`; il comando viene costruito
+da `build_session_command` e verificato dai test. La credenziale necessaria al push e a `gh` non è
+ancora fornita al processo: la consegna autonoma completa richiede un wrapper esterno che inietti
+la credenziale senza renderla leggibile al modello.
+
 `scripts/review_dispatcher.py` è il dispatcher locale del Review Agent. La modalità
 `--once --dry-run` interroga le PR aperte tramite la GitHub App dedicata, ignora le PR in draft e
 gli head SHA già revisionati dall'identità applicativa, e non avvia sessioni né scrive su GitHub.

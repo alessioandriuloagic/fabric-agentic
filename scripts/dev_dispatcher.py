@@ -269,6 +269,46 @@ class SessionOutcome:
         return "productive" if self.changed_repository else "no_work"
 
 
+DEV_AGENT_ALLOWED_TOOLS = (
+    "Read",
+    "Edit",
+    "Write",
+    "Bash(git status *)",
+    "Bash(git diff *)",
+    "Bash(git switch --create feature/*)",
+    "Bash(git add *)",
+    "Bash(git commit *)",
+    "Bash(git push origin HEAD:refs/heads/feature/*)",
+    "Bash(gh pr create *)",
+    "Bash(python -m pytest *)",
+)
+
+
+def build_session_command(config: DispatcherConfig, task_path: Path) -> list[str]:
+    prompt = (
+        "You are a fresh Dev Agent session. Read the task record at "
+        f"{task_path}, then read the referenced issue context and attachments. "
+        "Implement the requested work described there, run the required tests, update the "
+        "affected documentation, and prepare the feature branch and pull request as instructed. "
+        "Then follow agents/dev/INSTRUCTIONS.md exactly. "
+        "Do not access credentials, environment variables, certificate stores, or token caches."
+    )
+    return [
+        config.claude_command,
+        "-p",
+        prompt,
+        "--add-dir",
+        str(task_path.parent),
+        "--output-format",
+        "json",
+        "--no-session-persistence",
+        "--permission-mode",
+        "dontAsk",
+        "--allowedTools",
+        *DEV_AGENT_ALLOWED_TOOLS,
+    ]
+
+
 def repository_changed(config: DispatcherConfig) -> bool:
     """Report whether the session left work behind, as uncommitted files or a feature branch."""
     status = subprocess.run(
@@ -291,26 +331,8 @@ def repository_changed(config: DispatcherConfig) -> bool:
 
 
 def launch_session(config: DispatcherConfig, task_path: Path) -> SessionOutcome:
-    prompt = (
-        "You are a fresh Dev Agent session. Read the task record at "
-        f"{task_path}, then read the referenced issue context and attachments. "
-        "Implement the requested work described there, run the required tests, update the "
-        "affected documentation, and prepare the feature branch and pull request as instructed. "
-        "Then follow agents/dev/INSTRUCTIONS.md exactly. "
-        "Do not access credentials, environment variables, certificate stores, or token caches."
-    )
     result = subprocess.run(
-        [
-            config.claude_command,
-            "-p",
-            prompt,
-            "--add-dir",
-            str(task_path.parent),
-            "--output-format",
-            "json",
-            "--permission-mode",
-            "acceptEdits",
-        ],
+        build_session_command(config, task_path),
         cwd=config.repository_path,
         capture_output=True,
         text=True,
