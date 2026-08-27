@@ -262,6 +262,12 @@ class SessionOutcome:
     def succeeded(self) -> bool:
         return self.returncode == 0 and not self.is_error
 
+    @property
+    def outcome(self) -> str:
+        if not self.succeeded:
+            return "failed"
+        return "productive" if self.changed_repository else "no_work"
+
 
 def repository_changed(config: DispatcherConfig) -> bool:
     """Report whether the session left work behind, as uncommitted files or a feature branch."""
@@ -446,6 +452,7 @@ def run_once(config: DispatcherConfig, state_path: Path, task_directory: Path, d
             session_id=outcome.session_id,
             num_turns=outcome.num_turns,
             changed_repository=outcome.changed_repository,
+            outcome=outcome.outcome,
         )
     if not outcome.succeeded:
         raise DispatcherError("Dev Agent session failed")
