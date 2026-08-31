@@ -21,6 +21,7 @@ si descrive come sono implementate.
 | [09 — Framework gate](09-framework-gate.md) | Verifica B3 e decisione necessaria prima del primo onboarding agentico |
 | [10 — GitHub issue attachments](10-github-issue-attachments.md) | Ricerca ufficiale su allegati GitHub, installation token e permessi |
 | [10 — Retrospettiva S1-04](10-retrospettiva-s1-04.md) | Esito e lezioni della sprint S1-04 |
+| [11 — GitHub Copilot runtime](11-github-copilot-runtime.md) | Ricerca sui runtime Copilot utilizzabili dal dispatcher e verdetto per opzione |
 | [12 — Console e avvio](12-console-e-avvio.md) | Layout canonico degli agenti, verifica di prontezza e console locale in sola lettura |
 
 ## Convenzione sulle affermazioni di piattaforma
