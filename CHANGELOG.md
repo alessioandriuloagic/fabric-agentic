@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Reso il rail del pacchetto tollerante alla prosa che la sessione antepone all'intestazione,
+  allineandolo al publisher del voto di review. Il contratto delle sezioni resta invariato.
+
 - Resa portabile l'espansione dei percorsi di configurazione: `%VAR%` e `$VAR` sono entrambi
   supportati e `%USERPROFILE%` ricade sulla home anche su POSIX. La sintassi Windows restava
   letterale su Linux, quindi la stessa configurazione non era distribuibile.

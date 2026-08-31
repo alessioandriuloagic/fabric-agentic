@@ -56,10 +56,14 @@ def parse_package(text: str) -> WorkPackage:
     if not body:
         raise IssuePackageError("the work package is empty")
 
-    lines = body.splitlines()
-    header = HEADER_LINE.match(lines[0].strip())
-    if header is None:
+    # Sessions tend to prepend prose; the package starts at its header and everything before is dropped.
+    all_lines = body.splitlines()
+    start = next((index for index, line in enumerate(all_lines) if HEADER_LINE.match(line.strip())), None)
+    if start is None:
         raise IssuePackageError("the work package has a malformed header")
+    lines = all_lines[start:]
+    body = "\n".join(lines).strip()
+    header = HEADER_LINE.match(lines[0].strip())
     mode = header.group("mode").strip()
     if mode not in PACKAGE_MODES:
         raise IssuePackageError(f"the work package declares the unknown mode '{mode}'")

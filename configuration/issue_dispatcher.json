@@ -3,8 +3,8 @@
   "github": {
     "owner": "alessioandriuloagic",
     "repository": "fabric-agentic",
-    "app_id": 0,
-    "installation_id": 0,
+    "app_id": 4778509,
+    "installation_id": 157903990,
     "private_key_path": "%USERPROFILE%/.fabric-agentic/issue-agent/github-app-private-key.pem"
   },
   "agent": {

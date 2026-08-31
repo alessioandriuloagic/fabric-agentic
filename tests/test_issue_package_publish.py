@@ -159,6 +159,16 @@ class IssuePackagePublishTests(unittest.TestCase):
     def test_rejects_a_missing_header(self) -> None:
         self.assertRejects(package_text(header="RIEPILOGO LAVORO"), "malformed header")
 
+    def test_accepts_a_package_preceded_by_session_prose(self) -> None:
+        github = FakeGitHub()
+        text = "Both specialists reported. Two procedural notes first.\n\n" + package_text()
+
+        result = self.publish(text, github)
+
+        self.assertEqual(result["status"], "published")
+        self.assertTrue(github.published_body().splitlines()[2].startswith("PACCHETTO DI LAVORO"))
+        self.assertNotIn("Both specialists reported", github.published_body())
+
     def test_rejects_an_unknown_mode(self) -> None:
         self.assertRejects(
             package_text(header="PACCHETTO DI LAVORO - Analisi Libera - CRM"), "unknown mode"

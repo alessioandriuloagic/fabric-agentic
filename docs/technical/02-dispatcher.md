@@ -150,6 +150,14 @@ solo dopo l'approvazione umana, che applica l'etichetta `dev-agent`. Vedi ADR-00
 Finché l'identità dedicata non è provisionata, `configuration/issue_dispatcher.json` contiene
 identificativi a zero e il dispatcher si arresta con `the Issue Agent identity is not provisioned`
 invece di tentare una chiamata con una credenziale inesistente.
+
+**Identità verificata 2026-08-31**: App `fabric-agentic-issue-agent`, installazione limitata al solo
+repository, permessi effettivi `contents:read`, `issues:write`, `metadata:read`. Il login del bot
+viene letto dinamicamente da `/app`, quindi il rail non dipende da un nome scritto a mano.
+
+Il pacchetto può essere preceduto da prosa della sessione: il rail individua l'intestazione e scarta
+quanto la precede, come già fa il publisher del voto di review. Restano rifiutati intestazione
+assente, modalità sconosciuta, sezioni mancanti, duplicate, fuori ordine o vuote.
 ---
 
 ## 3. Trigger del Dev Agent
