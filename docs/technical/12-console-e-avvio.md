@@ -84,23 +84,51 @@ un'azione esplicita da terminale.
 
 ---
 
-## 5. Avvio
+## 5. Profilo di istanza
+
+```
+python -m fabric_agentic validate --config profiles/<cliente>/instance.json
+python -m fabric_agentic render   --config profiles/<cliente>/instance.json --output .generated
+```
+
+`validate` rifiuta il profilo **prima** di qualsiasi chiamata esterna. `render` genera il piano di
+deployment: `plan.json` per il consumo automatico e `README.md` per la lettura umana.
+
+Il render è **riproducibile byte per byte**: nessun timestamp nell'output e newline fissi, così lo
+stesso profilo produce gli stessi file su Windows e su Linux e un diff segnala solo cambiamenti
+reali. Le capacità dei connector nel piano arrivano dal registry, non sono riscritte a mano.
+
+Nel piano entrano solo **riferimenti** a credenziali: il profilo rifiuta valori inline, e qui non
+viene generato alcun segreto.
+
+`doctor --config <profilo>` unisce le due verifiche: identità provisionate **e** profilo valido.
+
+---
+
+## 6. Avvio
 
 Prima verifica, poi avvia. In tre terminali distinti:
 
 ```
 python -m fabric_agentic doctor
-python -m scripts.issue_dispatcher  --config ... --state ... --tasks ... --once
+python -m scripts.issue_dispatcher  --config ... --state ... --tasks ... --poll
 python -m scripts.dev_dispatcher    --config ... --state ... --tasks ... --log ... --poll
-python -m scripts.review_dispatcher --config ... --state ... --tasks ... --once
+python -m scripts.review_dispatcher --config ... --state ... --tasks ... --poll
 ```
 
-Aggiungere `--dry-run` mostra cosa verrebbe raccolto senza avviare alcuna sessione e senza scrivere
-su GitHub: è il modo corretto per la prima prova.
+Aggiungere `--once --dry-run` mostra cosa verrebbe raccolto senza avviare alcuna sessione e senza
+scrivere su GitHub: è il modo corretto per la prima prova. `--cycles N` limita il numero di giri,
+utile per una verifica breve.
 
-**Solo il Dev Agent ha un ciclo continuo** (`--poll`). Issue e Review eseguono un ciclo per
-invocazione: oggi vanno rilanciati o schedulati. È una limitazione nota, non una scelta di design,
-e resta aperta finché i dispatcher non avranno un runtime gestito.
+### Perché il ciclo si ferma dopo tre fallimenti consecutivi
+
+Lo stato anti-loop avanza **solo** quando un ciclo riesce. Un ciclo che fallisce non lo aggiorna,
+quindi un errore persistente rilancerebbe la stessa sessione a ogni intervallo: un ciclo caldo e
+costoso, non un semplice retry. Dopo tre fallimenti consecutivi il loop si arresta con errore. Un
+ciclo riuscito azzera il contatore, così un errore transitorio non ferma l'agente.
+
+La configurazione viene letta una sola volta all'avvio: un file invalido fallisce subito, non dopo
+tre giri.
 
 ---
 

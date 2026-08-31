@@ -21,8 +21,8 @@ ROLES = {
     "dev": "Implementa un ticket approvato e apre la pull request",
     "review": "Rivede una pull request ed emette un voto",
 }
-# Only the dev dispatcher owns a polling loop; the other two run one cycle per invocation.
-CONTINUOUS = {"dev"}
+# Only the dev dispatcher keeps its own log file; the other two report their cycles on stdout.
+LOGGED = {"dev"}
 # Mirrors what each dispatcher's own load_config reads, so a green check cannot precede a red start.
 REQUIRED_SECTIONS = {
     "issue": ("github", "agent"),
@@ -47,7 +47,6 @@ class AgentStatus:
     activity: str
     repository: str
     start_command: str
-    continuous: bool
 
     @property
     def ready(self) -> bool:
@@ -93,7 +92,6 @@ def describe_agent(agent: str, home: Path | None = None) -> AgentStatus:
         activity=_last_cycle(directory),
         repository=_repository(config),
         start_command=_start_command(agent, directory),
-        continuous=agent in CONTINUOUS,
     )
 
 
@@ -178,8 +176,7 @@ def _start_command(agent: str, directory: Path) -> str:
         f"--state {directory / 'state.json'}",
         f"--tasks {directory / 'tasks'}",
     ]
-    if agent in CONTINUOUS:
-        arguments += [f"--log {directory / 'dispatcher.log'}", "--poll"]
-    else:
-        arguments.append("--once")
+    if agent in LOGGED:
+        arguments.append(f"--log {directory / 'dispatcher.log'}")
+    arguments.append("--poll")
     return f"python -m scripts.{agent}_dispatcher " + " ".join(arguments)

@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Completata la CLI del kit: `validate` verifica il profilo di istanza prima di qualsiasi chiamata
+  esterna, `render` genera il piano di deployment (`plan.json` e `README.md`) in modo riproducibile
+  byte per byte, e `doctor --config` unisce identità provisionate e profilo valido. Il pacchetto
+  espone l'entry point `fabric-agentic` quando installato, restando eseguibile come
+  `python -m fabric_agentic` senza installazione.
+
+- I dispatcher Issue e Review hanno ora un ciclo continuo (`--poll`, con `--cycles` per limitarlo),
+  costruito su un loop condiviso in `fabric_agentic/polling.py`. Il loop si ferma dopo tre cicli
+  falliti consecutivi: uno stato anti-loop che non avanza renderebbe il retry una riesecuzione
+  ripetuta della stessa sessione, non un semplice tentativo.
+
 - Aggiunta la superficie di avvio del kit: `python -m fabric_agentic doctor` verifica cosa è
   provisionato su una macchina e stampa il comando di avvio di ogni agente, mentre
   `python -m fabric_agentic console` espone la stessa vista in una pagina locale in sola lettura,

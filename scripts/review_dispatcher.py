@@ -15,6 +15,7 @@ from urllib.request import Request, urlopen
 
 from fabric_agentic.agent_session import session_failure_reason
 from fabric_agentic.config_paths import expand_path, read_json_config
+from fabric_agentic.polling import PollingStopped, run_polling
 from fabric_agentic.credential_broker import credential_broker_environment
 from fabric_agentic.github_app_auth import GITHUB_API, create_installation_token
 from scripts.review_vote_publish import app_bot_login
@@ -294,19 +295,51 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--state", type=Path, required=True)
     parser.add_argument("--tasks", type=Path, required=True)
     parser.add_argument("--once", action="store_true")
+    parser.add_argument("--poll", action="store_true")
+    parser.add_argument("--cycles", type=int)
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args()
+
+
+def report(event: str, **fields) -> None:
+    print(json.dumps({"event": event, **fields}), flush=True)
+
+
+def run_polling_mode(
+    config: ReviewDispatcherConfig,
+    state_path: Path,
+    task_directory: Path,
+    cycles: int | None,
+) -> None:
+    run_polling(
+        cycle=lambda: run_once(config, state_path, task_directory, dry_run=False),
+        poll_seconds=config.poll_seconds,
+        errors=(ReviewDispatcherError, subprocess.CalledProcessError),
+        cycles=cycles,
+        on_cycle=lambda tasks: report(
+            "poll_completed", pull_requests=[task["pull_request"] for task in tasks]
+        ),
+        on_error=lambda error: report("poll_failed", reason=str(error)),
+    )
 
 
 def main() -> int:
     args = parse_args()
     try:
-        if not args.once:
-            raise ReviewDispatcherError("choose --once")
-        tasks = run_once(load_config(args.config), args.state, args.tasks, args.dry_run)
+        if sum([args.once, args.poll]) != 1:
+            raise ReviewDispatcherError("choose exactly one execution mode")
+        if args.poll and args.dry_run:
+            raise ReviewDispatcherError("--poll cannot be combined with --dry-run")
+
+        config = load_config(args.config)
+        if args.poll:
+            run_polling_mode(config, args.state, args.tasks, args.cycles)
+            return 0
+
+        tasks = run_once(config, args.state, args.tasks, args.dry_run)
         if args.dry_run:
             print(json.dumps({"tasks": tasks}))
-    except ReviewDispatcherError as error:
+    except (ReviewDispatcherError, PollingStopped) as error:
         print(json.dumps({"error": str(error)}))
         return 1
     return 0
