@@ -4,12 +4,19 @@ import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import quote
 
 from jsonschema import Draft202012Validator, FormatChecker
 
+from fabric_agentic.connectors import CRM_DATAVERSE, ConnectorError, DatasetRequest, plan_request
+
 
 SCHEMA_PATH = Path("schemas/crm-source-v1.0.json")
+ACCOUNTS = DatasetRequest(
+    name="accounts",
+    primary_key=("accountid",),
+    columns=("accountid", "name", "modifiedon"),
+    watermark_column="modifiedon",
+)
 
 
 class CrmFrameworkError(ValueError):
@@ -54,13 +61,8 @@ def load_configuration(configuration_path: Path, schema_path: Path = SCHEMA_PATH
 
 
 def build_accounts_request(environment_url: str, watermark: datetime | None) -> str:
-    base_url = environment_url.rstrip("/")
-    select = "$select=accountid,name,modifiedon"
-    if watermark is None:
-        return f"{base_url}/api/data/v9.2/accounts?{select}"
-
-    if watermark.tzinfo is None:
-        raise CrmFrameworkError("watermark must include a timezone")
-    watermark_utc = watermark.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    filter_expression = quote(f"modifiedon ge {watermark_utc}", safe="")
-    return f"{base_url}/api/data/v9.2/accounts?{select}&$filter={filter_expression}"
+    try:
+        plan = plan_request(CRM_DATAVERSE.name, {"environment_url": environment_url}, ACCOUNTS, watermark)
+    except ConnectorError as error:
+        raise CrmFrameworkError(str(error)) from error
+    return plan.target
