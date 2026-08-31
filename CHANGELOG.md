@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Completato lo smoke end-to-end dell'Issue Agent sull'intake usa-e-getta #134: discovery,
+  sessione, pacchetto A-G completo e commento pubblicato dall'identità `fabric-agentic-issue-agent`,
+  senza intervento umano. Nessun work item creato e nessun ricandidamento alla riesecuzione.
+
 - Aggiunto il contratto portabile del profilo di istanza: `scripts/instance_profile.py` valida
   progetto, tracker, ambienti, connector, dataset, chiavi, modalità di carico e watermark, rifiuta
   credenziali inline e deriva i nomi workspace dallo slug di progetto. Aggiunto il profilo template
