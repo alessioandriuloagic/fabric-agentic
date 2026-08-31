@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Callable
 from urllib.request import Request, urlopen
 
+from fabric_agentic.config_paths import read_json_config
 from fabric_agentic.credential_broker import credential_broker_environment
 from fabric_agentic.github_app_auth import create_installation_token
 from scripts.tracker import AzureDevOpsTracker, GitHubIssuesTracker, WorkItemTracker
@@ -47,7 +48,7 @@ class DispatcherConfig:
 
 def load_config(config_path: Path) -> DispatcherConfig:
     try:
-        config = json.loads(config_path.read_text(encoding="utf-8"))
+        config = read_json_config(config_path)
         return DispatcherConfig(
             organization=config["azure_devops"]["organization"],
             project=config["azure_devops"]["project"],

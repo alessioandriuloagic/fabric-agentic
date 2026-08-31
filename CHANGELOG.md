@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Aggiunta la superficie di avvio del kit: `python -m fabric_agentic doctor` verifica cosa è
+  provisionato su una macchina e stampa il comando di avvio di ogni agente, mentre
+  `python -m fabric_agentic console` espone la stessa vista in una pagina locale in sola lettura,
+  su loopback, senza avviare processi né leggere materiale crittografico. Il layout canonico degli
+  agenti e i vincoli della console sono documentati in `docs/technical/12-console-e-avvio.md`.
+
 - Aggiunto il registry dei connector in `fabric_agentic/connectors.py`: ogni connector dichiara le
   proprie capacità e `plan_request` risolve la lettura di un dataset senza rami per sorgente. Il
   profilo di istanza deriva da qui l'elenco ammesso e rifiuta un carico incrementale su un connector
@@ -38,6 +44,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   deterministico, identità applicativa dedicata e cancello umano prima del work item.
 
 ### Fixed
+
+- I tre dispatcher leggono la configurazione con un lettore condiviso che accetta il BOM scritto
+  dagli editor e dalle shell Windows: un JSON valido non viene più rifiutato all'avvio. Il Dev Agent
+  segnala inoltre il tracker non dichiarato, che prima ripiegava in silenzio su Azure DevOps.
 
 - I dispatcher Review e Issue preparano ora la clone con la propria identità applicativa invece che
   con le credenziali ambientali dell'utente: `credential.helper` è azzerato e il token arriva solo
