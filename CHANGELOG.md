@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Registrato `ADR-0017`: il runtime target dei tre dispatcher è event-driven su runner
+  self-hosted, non un supervisore locale né un servizio always-on. Issue e Review sono di fatto
+  stateless e migrano per primi; il Dev Agent, con stato locale reale, migra per ultimo. La
+  decisione dipende da un prerequisito bloccante indipendente: un'identità di inferenza non
+  legata a un login personale.
+
+- Registrato come voce aperta (PRD Q-13, `CONTEXT.md`, checklist di onboarding) che Issue, Dev e
+  Review invocano oggi lo stesso Claude Code sotto l'account **personale** dell'operatore, non
+  un'identità aziendale: blocca l'uso del flusso su un cliente reale o l'esecuzione da parte di
+  un collega finché non viene risolto.
+
 - Completata la CLI del kit: `validate` verifica il profilo di istanza prima di qualsiasi chiamata
   esterna, `render` genera il piano di deployment (`plan.json` e `README.md`) in modo riproducibile
   byte per byte, e `doctor --config` unisce identità provisionate e profilo valido. Il pacchetto

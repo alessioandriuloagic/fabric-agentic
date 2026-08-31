@@ -66,13 +66,13 @@ Solo il **Livello 1** richiede presenza umana. Ed è l'unico che si paga una vol
 | Tenant dell'organizzazione Azure DevOps | Coincide con il tenant Fabric delle identità agentiche, oppure la migrazione di directory è completata prima di aggiungere gli SP |
 | Credenziale tecnica per il cliente | SP OIDC, SP con secret oppure utenza di servizio; scelta e autorizzazione sono umane |
 | Nome progetto | Diventa il segmento variabile del naming (`ws_<progetto>_<ambiente>`) |
-| Sottoscrizioni ai runtime degli agenti | Due vendor diversi, uno per ruolo |
+| Identità di inferenza aziendale per Issue, Dev e Review | **Non l'account personale dell'operatore.** Oggi tutti e tre invocano lo stesso Claude Code sotto un login individuale (vedi `CONTEXT.md`, riga "Runtime dei tre agenti", e PRD Q-13): con un cliente reale o un collega serve un seat/licenza aziendale, con budget e policy propri, prima di avviare un solo dispatcher |
 
 ### 3.2 Checklist di bootstrap
 
 **Identità e permessi** *(richiede un amministratore del tenant)*
 
-- [ ] Predisporre le identità del Dev Agent e del Review Agent nell'organizzazione AGIC, distinte dalla credenziale del cliente
+- [ ] Predisporre le identità di Issue, Dev e Review Agent nell'organizzazione AGIC, distinte dalla credenziale del cliente e da qualunque account personale
 - [ ] Associare l'organizzazione Azure DevOps al tenant Fabric che ospita le identità agentiche; per la sandbox è Agic Dev (`1cf6db06-3e00-48b6-a65c-be932526610e`)
 - [ ] Verificare prima che l'Organization Owner sia un membro **attivo** del tenant di destinazione; il portale rifiuta il cambio directory per utenti esterni o non provisionati
 - [ ] Scegliere una sola `ExecutionCredential` per il cliente: SP OIDC, SP con secret o utenza di servizio
@@ -82,6 +82,8 @@ Solo il **Livello 1** richiede presenza umana. Ed è l'unico che si paga una vol
 - [ ] Creare il gruppo di sicurezza degli agenti e attivare gli switch di tenant necessari per le sole diagnosi consentite
 - [ ] Verificare che il Dev Agent non abbia ruoli di scrittura Fabric né accesso diretto alle connessioni dati
 - [ ] Verificare che il Review Agent **non** abbia alcun accesso a Fabric
+- [ ] Verificare che l'Issue Agent **non** abbia alcun accesso a Fabric né possa creare o modificare work item
+- [ ] Provisionare l'identità di inferenza aziendale (Claude Code o equivalente) e verificare che nessun dispatcher usi ancora un login personale
 - [ ] Registrare solo riferimenti al secret store — mai credenziali in file di configurazione
 
 **Esito sandbox Agentic (2026-08-20)**
@@ -104,12 +106,12 @@ Solo il **Livello 1** richiede presenza umana. Ed è l'unico che si paga una vol
 - [ ] Creare il progetto e il repository della soluzione
 - [ ] Creare il repository o lo spazio della knowledge base
 - [ ] Configurare la board con gli stati previsti dal ciclo di vita
-- [ ] Creare il tag riservato al Dev Agent
-- [ ] Assegnare ai due service principal i permessi minimi previsti dal modello
+- [ ] Creare il tag riservato al Dev Agent, e le etichette `issue-agent` / `dev-agent` per l'Issue Agent
+- [ ] Assegnare ai tre service principal i permessi minimi previsti dal modello
 
 **Protezione del ramo principale** *(il passo più importante dell'intero bootstrap)*
 
-- [ ] Vietare il push diretto su `main` a **entrambi** gli agenti
+- [ ] Vietare il push diretto su `main` a **tutti e tre** gli agenti
 - [ ] Richiedere la pull request per ogni modifica
 - [ ] Rendere obbligatoria l'approvazione umana **in aggiunta** a quella del Review Agent
 - [ ] **Verificare la policy provandola**: tentare un push con l'identità dell'agente e
