@@ -145,6 +145,10 @@ Lo stato locale del dispatcher accetta UTF-8 con o senza BOM. Questo consente di
 ispezionare lo state file con PowerShell senza far fallire il ciclo; lo state resta fuori dal repo
 e contiene solo identificativi di work item, commenti e thread già osservati.
 
+La stessa tolleranza vale ora per la **configurazione**: i tre dispatcher la leggono con
+`read_json_config`, condiviso in `fabric_agentic/config_paths.py`. Prima un file scritto da
+PowerShell veniva rifiutato pur essendo JSON valido, perché portava un byte order mark.
+
 `scripts/issue_dispatcher.py` è il dispatcher locale dell'Issue Agent. La coda è una **issue di
 intake** etichettata `issue-agent`, aperta, non ancora approvata e senza pacchetto già pubblicato.
 La sessione produce il pacchetto di lavoro; il rail deterministico `scripts/issue_package_publish.py`
@@ -170,6 +174,23 @@ intervento umano — discovery, preparazione clone, sessione, pacchetto, pubblic
 marcatore e fingerprint. Tutte e sette le sezioni del contratto sono presenti. Una seconda
 esecuzione non ha prodotto candidati. **Nessun work item è stato creato**: il rail ha pubblicato
 solo il commento, come previsto da ADR-0014.
+
+### Ciclo continuo
+
+Tutti e tre i dispatcher espongono `--poll`, con `--cycles N` per limitare una verifica breve. Il
+loop è condiviso: `fabric_agentic/polling.py`, non una copia per agente. Solo il Dev Agent scrive
+un file di log; Issue e Review riportano ogni ciclo su stdout come una riga JSON.
+
+Il loop si **ferma dopo tre cicli falliti consecutivi**. Non è prudenza generica: lo stato
+anti-loop avanza solo quando un ciclo riesce, quindi un errore persistente rilancerebbe la stessa
+sessione a ogni intervallo — un ciclo caldo e costoso, non un retry. Un ciclo riuscito azzera il
+contatore, così un errore transitorio non ferma l'agente. La configurazione viene letta una sola
+volta all'avvio: un file invalido fallisce subito.
+
+**Verifica sul campo 2026-08-31**: Issue dispatcher eseguito con `--poll --cycles 2` contro il
+repository reale; due cicli puliti, exit code `0`. Con una configurazione inesistente l'errore è
+immediato, senza entrare nel loop.
+
 ---
 
 ## 3. Trigger del Dev Agent

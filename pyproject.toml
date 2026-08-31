@@ -6,7 +6,6 @@ build-backend = "setuptools.build_meta"
 name = "fabric-agentic"
 version = "0.1.0"
 description = "Reusable delivery kit for agentic Microsoft Fabric projects"
-readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "Proprietary" }
 dependencies = []
