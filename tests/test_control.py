@@ -107,13 +107,14 @@ class ControlTests(unittest.TestCase):
 
             self.assertIn("tracker", describe_agent("dev", home).missing)
 
-    def test_only_the_dev_agent_runs_continuously(self) -> None:
+    def test_every_agent_starts_a_continuous_loop(self) -> None:
         with TemporaryDirectory() as directory:
             home = Path(directory)
 
-            self.assertTrue(describe_agent("dev", home).continuous)
-            self.assertIn("--poll", describe_agent("dev", home).start_command)
-            self.assertIn("--once", describe_agent("review", home).start_command)
+            for agent in ("issue", "dev", "review"):
+                self.assertIn("--poll", describe_agent(agent, home).start_command)
+            self.assertIn("--log", describe_agent("dev", home).start_command)
+            self.assertNotIn("--log", describe_agent("review", home).start_command)
 
     def test_describes_the_whole_chain(self) -> None:
         with TemporaryDirectory() as directory:

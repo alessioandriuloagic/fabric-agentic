@@ -14,5 +14,8 @@ dependencies = []
 [project.optional-dependencies]
 agents = ["pyjwt>=2.8", "cryptography>=42"]
 
+[project.scripts]
+fabric-agentic = "fabric_agentic.cli:main"
+
 [tool.setuptools]
 packages = ["fabric_agentic"]

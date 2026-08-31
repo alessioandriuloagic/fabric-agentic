@@ -64,7 +64,7 @@ def _render_card(status: AgentStatus) -> str:
         f"<span>{html.escape(check.detail)}</span></li>"
         for check in status.checks
     )
-    cadence = "ciclo continuo" if status.continuous else "un ciclo per invocazione"
+    cadence = "ciclo continuo"
     return f"""<div class="card">
  <div class="head">
   <span class="name">{html.escape(status.agent)}</span>
