@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Completato lo smoke end-to-end del Review Agent sulla PR usa-e-getta #130: discovery,
+  preparazione della clone, sessione, esito A1-F4 e voto `CHANGES_REQUESTED` pubblicato
+  dall'identità `fabric-agentic-review-agent`, senza intervento umano e senza merge.
+
+### Fixed
+
+- Corretti due difetti del dispatcher Review emersi dallo smoke reale: il publisher viene ora
+  invocato come modulo e la clone recupera l'head della PR in `refs/remotes/origin/pr/<n>` restando
+  su `main`, così la sessione legge il diff e la copia di pubblicazione resta allineata.
+
+- Reso ermetico il test della guardia `pre-push`: usa un repository temporaneo e verifica sia il
+  rifiuto del push su `main` sia il push consentito su `feature/*`, senza dipendere dallo stato del
+  repository corrente.
+
 - Integrata l'evidenza S0-07 di lettura API del Dev Agent: workspace, item e istanze job leggibili
   con HTTP `200`; i probe di scrittura restano separati perché quelli invalidi non dimostrano il
   permesso.

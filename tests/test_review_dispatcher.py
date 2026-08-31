@@ -2,12 +2,14 @@ import json
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from scripts.review_dispatcher import (
     ReviewDispatcherConfig,
     ReviewDispatcherError,
     PullRequestCandidate,
+    prepare_review_clone,
+    publisher_command,
     review_candidates,
     run_once,
     session_lock,
@@ -25,8 +27,30 @@ class ReviewDispatcherTests(unittest.TestCase):
             github_private_key_path=Path("review.pem"),
             repository_path=Path("repository"),
             claude_command="claude",
-            publisher_path=Path("scripts/review_vote_publish.py"),
         )
+
+    def test_publisher_is_invoked_as_a_module(self) -> None:
+        command = publisher_command(self.config, {"pull_request": 130}, Path("outcome.txt"))
+
+        self.assertEqual(command[1], "-m")
+        self.assertEqual(command[2], "scripts.review_vote_publish")
+        self.assertIn("--pull-request", command)
+        self.assertEqual(command[command.index("--pull-request") + 1], "130")
+
+    @patch("scripts.review_dispatcher.subprocess.run")
+    def test_clone_is_prepared_with_the_pull_request_head(self, mock_run) -> None:
+        mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+
+        head_ref = prepare_review_clone(self.config, 130)
+
+        commands = [call.args[0] for call in mock_run.call_args_list]
+        self.assertIn(["git", "-C", "repository", "fetch", "--prune", "origin", "main"], commands)
+        self.assertIn(["git", "-C", "repository", "merge", "--ff-only", "origin/main"], commands)
+        self.assertIn(
+            ["git", "-C", "repository", "fetch", "--force", "origin", "pull/130/head:refs/remotes/origin/pr/130"],
+            commands,
+        )
+        self.assertEqual(head_ref, "refs/remotes/origin/pr/130")
 
     @patch("scripts.review_dispatcher.pull_request_reviews")
     @patch("scripts.review_dispatcher.open_pull_requests")
