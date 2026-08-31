@@ -13,7 +13,7 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from fabric_agentic.agent_session import session_failure_reason
-from fabric_agentic.config_paths import expand_path
+from fabric_agentic.config_paths import expand_path, read_json_config
 from fabric_agentic.credential_broker import credential_broker_environment
 from fabric_agentic.github_app_auth import GITHUB_API, create_installation_token
 from scripts.issue_package_publish import IDENTITY_MARKER, app_bot_login
@@ -50,7 +50,7 @@ class IntakeCandidate:
 
 def load_config(config_path: Path) -> IssueDispatcherConfig:
     try:
-        config = json.loads(config_path.read_text(encoding="utf-8"))
+        config = read_json_config(config_path)
         github = config["github"]
         agent = config["agent"]
         app_id = int(github["app_id"])

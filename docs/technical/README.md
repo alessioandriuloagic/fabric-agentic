@@ -20,6 +20,7 @@ si descrive come sono implementate.
 | [08 — KPI baseline](08-kpi-baseline.md) | Misure iniziali del dispatcher e metodo di raccolta dei KPI |
 | [09 — Framework gate](09-framework-gate.md) | Verifica B3 e decisione necessaria prima del primo onboarding agentico |
 | [10 — GitHub issue attachments](10-github-issue-attachments.md) | Ricerca ufficiale su allegati GitHub, installation token e permessi |
+| [12 — Console e avvio](12-console-e-avvio.md) | Layout canonico degli agenti, verifica di prontezza e console locale in sola lettura |
 
 ## Convenzione sulle affermazioni di piattaforma
 

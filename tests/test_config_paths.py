@@ -1,9 +1,10 @@
 import os
 import unittest
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
-from fabric_agentic.config_paths import expand_path
+from fabric_agentic.config_paths import expand_path, read_json_config
 
 
 class ConfigPathsTests(unittest.TestCase):
@@ -34,6 +35,24 @@ class ConfigPathsTests(unittest.TestCase):
             path = expand_path("%FABRIC_AGENTIC_ABSENT%/profile.json")
 
         self.assertIn("%FABRIC_AGENTIC_ABSENT%", str(path))
+
+
+class ConfigReaderTests(unittest.TestCase):
+    def read(self, contents: bytes) -> dict:
+        with TemporaryDirectory() as directory:
+            config_path = Path(directory) / "dispatcher-config.json"
+            config_path.write_bytes(contents)
+            return read_json_config(config_path)
+
+    def test_reads_plain_utf8(self) -> None:
+        self.assertEqual(self.read(b'{"github": {"owner": "example"}}'), {"github": {"owner": "example"}})
+
+    def test_reads_a_configuration_written_with_a_byte_order_mark(self) -> None:
+        self.assertEqual(self.read(b'\xef\xbb\xbf{"github": {"owner": "example"}}'), {"github": {"owner": "example"}})
+
+    def test_rejects_a_document_that_is_not_an_object(self) -> None:
+        with self.assertRaises(ValueError):
+            self.read(b"[]")
 
 
 if __name__ == "__main__":
