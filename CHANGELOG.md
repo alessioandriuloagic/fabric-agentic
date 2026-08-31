@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Aggiunto un `README.md` alla radice: sommario compatto di cosa fa il kit, avvio rapido, struttura
+  del repository, come si porta su un cliente o un collega, stato e limiti noti, con link a ogni
+  documento di approfondimento. `pyproject.toml` torna a dichiararlo come `readme` del pacchetto,
+  ora che il file esiste.
+
 - Registrato `ADR-0017`: il runtime target dei tre dispatcher è event-driven su runner
   self-hosted, non un supervisore locale né un servizio always-on. Issue e Review sono di fatto
   stateless e migrano per primi; il Dev Agent, con stato locale reale, migra per ultimo. La
