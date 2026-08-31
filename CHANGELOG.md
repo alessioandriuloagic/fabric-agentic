@@ -15,6 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Resa portabile la guardia `pre-push` del Dev Agent: l'hook viene reso eseguibile e gli shim sono
+  generati anche in forma POSIX. Senza il permesso di esecuzione Git ignorava l'hook, quindi su
+  Linux il push su `main` non era bloccato.
+
+- Isolate le credenziali di sessione azzerando `credential.helper`: la sessione può autenticarsi
+  solo con il token intermediato dal broker, mai con credenziali ambientali dell'utente. L'askpass
+  risponde ora un valore per invocazione, come previsto dal contratto `GIT_ASKPASS`.
+
 - Corretti due difetti del dispatcher Review emersi dallo smoke reale: il publisher viene ora
   invocato come modulo e la clone recupera l'head della PR in `refs/remotes/origin/pr/<n>` restando
   su `main`, così la sessione legge il diff e la copia di pubblicazione resta allineata.
