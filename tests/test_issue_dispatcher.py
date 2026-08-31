@@ -78,8 +78,10 @@ class IssueDispatcherTests(unittest.TestCase):
         self.assertEqual(command[2], "scripts.issue_package_publish")
         self.assertEqual(command[command.index("--issue") + 1], "12")
 
+    @patch("scripts.issue_dispatcher.create_installation_token")
     @patch("scripts.issue_dispatcher.subprocess.run")
-    def test_clone_is_prepared_on_main(self, mock_run) -> None:
+    def test_clone_is_prepared_on_main(self, mock_run, mock_token) -> None:
+        mock_token.return_value.token = "installation-token"
         mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
 
         prepare_issue_clone(self.config)
@@ -87,6 +89,19 @@ class IssueDispatcherTests(unittest.TestCase):
         commands = [call.args[0] for call in mock_run.call_args_list]
         self.assertIn(["git", "-C", "repository", "fetch", "--prune", "origin", "main"], commands)
         self.assertIn(["git", "-C", "repository", "merge", "--ff-only", "origin/main"], commands)
+
+    @patch("scripts.issue_dispatcher.create_installation_token")
+    @patch("scripts.issue_dispatcher.subprocess.run")
+    def test_clone_preparation_uses_the_brokered_credential(self, mock_run, mock_token) -> None:
+        mock_token.return_value.token = "installation-token"
+        mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+
+        prepare_issue_clone(self.config)
+
+        environment = mock_run.call_args.kwargs["env"]
+        self.assertIn("FABRIC_AGENT_CREDENTIAL_BROKER", environment)
+        self.assertNotIn("GH_TOKEN", environment)
+        self.assertNotIn("installation-token", json.dumps(environment))
 
     def test_lock_rejects_a_second_active_session(self) -> None:
         with TemporaryDirectory() as directory:

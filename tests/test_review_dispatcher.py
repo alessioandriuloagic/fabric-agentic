@@ -37,8 +37,10 @@ class ReviewDispatcherTests(unittest.TestCase):
         self.assertIn("--pull-request", command)
         self.assertEqual(command[command.index("--pull-request") + 1], "130")
 
+    @patch("scripts.review_dispatcher.create_installation_token")
     @patch("scripts.review_dispatcher.subprocess.run")
-    def test_clone_is_prepared_with_the_pull_request_head(self, mock_run) -> None:
+    def test_clone_is_prepared_with_the_pull_request_head(self, mock_run, mock_token) -> None:
+        mock_token.return_value.token = "installation-token"
         mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
 
         head_ref = prepare_review_clone(self.config, 130)
@@ -51,6 +53,19 @@ class ReviewDispatcherTests(unittest.TestCase):
             commands,
         )
         self.assertEqual(head_ref, "refs/remotes/origin/pr/130")
+
+    @patch("scripts.review_dispatcher.create_installation_token")
+    @patch("scripts.review_dispatcher.subprocess.run")
+    def test_clone_preparation_uses_the_brokered_credential(self, mock_run, mock_token) -> None:
+        mock_token.return_value.token = "installation-token"
+        mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+
+        prepare_review_clone(self.config, 130)
+
+        environment = mock_run.call_args.kwargs["env"]
+        self.assertIn("FABRIC_AGENT_CREDENTIAL_BROKER", environment)
+        self.assertNotIn("GH_TOKEN", environment)
+        self.assertNotIn("installation-token", json.dumps(environment))
 
     @patch("scripts.review_dispatcher.pull_request_reviews")
     @patch("scripts.review_dispatcher.open_pull_requests")

@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- I dispatcher Review e Issue preparano ora la clone con la propria identità applicativa invece che
+  con le credenziali ambientali dell'utente: `credential.helper` è azzerato e il token arriva solo
+  dal broker. Il broker è stato estratto in `scripts/credential_broker.py` ed è condiviso dai tre
+  agenti, non duplicato.
+
 - Reso il rail del pacchetto tollerante alla prosa che la sessione antepone all'intestazione,
   allineandolo al publisher del voto di review. Il contratto delle sezioni resta invariato.
 
