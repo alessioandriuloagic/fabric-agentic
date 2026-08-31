@@ -13,6 +13,7 @@ from typing import Iterator
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
+from scripts.config_paths import expand_path
 from scripts.github_app_auth import GITHUB_API, create_installation_token
 from scripts.review_vote_publish import app_bot_login
 
@@ -61,11 +62,6 @@ def load_config(config_path: Path) -> ReviewDispatcherConfig:
         )
     except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as error:
         raise ReviewDispatcherError("review dispatcher configuration is invalid") from error
-
-
-def expand_path(value: str) -> Path:
-    path = Path(os.path.expandvars(value)).expanduser()
-    return path
 
 
 def github_request(method: str, path: str, token: str, body: dict | None = None) -> object:

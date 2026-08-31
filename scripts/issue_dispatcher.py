@@ -12,6 +12,7 @@ from typing import Iterator
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
+from scripts.config_paths import expand_path
 from scripts.github_app_auth import GITHUB_API, create_installation_token
 from scripts.issue_package_publish import IDENTITY_MARKER, app_bot_login
 
@@ -43,10 +44,6 @@ class IntakeCandidate:
     title: str
     body: str
     url: str
-
-
-def expand_path(value: str) -> Path:
-    return Path(os.path.expandvars(value)).expanduser()
 
 
 def load_config(config_path: Path) -> IssueDispatcherConfig:

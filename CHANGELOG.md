@@ -17,6 +17,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Aggiunto `ADR-0014`: innesco dell'Issue Agent tramite issue di intake, pubblicazione via rail
   deterministico, identità applicativa dedicata e cancello umano prima del work item.
 
+### Fixed
+
+- Resa portabile l'espansione dei percorsi di configurazione: `%VAR%` e `$VAR` sono entrambi
+  supportati e `%USERPROFILE%` ricade sulla home anche su POSIX. La sintassi Windows restava
+  letterale su Linux, quindi la stessa configurazione non era distribuibile.
+
+- Estesa la copertura CI ai dispatcher Review e Issue e all'espansione dei percorsi, che prima non
+  erano protetti dal workflow.
+
 - Completato lo smoke end-to-end del Review Agent sulla PR usa-e-getta #130: discovery,
   preparazione della clone, sessione, esito A1-F4 e voto `CHANGES_REQUESTED` pubblicato
   dall'identità `fabric-agentic-review-agent`, senza intervento umano e senza merge.
