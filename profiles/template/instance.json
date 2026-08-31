@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "project": {
+    "slug": "cliente_demo",
+    "display_name": "Cliente Demo"
+  },
+  "tracker": {
+    "type": "github_issues",
+    "owner": "REPLACE_WITH_OWNER",
+    "repository": "REPLACE_WITH_REPOSITORY"
+  },
+  "environments": ["dev"],
+  "sources": [
+    {
+      "name": "crm_demo",
+      "connector": "crm_dataverse",
+      "connection_ref": "REPLACE_WITH_FABRIC_CONNECTION_ID",
+      "datasets": [
+        {
+          "name": "accounts",
+          "primary_key": ["accountid"],
+          "load_mode": "incremental",
+          "watermark_column": "modifiedon"
+        }
+      ]
+    }
+  ],
+  "credentials": [
+    {
+      "name": "execution_credential",
+      "store": "key_vault",
+      "reference": "REPLACE_WITH_SECRET_REFERENCE"
+    }
+  ]
+}

@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Aggiunto il contratto portabile del profilo di istanza: `scripts/instance_profile.py` valida
+  progetto, tracker, ambienti, connector, dataset, chiavi, modalità di carico e watermark, rifiuta
+  credenziali inline e deriva i nomi workspace dallo slug di progetto. Aggiunto il profilo template
+  in `profiles/template/instance.json`. Nessuna dipendenza esterna, così la CI resta senza install.
+
 - Aggiunta la catena deterministica dell'Issue Agent: dispatcher su intake etichettate
   `issue-agent`, istruzioni versionate in `agents/issue/INSTRUCTIONS.md` e rail
   `scripts/issue_package_publish.py` che valida il pacchetto e pubblica un solo commento. Il rail
