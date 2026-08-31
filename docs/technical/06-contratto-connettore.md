@@ -71,6 +71,25 @@ Ogni connettore espone le stesse operazioni, indipendentemente dalla tipologia:
 | **Descrizione dello schema** | Dichiara le colonne prodotte, in modo esplicito |
 | **Diagnostica** | Esegue controlli consentiti su sorgente e restituisce solo evidenze aggregate o mascherate |
 
+### Registry e capacità dichiarate
+
+L'implementazione di questo contratto vive in `fabric_agentic/connectors.py`, che è l'**unico**
+elenco dei connettori ammessi: `instance_profile` lo deriva da lì invece di ridichiararlo.
+
+Ogni connettore dichiara le proprie capacità, e il profilo viene rifiutato in validazione se ne
+chiede una assente:
+
+| Campo | Significato |
+|---|---|
+| `supports_incremental` | La sorgente espone un marcatore di modifica utilizzabile come watermark |
+| `supports_source_count` | La sorgente sa dire quanti record ci si aspetta, per la riconciliazione |
+| `connection_fields` | Campi di connessione obbligatori per questa tipologia |
+
+`plan_request(connector, connection, DatasetRequest, watermark)` risolve la lettura di un dataset
+passando dal registry: è il punto che permette all'orchestrazione di non avere rami per sorgente.
+`DatasetRequest` trasporta solo ciò che il profilo già conosce — nome, chiave primaria, colonne,
+colonna di watermark — senza specificità di connettore. Vedi ADR-0016.
+
 ### Regole
 
 | Regola | Motivo |
@@ -83,7 +102,11 @@ Ogni connettore espone le stesse operazioni, indipendentemente dalla tipologia:
 
 ---
 
-## 4. Connettore REST
+## 4. Connettore REST — progettazione, non registrato
+
+> **Questa tipologia non è nel registry.** `rest` non è un valore ammesso per `connector` in un
+> profilo di istanza: `get_connector` lo rifiuta. La sezione resta come materiale di progettazione
+> per una fase successiva, non come contratto disponibile.
 
 | Aspetto | Trattamento |
 |---|---|
@@ -136,7 +159,7 @@ Bronze o audit. Vedi ADR-0012.
 | Percorso | Dichiarato in configurazione |
 | Formato | Dichiarato esplicitamente (CSV, Parquet) |
 | Schema | **Dichiarato, non inferito** |
-| Incrementalità | Per data del file o per colonna watermark |
+| Incrementalità | **Assente**: `supports_incremental = False`. Un file depositato non espone un marcatore di modifica lato sorgente, quindi è ammesso il solo carico completo. Un profilo che chiede un carico incrementale su `file` viene rifiutato in validazione (ADR-0016) |
 | Conteggio | Numero di righe lette |
 
 ### Regola sui nomi dei file
@@ -160,7 +183,7 @@ architetturale.
 |---|---|
 | 1 | Decisione registrata come ADR |
 | 2 | Implementazione dell'interfaccia completa |
-| 3 | Registrazione nel framework |
+| 3 | Registrazione in `fabric_agentic/connectors.py`: capacità dichiarate e planner associato |
 | 4 | Documentazione dei parametri specifici |
 | 5 | Onboarding di un dataset di prova |
 | 6 | **Verifica che l'orchestrazione non sia stata toccata** |

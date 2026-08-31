@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Completata la CLI del kit: `validate` verifica il profilo di istanza prima di qualsiasi chiamata
+  esterna, `render` genera il piano di deployment (`plan.json` e `README.md`) in modo riproducibile
+  byte per byte, e `doctor --config` unisce identità provisionate e profilo valido. Il pacchetto
+  espone l'entry point `fabric-agentic` quando installato, restando eseguibile come
+  `python -m fabric_agentic` senza installazione.
+
+- I dispatcher Issue e Review hanno ora un ciclo continuo (`--poll`, con `--cycles` per limitarlo),
+  costruito su un loop condiviso in `fabric_agentic/polling.py`. Il loop si ferma dopo tre cicli
+  falliti consecutivi: uno stato anti-loop che non avanza renderebbe il retry una riesecuzione
+  ripetuta della stessa sessione, non un semplice tentativo.
+
+- Aggiunta la superficie di avvio del kit: `python -m fabric_agentic doctor` verifica cosa è
+  provisionato su una macchina e stampa il comando di avvio di ogni agente, mentre
+  `python -m fabric_agentic console` espone la stessa vista in una pagina locale in sola lettura,
+  su loopback, senza avviare processi né leggere materiale crittografico. Il layout canonico degli
+  agenti e i vincoli della console sono documentati in `docs/technical/12-console-e-avvio.md`.
+
 - Aggiunto il registry dei connector in `fabric_agentic/connectors.py`: ogni connector dichiara le
   proprie capacità e `plan_request` risolve la lettura di un dataset senza rami per sorgente. Il
   profilo di istanza deriva da qui l'elenco ammesso e rifiuta un carico incrementale su un connector
@@ -24,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sessione, pacchetto A-G completo e commento pubblicato dall'identità `fabric-agentic-issue-agent`,
   senza intervento umano. Nessun work item creato e nessun ricandidamento alla riesecuzione.
 
-- Aggiunto il contratto portabile del profilo di istanza: `scripts/instance_profile.py` valida
+- Aggiunto il contratto portabile del profilo di istanza: `fabric_agentic/instance_profile.py` valida
   progetto, tracker, ambienti, connector, dataset, chiavi, modalità di carico e watermark, rifiuta
   credenziali inline e deriva i nomi workspace dallo slug di progetto. Aggiunto il profilo template
   in `profiles/template/instance.json`. Nessuna dipendenza esterna, così la CI resta senza install.
@@ -39,9 +56,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Allineata la documentazione al codice dopo l'estrazione del core e l'arrivo di registry, CLI e
+  ciclo continuo: percorsi dei moduli spostati, albero del repository, connettore `file` a solo
+  carico completo, connettore REST marcato come non registrato, checklist di onboarding a tre
+  agenti e indice dei documenti tecnici. `pyproject.toml` non dichiara più un `README.md`
+  inesistente, che faceva fallire la build del pacchetto.
+
+- I tre dispatcher leggono la configurazione con un lettore condiviso che accetta il BOM scritto
+  dagli editor e dalle shell Windows: un JSON valido non viene più rifiutato all'avvio. Il Dev Agent
+  segnala inoltre il tracker non dichiarato, che prima ripiegava in silenzio su Azure DevOps.
+
 - I dispatcher Review e Issue preparano ora la clone con la propria identità applicativa invece che
   con le credenziali ambientali dell'utente: `credential.helper` è azzerato e il token arriva solo
-  dal broker. Il broker è stato estratto in `scripts/credential_broker.py` ed è condiviso dai tre
+  dal broker. Il broker è stato estratto in `fabric_agentic/credential_broker.py` ed è condiviso dai tre
   agenti, non duplicato.
 
 - Reso il rail del pacchetto tollerante alla prosa che la sessione antepone all'intestazione,

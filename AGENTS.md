@@ -142,6 +142,22 @@ discipline used for release version bumps above.
 
 <!-- Project-specific notes: add anything unique to this project below this line, inside the markers, and it will survive future /init-dai-project re-runs only if you keep it between them. -->
 
+## Confine fra core riutilizzabile e perimetro operativo
+
+`fabric_agentic/` è il core riutilizzabile: nessuna dipendenza esterna, nessun valore di tenant o
+cliente. `scripts/` è il perimetro operativo — dispatcher, rail, publisher — e **può** importare il
+core. Il core **non importa mai** `scripts`, e `tests/test_package.py` lo verifica: una violazione
+fa fallire la CI, non una review. La motivazione è in `docs/adr/ADR-0015`.
+
+Regole pratiche che ne discendono:
+
+- La CI esegue i test **senza alcuno step di installazione**: ciò che è coperto dal workflow deve
+  restare eseguibile con la sola libreria standard.
+- Gli entry point si invocano come moduli (`python -m scripts.<nome>`, `python -m fabric_agentic`),
+  mai per percorso di file.
+- L'elenco dei connettori ammessi vive solo in `fabric_agentic/connectors.py`: la documentazione lo
+  descrive, non lo ridichiara (`docs/adr/ADR-0016`).
+
 ## Review Agent
 
 The workspace custom agent `.github/agents/review-agent.agent.md` is the executable review

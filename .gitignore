@@ -32,6 +32,9 @@ coverage/
 .dispatcher-state/
 .vscode/
 
+# Rendered instance plans, always regenerable from the profile
+.generated/
+
 # Operating system files
 .DS_Store
 Thumbs.db

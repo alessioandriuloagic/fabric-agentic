@@ -244,10 +244,14 @@ interno prima del prossimo run. Nessun secret viene versionato nel repository.
 
 ### 7.1 Connettori in fase 1
 
-| # | Tipologia | Sorgente concreta | Note |
-|---|---|---|---|
-| 1 | **CRM / Dataverse** | **CRM demo Customer Insight Journeys** — entità `account` | Fabric Connection `CommonDataService`; chiave `accountid`, watermark `modifiedon` |
-| 2 | **File** | **Anagrafica città sintetica** (~1.000 righe) CSV/Parquet su OneLake Files | Generata da noi, con coordinate geografiche |
+> L'elenco autorevole dei connettori ammessi è il registry `fabric_agentic/connectors.py`, da cui
+> il profilo di istanza deriva la validazione. Questa tabella è descrittiva: se diverge, vince il
+> registry.
+
+| # | Tipologia | Chiave nel registry | Sorgente concreta | Note |
+|---|---|---|---|---|
+| 1 | **CRM / Dataverse** | `crm_dataverse` | **CRM demo Customer Insight Journeys** — entità `account` | Fabric Connection `CommonDataService`; chiave `accountid`, watermark `modifiedon`. Lettura incrementale supportata |
+| 2 | **File** | `file` | **Anagrafica città sintetica** (~1.000 righe) CSV/Parquet su OneLake Files | Generata da noi, con coordinate geografiche. **Solo carico completo**: un file depositato non espone marcatori di modifica (ADR-0016) |
 
 Il dataset CRM è il tracer iniziale con dati demo/sintetici. L'anagrafica città File resta il
 secondo connettore e la prova dell'astrazione; le join Silver sono un'evoluzione successiva.
@@ -265,6 +269,8 @@ Altro Lakehouse Fabric (shortcut) · Database / DWH · CRM (Dataverse) · ShareP
   connettore.
 - Ogni dataset dichiara esplicitamente in configurazione la modalità di carico
   (`full` o `incremental`) e, se incrementale, la watermark column.
+- Una combinazione impossibile — carico incrementale su un connettore che non lo supporta — viene
+  **rifiutata in validazione**, non scoperta a metà carico.
 
 > **Il secondo connettore è il vero test dell'architettura.** Con una sola sorgente qualsiasi
 > framework sembra generico. Se aggiungere il connettore File richiede modifiche
@@ -286,6 +292,7 @@ Altro Lakehouse Fabric (shortcut) · Database / DWH · CRM (Dataverse) · ShareP
 | Review Agent app ID | `a6d3e2af-92e5-447a-bb1e-9a466e1bdaed` (`fabric-agentic-review-agent`) |
 | Review Agent GitHub App | `fabric-agentic-review-agent`, App ID `4735692`, Installation ID `156937328`; distinta dall'App del Dev Agent e installata sul solo repository previsto. Permessi verificati via API: `contents:read`, `issues:read`, `metadata:read`, `pull_requests:write`. La private key PEM è in `%USERPROFILE%\.fabric-agentic\review-agent\github-app-private-key.pem`, directory ACL limitata all'owner |
 | Issue Agent GitHub App | `fabric-agentic-issue-agent`, App ID `4778509`, Installation ID `157903990`; distinta da quelle di Dev e Review e installata sul solo repository previsto. Permessi verificati via API il 2026-08-31: `contents:read`, `issues:write`, `metadata:read`. La private key PEM è in `%USERPROFILE%\.fabric-agentic\issue-agent\github-app-private-key.pem`, directory ACL limitata all'owner. `issues:write` è il minimo che GitHub consente per commentare: il divieto di creare work item è imposto dal rail, non dai permessi |
+| Layout locale degli agenti | Ogni agente vive in `~/.fabric-agentic/<agente>-agent/` con `dispatcher-config.json`, `github-app-private-key.pem`, `repository/`, `state.json` e `tasks/`. `python -m fabric_agentic doctor` verifica il layout e stampa il comando di avvio; vedi `docs/technical/12-console-e-avvio.md` |
 | Deploy app ID | `33e53b67-3872-4bc0-8d20-ed76a3c85ae7` (`fabric-agentic-deploy`); service principal senza secret, federated credential e Configured Connection Git predisposte. Assegnazione feature workspace verificata con il pattern IP: Azure RBAC `Contributor` sulla capacity e Object ID `db9d4adb-db6a-4238-8e75-c69d21b1b37e` in `properties.administration.members` |
 | Workspace DEV | `ws_agentic_dev` — `abb3a689-6a8a-4a98-88da-b3f7c6de05c5`; ricreato il 2026-08-21 e assegnato a `fabricalessiodev` |
 | Workspace TEST | `ws_agentic_test` — `782a3048-e181-4138-bb2c-e87f4c75f013`; creato il 2026-08-24 e assegnato alla capacity `fabricalessiodev` (`8626d394-40c1-4872-a1f1-25b8cfcbf6ad`), SKU F2 Active. Semantic Model `CRM Demo` creato: `c405057b-6ebe-4043-8126-a23d035fab33`; sviluppo Report PBIR sospeso come TODO futuro per errore renderer live |

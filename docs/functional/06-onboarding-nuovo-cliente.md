@@ -125,12 +125,20 @@ Solo il **Livello 1** richiede presenza umana. Ed è l'unico che si paga una vol
 - [ ] Portare la documentazione funzionale nel nuovo progetto
 - [ ] Generare la wiki dalla documentazione versionata
 
+**Profilo di istanza**
+
+- [ ] Partire da `profiles/template/instance.json` e dichiarare progetto, tracker, ambienti e sorgenti
+- [ ] `python -m fabric_agentic validate --config <profilo>` senza errori
+- [ ] `python -m fabric_agentic render --config <profilo> --output .generated` e rilettura del piano
+
 **Ambiente locale dell'operatore**
 
-- [ ] Installare i due runtime agentici in ambienti di esecuzione separati
-- [ ] Configurare i due dispatcher con i riferimenti al progetto
+- [ ] Installare i tre runtime agentici in ambienti di esecuzione separati
+- [ ] Predisporre il layout canonico per Issue, Dev e Review sotto `~/.fabric-agentic/<agente>-agent/`
+      (vedi `../technical/12-console-e-avvio.md`)
+- [ ] `python -m fabric_agentic doctor` verde su tutti e tre
 - [ ] Verificare che ciascun dispatcher si autentichi con **il proprio** service principal
-- [ ] Avviare i dispatcher e confermare il polling a vuoto, senza consumo di token
+- [ ] Avviare i dispatcher con `--once --dry-run` e confermare il polling a vuoto, senza consumo di token
 
 ### 3.3 Cosa è asset e cosa è specifico del cliente
 

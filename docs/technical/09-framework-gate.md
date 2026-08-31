@@ -52,7 +52,8 @@ Il primo slice di S1-00 ha creato nel repository Agentic:
 
 - `PROVENANCE.md` con commit e divergenze dalla fonte;
 - `configuration/crm_demo.json` e `schemas/crm-source-v1.0.json`;
-- validator fail-fast e builder OData `modifiedon` in `scripts/crm_framework.py`;
+- validator fail-fast in `scripts/crm_framework.py`, con il builder OData `modifiedon` delegato a
+  `plan_request` in `fabric_agentic/connectors.py`, unica implementazione dell'URL Dataverse;
 - inventario `docs/sources/crm_demo.md`;
 - collocazioni versionate per futuri notebook e pipeline in `fabric/`;
 - notebook FabricGitSource `nb_crm_preflight`, validato localmente senza esecuzione CRM.
