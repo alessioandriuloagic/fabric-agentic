@@ -13,6 +13,7 @@ from typing import Iterator
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
+from scripts.agent_session import session_failure_reason
 from scripts.config_paths import expand_path
 from scripts.github_app_auth import GITHUB_API, create_installation_token
 from scripts.review_vote_publish import app_bot_login
@@ -236,12 +237,18 @@ def launch_review_session(config: ReviewDispatcherConfig, task_path: Path) -> st
         check=False,
     )
     if result.returncode != 0 or not result.stdout.strip():
-        raise ReviewDispatcherError("Review Agent session failed")
+        raise ReviewDispatcherError(
+            f"Review Agent session failed ({session_failure_reason(result.returncode, result.stdout)})"
+        )
     try:
         payload = json.loads(result.stdout)
-        outcome = payload.get("result")
     except (TypeError, ValueError, json.JSONDecodeError) as error:
         raise ReviewDispatcherError("Review Agent session returned invalid output") from error
+    if payload.get("is_error"):
+        raise ReviewDispatcherError(
+            f"Review Agent session failed ({session_failure_reason(result.returncode, result.stdout)})"
+        )
+    outcome = payload.get("result")
     if not isinstance(outcome, str) or not outcome.strip():
         raise ReviewDispatcherError("Review Agent session returned no outcome")
     return outcome
