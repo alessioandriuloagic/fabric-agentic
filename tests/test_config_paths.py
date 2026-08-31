@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from scripts.config_paths import expand_path
+from fabric_agentic.config_paths import expand_path
 
 
 class ConfigPathsTests(unittest.TestCase):

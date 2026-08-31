@@ -94,7 +94,7 @@ hook senza permesso di esecuzione; gli shim di `gh` e dell'askpass sono generati
 sessione può autenticarsi solo con il token intermediato dal broker e non con credenziali
 ambientali dell'utente.
 
-Il broker vive in `scripts/credential_broker.py` ed è **condiviso dai tre agenti**, non duplicato.
+Il broker vive in `fabric_agentic/credential_broker.py` ed è **condiviso dai tre agenti**, non duplicato.
 Anche Review e Issue preparano la clone al suo interno, con il token della propria GitHub App: le
 operazioni Git sono quindi attribuite all'identità dell'agente e i dispatcher non dipendono dalle
 credenziali della macchina.

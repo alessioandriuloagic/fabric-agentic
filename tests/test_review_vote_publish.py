@@ -115,7 +115,7 @@ class ReviewVotePublishTests(unittest.TestCase):
             outcome_path.write_text(text, encoding="utf-8")
             key_path = Path(directory) / "review-agent.pem"
             key_path.write_text(PRIVATE_KEY, encoding="utf-8")
-            with patch("scripts.github_app_auth.jwt.encode", return_value=APP_JWT):
+            with patch("fabric_agentic.github_app_auth.jwt.encode", return_value=APP_JWT):
                 return publish_review_vote(
                     outcome_path=outcome_path,
                     owner="o",
@@ -308,7 +308,7 @@ class ReviewVotePublishTests(unittest.TestCase):
                 "--key-path", str(key_path),
             ]
             printed = StringIO()
-            with patch("sys.argv", argv), patch("scripts.github_app_auth.jwt.encode", return_value=APP_JWT):
+            with patch("sys.argv", argv), patch("fabric_agentic.github_app_auth.jwt.encode", return_value=APP_JWT):
                 with redirect_stdout(printed):
                     exit_code = main(opener=github, git=FakeGit())
 
@@ -340,7 +340,7 @@ class ReviewVotePublishTests(unittest.TestCase):
                 "--key-path", str(key_path),
             ]
             printed = StringIO()
-            with patch("sys.argv", argv), patch("scripts.github_app_auth.jwt.encode", return_value=APP_JWT):
+            with patch("sys.argv", argv), patch("fabric_agentic.github_app_auth.jwt.encode", return_value=APP_JWT):
                 with redirect_stdout(printed):
                     exit_code = main(opener=github, git=FakeGit())
 

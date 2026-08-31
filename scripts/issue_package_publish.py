@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Callable
 from urllib.request import Request, urlopen
 
-from scripts.github_app_auth import GITHUB_API, create_app_jwt, create_installation_token, load_private_key
+from fabric_agentic.github_app_auth import GITHUB_API, create_app_jwt, create_installation_token, load_private_key
 
 
 IDENTITY_MARKER = "[fabric-agentic-issue-agent]"

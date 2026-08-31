@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Estratto il core riutilizzabile nel pacchetto `fabric_agentic/`, con `pyproject.toml` e versione
+  dichiarata. `scripts/` resta il perimetro operativo e un test verifica che il core non importi
+  mai gli script. Aggiunto `ADR-0015` sulla scelta del pacchetto alla radice invece di `src/`,
+  motivata dall'esecuzione immediata dopo il clone e dalla CI senza step di installazione.
+
 - Completato lo smoke end-to-end dell'Issue Agent sull'intake usa-e-getta #134: discovery,
   sessione, pacchetto A-G completo e commento pubblicato dall'identità `fabric-agentic-issue-agent`,
   senza intervento umano. Nessun work item creato e nessun ricandidamento alla riesecuzione.

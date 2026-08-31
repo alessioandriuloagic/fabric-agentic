@@ -4,7 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
-from scripts.github_app_auth import (
+from fabric_agentic.github_app_auth import (
     GitHubAppAuthError,
     create_app_jwt,
     create_installation_token,
@@ -35,14 +35,14 @@ class GitHubAppAuthTests(unittest.TestCase):
             with self.assertRaisesRegex(GitHubAppAuthError, "too small"):
                 load_private_key(key_path)
 
-    @patch("scripts.github_app_auth.jwt.encode", return_value="app-jwt")
+    @patch("fabric_agentic.github_app_auth.jwt.encode", return_value="app-jwt")
     def test_creates_a_short_lived_app_jwt(self, encode_mock) -> None:
         self.assertEqual(create_app_jwt("4672750", "private-key", now=1000), "app-jwt")
         claims = encode_mock.call_args.args[0]
         self.assertEqual(claims, {"iat": 940, "exp": 1540, "iss": "4672750"})
 
-    @patch("scripts.github_app_auth.load_private_key", return_value="private-key")
-    @patch("scripts.github_app_auth.create_app_jwt", return_value="app-jwt")
+    @patch("fabric_agentic.github_app_auth.load_private_key", return_value="private-key")
+    @patch("fabric_agentic.github_app_auth.create_app_jwt", return_value="app-jwt")
     def test_returns_token_without_printing_it(self, _, __) -> None:
         requests = []
 

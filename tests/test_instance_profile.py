@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from scripts.instance_profile import (
+from fabric_agentic.instance_profile import (
     InstanceProfileError,
     feature_workspace_name,
     load_profile,

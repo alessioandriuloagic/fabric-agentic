@@ -17,8 +17,8 @@ from pathlib import Path
 from typing import Callable
 from urllib.request import Request, urlopen
 
-from scripts.credential_broker import credential_broker_environment
-from scripts.github_app_auth import create_installation_token
+from fabric_agentic.credential_broker import credential_broker_environment
+from fabric_agentic.github_app_auth import create_installation_token
 from scripts.tracker import AzureDevOpsTracker, GitHubIssuesTracker, WorkItemTracker
 
 
