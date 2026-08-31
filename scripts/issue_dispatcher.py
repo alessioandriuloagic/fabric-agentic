@@ -12,6 +12,7 @@ from typing import Iterator
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
+from scripts.agent_session import session_failure_reason
 from scripts.config_paths import expand_path
 from scripts.github_app_auth import GITHUB_API, create_installation_token
 from scripts.issue_package_publish import IDENTITY_MARKER, app_bot_login
@@ -233,11 +234,18 @@ def launch_issue_session(config: IssueDispatcherConfig, task_path: Path) -> str:
         check=False,
     )
     if result.returncode != 0 or not result.stdout.strip():
-        raise IssueDispatcherError("Issue Agent session failed")
+        raise IssueDispatcherError(
+            f"Issue Agent session failed ({session_failure_reason(result.returncode, result.stdout)})"
+        )
     try:
-        package = json.loads(result.stdout).get("result")
+        payload = json.loads(result.stdout)
     except (TypeError, ValueError, json.JSONDecodeError) as error:
         raise IssueDispatcherError("Issue Agent session returned invalid output") from error
+    if payload.get("is_error"):
+        raise IssueDispatcherError(
+            f"Issue Agent session failed ({session_failure_reason(result.returncode, result.stdout)})"
+        )
+    package = payload.get("result")
     if not isinstance(package, str) or not package.strip():
         raise IssueDispatcherError("Issue Agent session returned no work package")
     return package
