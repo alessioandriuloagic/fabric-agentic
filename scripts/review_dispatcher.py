@@ -15,6 +15,7 @@ from urllib.request import Request, urlopen
 
 from scripts.agent_session import session_failure_reason
 from scripts.config_paths import expand_path
+from scripts.credential_broker import credential_broker_environment
 from scripts.github_app_auth import GITHUB_API, create_installation_token
 from scripts.review_vote_publish import app_bot_login
 
@@ -153,11 +154,12 @@ def task_record(config: ReviewDispatcherConfig, candidate: PullRequestCandidate)
     }
 
 
-def run_git(config: ReviewDispatcherConfig, arguments: list[str]) -> None:
+def run_git(config: ReviewDispatcherConfig, arguments: list[str], environment: dict[str, str]) -> None:
     result = subprocess.run(
         ["git", "-C", str(config.repository_path), *arguments],
         capture_output=True,
         text=True,
+        env=environment,
         check=False,
     )
     if result.returncode != 0:
@@ -167,10 +169,16 @@ def run_git(config: ReviewDispatcherConfig, arguments: list[str]) -> None:
 def prepare_review_clone(config: ReviewDispatcherConfig, pull_request: int) -> str:
     """Fetch the pull request head without leaving main, so the publisher copy stays aligned."""
     head_ref = f"refs/remotes/origin/pr/{pull_request}"
-    run_git(config, ["fetch", "--prune", "origin", "main"])
-    run_git(config, ["checkout", "main"])
-    run_git(config, ["merge", "--ff-only", "origin/main"])
-    run_git(config, ["fetch", "--force", "origin", f"pull/{pull_request}/head:{head_ref}"])
+    token = create_installation_token(
+        config.github_app_id,
+        config.github_installation_id,
+        config.github_private_key_path,
+    ).token
+    with credential_broker_environment(token) as environment:
+        run_git(config, ["fetch", "--prune", "origin", "main"], environment)
+        run_git(config, ["checkout", "main"], environment)
+        run_git(config, ["merge", "--ff-only", "origin/main"], environment)
+        run_git(config, ["fetch", "--force", "origin", f"pull/{pull_request}/head:{head_ref}"], environment)
     return head_ref
 
 

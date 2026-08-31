@@ -14,6 +14,7 @@ from urllib.request import Request, urlopen
 
 from scripts.agent_session import session_failure_reason
 from scripts.config_paths import expand_path
+from scripts.credential_broker import credential_broker_environment
 from scripts.github_app_auth import GITHUB_API, create_installation_token
 from scripts.issue_package_publish import IDENTITY_MARKER, app_bot_login
 
@@ -174,11 +175,12 @@ def save_state(state_path: Path, state: dict[str, list[int]]) -> None:
     temporary_path.replace(state_path)
 
 
-def run_git(config: IssueDispatcherConfig, arguments: list[str]) -> None:
+def run_git(config: IssueDispatcherConfig, arguments: list[str], environment: dict[str, str]) -> None:
     result = subprocess.run(
         ["git", "-C", str(config.repository_path), *arguments],
         capture_output=True,
         text=True,
+        env=environment,
         check=False,
     )
     if result.returncode != 0:
@@ -186,9 +188,15 @@ def run_git(config: IssueDispatcherConfig, arguments: list[str]) -> None:
 
 
 def prepare_issue_clone(config: IssueDispatcherConfig) -> None:
-    run_git(config, ["fetch", "--prune", "origin", "main"])
-    run_git(config, ["checkout", "main"])
-    run_git(config, ["merge", "--ff-only", "origin/main"])
+    token = create_installation_token(
+        config.github_app_id,
+        config.github_installation_id,
+        config.github_private_key_path,
+    ).token
+    with credential_broker_environment(token) as environment:
+        run_git(config, ["fetch", "--prune", "origin", "main"], environment)
+        run_git(config, ["checkout", "main"], environment)
+        run_git(config, ["merge", "--ff-only", "origin/main"], environment)
 
 
 def discover_once(config: IssueDispatcherConfig) -> list[dict]:
