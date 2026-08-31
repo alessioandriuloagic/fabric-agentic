@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Aggiunto il registry dei connector in `fabric_agentic/connectors.py`: ogni connector dichiara le
+  proprie capacità e `plan_request` risolve la lettura di un dataset senza rami per sorgente. Il
+  profilo di istanza deriva da qui l'elenco ammesso e rifiuta un carico incrementale su un connector
+  che non lo supporta. `ADR-0016` registra la decisione, incluso `file` come connector supportato
+  ma a solo carico completo.
+
 - Estratto il core riutilizzabile nel pacchetto `fabric_agentic/`, con `pyproject.toml` e versione
   dichiarata. `scripts/` resta il perimetro operativo e un test verifica che il core non importi
   mai gli script. Aggiunto `ADR-0015` sulla scelta del pacchetto alla radice invece di `src/`,

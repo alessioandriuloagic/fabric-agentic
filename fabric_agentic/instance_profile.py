@@ -5,10 +5,11 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+from fabric_agentic.connectors import connector_names, supports_load_mode
+
 
 SUPPORTED_SCHEMA_VERSIONS = ("1.0",)
 SUPPORTED_TRACKERS = ("github_issues", "azure_devops")
-SUPPORTED_CONNECTORS = ("crm_dataverse", "file")
 LOAD_MODES = ("full", "incremental")
 
 SLUG = re.compile(r"^[a-z][a-z0-9_]*$")
@@ -100,7 +101,7 @@ def parse_sources(sources: list) -> tuple[Source, ...]:
     seen_datasets: set[str] = set()
     for source in sources:
         connector = source.get("connector")
-        if connector not in SUPPORTED_CONNECTORS:
+        if connector not in connector_names():
             raise InstanceProfileError(f"unknown connector '{connector}'")
         if not source.get("connection_ref"):
             raise InstanceProfileError(f"the source '{source.get('name')}' must reference a connection")
@@ -109,13 +110,13 @@ def parse_sources(sources: list) -> tuple[Source, ...]:
                 name=str(source.get("name")),
                 connector=connector,
                 connection_ref=str(source["connection_ref"]),
-                datasets=parse_datasets(source.get("datasets") or [], seen_datasets),
+                datasets=parse_datasets(source.get("datasets") or [], connector, seen_datasets),
             )
         )
     return tuple(parsed)
 
 
-def parse_datasets(datasets: list, seen: set[str]) -> tuple[Dataset, ...]:
+def parse_datasets(datasets: list, connector: str, seen: set[str]) -> tuple[Dataset, ...]:
     parsed = []
     for dataset in datasets:
         name = str(dataset.get("name"))
@@ -130,6 +131,8 @@ def parse_datasets(datasets: list, seen: set[str]) -> tuple[Dataset, ...]:
         load_mode = dataset.get("load_mode")
         if load_mode not in LOAD_MODES:
             raise InstanceProfileError(f"the dataset '{name}' declares the unknown load mode '{load_mode}'")
+        if not supports_load_mode(connector, load_mode):
+            raise InstanceProfileError(f"the connector '{connector}' cannot read the dataset '{name}' incrementally")
 
         watermark = dataset.get("watermark_column")
         if load_mode == "incremental" and not watermark:

@@ -84,6 +84,11 @@ class InstanceProfileTests(unittest.TestCase):
         document["sources"][0]["connector"] = "carrier_pigeon"
         self.assertRejects(document, "unknown connector")
 
+    def test_rejects_an_incremental_dataset_the_connector_cannot_read(self) -> None:
+        document = profile_document()
+        document["sources"][0]["connector"] = "file"
+        self.assertRejects(document, "cannot read the dataset 'accounts' incrementally")
+
     def test_rejects_a_dataset_without_a_primary_key(self) -> None:
         document = profile_document()
         document["sources"][0]["datasets"][0]["primary_key"] = []
