@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import subprocess
+import sys
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -14,6 +15,9 @@ from urllib.request import Request, urlopen
 
 from scripts.github_app_auth import GITHUB_API, create_installation_token
 from scripts.review_vote_publish import app_bot_login
+
+
+PUBLISHER_MODULE = "scripts.review_vote_publish"
 
 
 class ReviewDispatcherError(Exception):
@@ -29,7 +33,6 @@ class ReviewDispatcherConfig:
     github_private_key_path: Path
     repository_path: Path
     claude_command: str
-    publisher_path: Path
     poll_seconds: int = 30
 
 
@@ -54,7 +57,6 @@ def load_config(config_path: Path) -> ReviewDispatcherConfig:
             github_private_key_path=expand_path(github["private_key_path"]),
             repository_path=expand_path(agent["repository_path"]),
             claude_command=agent["claude_command"],
-            publisher_path=expand_path(agent["publisher_path"]),
             poll_seconds=int(agent.get("poll_seconds", 30)),
         )
     except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as error:
@@ -154,6 +156,42 @@ def task_record(config: ReviewDispatcherConfig, candidate: PullRequestCandidate)
     }
 
 
+def run_git(config: ReviewDispatcherConfig, arguments: list[str]) -> None:
+    result = subprocess.run(
+        ["git", "-C", str(config.repository_path), *arguments],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise ReviewDispatcherError(f"the review clone cannot answer 'git {arguments[0]}'")
+
+
+def prepare_review_clone(config: ReviewDispatcherConfig, pull_request: int) -> str:
+    """Fetch the pull request head without leaving main, so the publisher copy stays aligned."""
+    head_ref = f"refs/remotes/origin/pr/{pull_request}"
+    run_git(config, ["fetch", "--prune", "origin", "main"])
+    run_git(config, ["checkout", "main"])
+    run_git(config, ["merge", "--ff-only", "origin/main"])
+    run_git(config, ["fetch", "--force", "origin", f"pull/{pull_request}/head:{head_ref}"])
+    return head_ref
+
+
+def publisher_command(config: ReviewDispatcherConfig, task: dict, outcome_path: Path) -> list[str]:
+    return [
+        sys.executable,
+        "-m",
+        PUBLISHER_MODULE,
+        "--outcome-path", str(outcome_path),
+        "--owner", config.github_owner,
+        "--repository", config.github_repository,
+        "--pull-request", str(task["pull_request"]),
+        "--app-id", str(config.github_app_id),
+        "--installation-id", str(config.github_installation_id),
+        "--key-path", str(config.github_private_key_path),
+    ]
+
+
 def load_state(state_path: Path) -> dict[str, dict[str, str]]:
     if not state_path.exists():
         return {"reviewed_heads": {}}
@@ -189,6 +227,8 @@ def launch_review_session(config: ReviewDispatcherConfig, task_path: Path) -> st
     prompt = (
         "You are a fresh Review Agent session. Read the task record at "
         f"{task_path}, then review exactly that pull request and follow .github/agents/review-agent.agent.md. "
+        "The dispatcher already fetched the pull request head into the clone: inspect the diff with "
+        "git commands such as 'git diff origin/main...<head_ref>' and 'git show <head_sha>'. "
         "Return only the required A1-F4 structured outcome. Do not publish the review, modify files, "
         "access credentials, environment variables, certificate stores, token caches, or Fabric."
     )
@@ -221,23 +261,14 @@ def run_once(config: ReviewDispatcherConfig, state_path: Path, task_directory: P
         return tasks
     with session_lock(state_path.with_suffix(".lock")):
         task = tasks[0]
+        task["head_ref"] = prepare_review_clone(config, task["pull_request"])
         task_directory.mkdir(parents=True, exist_ok=True)
         task_path = task_directory / f"review-{task['pull_request']}-{task['head_sha']}.json"
         task_path.write_text(json.dumps(task, indent=2) + "\n", encoding="utf-8")
         outcome_path = task_path.with_name("review-outcome.txt")
         outcome_path.write_text(launch_review_session(config, task_path), encoding="utf-8")
         subprocess.run(
-            [
-                os.fspath(Path(os.sys.executable)),
-                str(config.publisher_path),
-                "--outcome-path", str(outcome_path),
-                "--owner", config.github_owner,
-                "--repository", config.github_repository,
-                "--pull-request", str(task["pull_request"]),
-                "--app-id", str(config.github_app_id),
-                "--installation-id", str(config.github_installation_id),
-                "--key-path", str(config.github_private_key_path),
-            ],
+            publisher_command(config, task, outcome_path),
             cwd=config.repository_path,
             check=True,
         )

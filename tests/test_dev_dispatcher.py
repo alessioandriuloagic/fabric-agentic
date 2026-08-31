@@ -172,35 +172,60 @@ class DevDispatcherTests(unittest.TestCase):
         helper = Path(__file__).resolve().parents[1] / "scripts" / "dev_agent_credential_helper.py"
 
         with credential_broker_environment("installation-token") as environment:
-            result = subprocess.run(
-                [sys.executable, str(helper), "git", "Username for https://github.com:"],
+            username = subprocess.run(
+                [sys.executable, str(helper), "git", "Username for 'https://github.com':"],
+                env=environment,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            password = subprocess.run(
+                [sys.executable, str(helper), "git", "Password for 'https://github.com':"],
                 env=environment,
                 capture_output=True,
                 text=True,
                 check=False,
             )
 
-        self.assertEqual(result.returncode, 0)
-        self.assertEqual(result.stdout.splitlines()[0], "x-access-token")
-        self.assertEqual(result.stdout.splitlines()[1], "installation-token")
+        self.assertEqual(username.returncode, 0)
+        self.assertEqual(username.stdout.splitlines(), ["x-access-token"])
+        self.assertEqual(password.stdout.splitlines(), ["installation-token"])
         self.assertNotIn("installation-token", json.dumps(environment))
 
     def test_broker_wrappers_reject_main_push_and_merge(self) -> None:
-        with credential_broker_environment("installation-token") as environment:
-            main_push = subprocess.run(
-                ["git", "push", "--dry-run", "origin", "HEAD:refs/heads/main"],
-                env=environment,
-                capture_output=True,
-                check=False,
-            )
-            merge = subprocess.run(
-                ["gh", "pr", "merge", "117"],
-                env=environment,
-                capture_output=True,
-                check=False,
-            )
+        with TemporaryDirectory() as directory:
+            origin = Path(directory) / "origin.git"
+            clone = Path(directory) / "clone"
+            subprocess.run(["git", "init", "--bare", "-b", "main", str(origin)], capture_output=True, check=True)
+            subprocess.run(["git", "clone", str(origin), str(clone)], capture_output=True, check=True)
+            for name, value in (("user.email", "probe@example.invalid"), ("user.name", "probe")):
+                subprocess.run(["git", "-C", str(clone), "config", name, value], capture_output=True, check=True)
+            (clone / "probe.txt").write_text("probe", encoding="utf-8")
+            subprocess.run(["git", "-C", str(clone), "add", "probe.txt"], capture_output=True, check=True)
+            subprocess.run(["git", "-C", str(clone), "commit", "-m", "probe"], capture_output=True, check=True)
+
+            with credential_broker_environment("installation-token") as environment:
+                main_push = subprocess.run(
+                    ["git", "-C", str(clone), "push", "origin", "HEAD:refs/heads/main"],
+                    env=environment,
+                    capture_output=True,
+                    check=False,
+                )
+                feature_push = subprocess.run(
+                    ["git", "-C", str(clone), "push", "origin", "HEAD:refs/heads/feature/probe"],
+                    env=environment,
+                    capture_output=True,
+                    check=False,
+                )
+                merge = subprocess.run(
+                    ["gh", "pr", "merge", "117"],
+                    env=environment,
+                    capture_output=True,
+                    check=False,
+                )
 
         self.assertNotEqual(main_push.returncode, 0)
+        self.assertEqual(feature_push.returncode, 0)
         self.assertNotEqual(merge.returncode, 0)
 
     def test_delivery_allowlist_excludes_merge_command(self) -> None:

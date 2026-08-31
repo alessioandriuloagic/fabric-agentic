@@ -171,6 +171,8 @@ End-to-end chain: `Issue Agent` (karl + ralph) -> human approval -> ticket -> `D
 
 ## Kaizen Learnings
 
+- **[2026-08-31] Run packaged entry points as modules** → [kaizen/20260831-run-packaged-entrypoints-as-modules.md](kaizen/20260831-run-packaged-entrypoints-as-modules.md)
+- **[2026-08-31] Guard tests must be hermetic** → [kaizen/20260831-guard-tests-must-be-hermetic.md](kaizen/20260831-guard-tests-must-be-hermetic.md)
 - **[2026-08-27] Workspace roles must be checked in the workspace UI** → [kaizen/20260827-workspace-roles-evidence.md](kaizen/20260827-workspace-roles-evidence.md)
 - **[2026-08-26] Usare lo schema ufficiale dei file .platform** → [kaizen/20260826-platform-schema-url.md](kaizen/20260826-platform-schema-url.md)
 - **[2026-08-26] Distinguere connessione Git e visibilita' workspace** → [kaizen/20260826-sync-workspace-identity-visibility.md](kaizen/20260826-sync-workspace-identity-visibility.md)

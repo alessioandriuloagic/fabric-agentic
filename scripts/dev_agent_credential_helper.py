@@ -21,8 +21,9 @@ def request_token(kind: str) -> str:
 def main() -> int:
     mode = sys.argv[1]
     if mode == "git":
-        print("x-access-token")
-        print(request_token("git"))
+        # GIT_ASKPASS is asked one value per invocation and reads only the first stdout line.
+        prompt = sys.argv[2] if len(sys.argv) > 2 else ""
+        print("x-access-token" if "username" in prompt.lower() else request_token("git"))
         return 0
     if mode == "gh":
         real_gh = sys.argv[2]

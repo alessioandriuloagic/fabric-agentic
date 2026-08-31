@@ -57,20 +57,18 @@ def credential_broker_environment(token: str) -> Iterator[dict[str, str]]:
     broker_thread = threading.Thread(target=broker.serve_forever, daemon=True)
     broker_thread.start()
     with tempfile.TemporaryDirectory(prefix="fabric-agentic-credentials-") as directory:
-        helper = Path(directory) / "credential-helper.cmd"
-        helper.write_text(
-            f'@echo off\n"{sys.executable}" "{Path(__file__).with_name("dev_agent_credential_helper.py")}" git %*\n',
-            encoding="utf-8",
-        )
+        helper_script = Path(__file__).with_name("dev_agent_credential_helper.py")
         real_gh = shutil.which("gh") or "gh"
-        gh_wrapper = Path(directory) / "gh.cmd"
-        gh_wrapper.write_text(
-            f'@echo off\n"{sys.executable}" "{Path(__file__).with_name("dev_agent_credential_helper.py")}" gh "{real_gh}" %*\n',
-            encoding="utf-8",
+        helper = write_executable(
+            Path(directory), "credential-helper", f'"{sys.executable}" "{helper_script}" git'
+        )
+        write_executable(
+            Path(directory), "gh", f'"{sys.executable}" "{helper_script}" gh "{real_gh}"'
         )
         hooks_directory = Path(directory) / "git-hooks"
         hooks_directory.mkdir()
-        (hooks_directory / "pre-push").write_text(
+        hook = hooks_directory / "pre-push"
+        hook.write_text(
             "#!/bin/sh\n"
             "while read local_ref local_oid remote_ref remote_oid; do\n"
             "  case \"$remote_ref\" in\n"
@@ -79,16 +77,22 @@ def credential_broker_environment(token: str) -> Iterator[dict[str, str]]:
             "done\n"
             "exit 0\n",
             encoding="utf-8",
+            newline="\n",
         )
+        # Git silently skips a hook that is not executable, which would disable the main guard.
+        hook.chmod(0o755)
         environment = os.environ.copy()
         environment.pop("GH_TOKEN", None)
         environment.pop("GITHUB_TOKEN", None)
         environment["GIT_ASKPASS"] = str(helper)
         environment["GIT_TERMINAL_PROMPT"] = "0"
         environment["FABRIC_AGENT_CREDENTIAL_BROKER"] = f"127.0.0.1:{broker.server_address[1]}"
-        environment["GIT_CONFIG_COUNT"] = "1"
+        environment["GIT_CONFIG_COUNT"] = "2"
         environment["GIT_CONFIG_KEY_0"] = "core.hooksPath"
         environment["GIT_CONFIG_VALUE_0"] = str(hooks_directory)
+        # Neutralise any ambient credential manager so the session can only use the brokered token.
+        environment["GIT_CONFIG_KEY_1"] = "credential.helper"
+        environment["GIT_CONFIG_VALUE_1"] = ""
         environment["PATH"] = f"{directory}{os.pathsep}{environment.get('PATH', '')}"
         try:
             yield environment
@@ -96,6 +100,18 @@ def credential_broker_environment(token: str) -> Iterator[dict[str, str]]:
             broker.shutdown()
             broker.server_close()
             broker_thread.join(timeout=2)
+
+
+def write_executable(directory: Path, name: str, command: str) -> Path:
+    """Write a PATH shim that works both as a Windows .cmd and as a POSIX executable."""
+    if os.name == "nt":
+        script = directory / f"{name}.cmd"
+        script.write_text(f"@echo off\n{command} %*\n", encoding="utf-8")
+        return script
+    script = directory / name
+    script.write_text(f'#!/bin/sh\n{command} "$@"\n', encoding="utf-8", newline="\n")
+    script.chmod(0o755)
+    return script
 
 
 @dataclass(frozen=True)

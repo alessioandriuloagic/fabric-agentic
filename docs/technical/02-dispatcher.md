@@ -86,21 +86,39 @@ fornita da un broker localhost avviato dal dispatcher: il token resta nella memo
 mentre helper temporanei per Git e `gh` lo richiedono per singola operazione. Il token non entra nel
 comando Claude, nelle variabili `GH_TOKEN`/`GITHUB_TOKEN`, nei file del repository o nei log. Il
 push autorizzato è solo verso `refs/heads/feature/*`; il merge e il push su `main` restano fuori
-dall'allowlist. Su Windows il broker installa inoltre un `pre-push` hook in una directory
-temporanea esterna al repository e lo impone con configurazione Git di processo: anche il vero
-`git.exe` rifiuta il ref `main` prima del remote.
+dall'allowlist. Il broker installa inoltre un `pre-push` hook in una directory temporanea esterna
+al repository e lo impone con configurazione Git di processo: anche il vero `git.exe` rifiuta il
+ref `main` prima del remote. L'hook viene reso eseguibile, perché Git ignora silenziosamente un
+hook senza permesso di esecuzione; gli shim di `gh` e dell'askpass sono generati sia in forma
+`.cmd` sia in forma POSIX. Nell'ambiente di sessione `credential.helper` viene azzerato, così la
+sessione può autenticarsi solo con il token intermediato dal broker e non con credenziali
+ambientali dell'utente.
 
 `scripts/review_dispatcher.py` è il dispatcher locale del Review Agent. La modalità
 `--once --dry-run` interroga le PR aperte tramite la GitHub App dedicata, ignora le PR in draft e
 gli head SHA già revisionati dall'identità applicativa, e non avvia sessioni né scrive su GitHub.
 La configurazione e la clone sono esterne al repository; lo state locale indicizza numero PR e
-head SHA. La modalità operativa crea un solo task, avvia una sessione nuova nella clone Review e
-consegna l'esito al publisher di #97; un lock locale impedisce sessioni concorrenti.
+head SHA. La modalità operativa prepara la clone, crea un solo task, avvia una sessione nuova nella
+clone Review e consegna l'esito al publisher di #97; un lock locale impedisce sessioni concorrenti.
+
+La preparazione della clone allinea `main` a `origin/main` e recupera l'head della PR in
+`refs/remotes/origin/pr/<n>` **senza cambiare branch**: la sessione vede il diff reale e la copia di
+pubblicazione resta allineata come richiede il publisher. Il publisher viene invocato come modulo
+(`-m scripts.review_vote_publish`), non come percorso di file.
 
 **Verifica sul campo 2026-08-27**: eseguito `--once --dry-run` contro il repository reale dalla
 clone dedicata; risultato `{"tasks": []}`, exit code `0`. Non sono stati creati state file, task
-directory o lock. La clone viene aggiornata separatamente quando la PR del dispatcher sarà
-integrata in `main`.
+directory o lock.
+
+**Smoke end-to-end 2026-08-31**: sulla PR usa-e-getta #130 il ciclo completo è riuscito senza
+intervento umano — discovery, preparazione clone, sessione, esito A1-F4, pubblicazione. Il voto
+registrato è `CHANGES_REQUESTED` con 6 rilievi, autore `fabric-agentic-review-agent` e commit
+coincidente con l'head della PR. Una seconda esecuzione sullo stesso head non ha prodotto candidati.
+La PR e la branch di probe sono state chiuse e rimosse senza merge.
+
+Il primo tentativo ha fallito e ha rivelato due difetti reali, entrambi corretti: il publisher era
+invocato come percorso file e rompeva gli import di pacchetto; la clone non conteneva il commit
+della PR, quindi la sessione non poteva leggere il diff.
 
 ### Smoke S0-14
 

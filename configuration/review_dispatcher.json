@@ -10,7 +10,6 @@
   "agent": {
     "repository_path": "%USERPROFILE%/.fabric-agentic/review-agent/repository",
     "claude_command": "claude",
-    "publisher_path": "scripts/review_vote_publish.py",
     "poll_seconds": 30
   }
 }
