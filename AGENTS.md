@@ -166,6 +166,14 @@ implemented by the Dev Agent through a pull request. Its remaining `execute` per
 by instructions only, so like the Review Agent it needs a dedicated identity and runtime before it
 can be treated as a production control.
 
+Its trigger is deterministic (ADR-0014): an open issue labelled `issue-agent`, not yet labelled
+`dev-agent` and without a package already published. `scripts/issue_dispatcher.py` detects the
+intake and runs a fresh session in the dedicated clone; the session reads
+`agents/issue/INSTRUCTIONS.md` and emits the work package. The package is published by the
+deterministic rail `scripts/issue_package_publish.py` as a single comment, so the model never holds
+the token. The rail never creates, updates, or closes a work item: the package is a proposal, and
+the human turns it into work by applying the `dev-agent` label.
+
 End-to-end chain: `Issue Agent` (karl + ralph) -> human approval -> ticket -> `Dev Agent` -> PR ->
 `Review Agent` -> human merge.
 

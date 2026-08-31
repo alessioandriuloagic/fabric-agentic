@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "github": {
+    "owner": "alessioandriuloagic",
+    "repository": "fabric-agentic",
+    "app_id": 0,
+    "installation_id": 0,
+    "private_key_path": "%USERPROFILE%/.fabric-agentic/issue-agent/github-app-private-key.pem"
+  },
+  "agent": {
+    "repository_path": "%USERPROFILE%/.fabric-agentic/issue-agent/repository",
+    "claude_command": "claude",
+    "poll_seconds": 30
+  }
+}
