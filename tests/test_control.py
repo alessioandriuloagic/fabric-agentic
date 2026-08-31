@@ -1,5 +1,6 @@
 import io
 import json
+import os
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -16,6 +17,7 @@ def write_agent(home: Path, agent: str, **overrides) -> Path:
     (clone / ".git").mkdir(parents=True)
     key_path = directory / "github-app-private-key.pem"
     key_path.write_text("not a real key", encoding="utf-8")
+    key_path.chmod(0o600)
     (directory / "state.json").write_text("{}", encoding="utf-8")
 
     config = {
@@ -66,6 +68,14 @@ class ControlTests(unittest.TestCase):
             self.assertIn("configurazione", status.missing)
             self.assertIn("identità", status.missing)
             self.assertIn("clone dedicato", status.missing)
+
+    @unittest.skipIf(os.name == "nt", "Windows does not expose POSIX mode bits")
+    def test_rejects_a_private_key_readable_beyond_its_owner(self) -> None:
+        with TemporaryDirectory() as directory:
+            home = Path(directory)
+            (write_agent(home, "review") / "github-app-private-key.pem").chmod(0o644)
+
+            self.assertIn("chiave privata", describe_agent("review", home).missing)
 
     def test_rejects_an_unprovisioned_identity(self) -> None:
         with TemporaryDirectory() as directory:
