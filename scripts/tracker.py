@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Callable
 from urllib.request import Request, urlopen
 
-from scripts.github_app_auth import create_installation_token
+from fabric_agentic.github_app_auth import create_installation_token
 
 
 # GitHub GraphQL filters issues by any of the given labels, so the conjunction is enforced here.

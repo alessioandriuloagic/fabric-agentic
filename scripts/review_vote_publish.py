@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Callable
 from urllib.request import Request, urlopen
 
-from scripts.github_app_auth import (
+from fabric_agentic.github_app_auth import (
     GITHUB_API,
     GitHubAppAuthError,
     create_app_jwt,

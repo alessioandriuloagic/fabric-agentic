@@ -13,10 +13,10 @@ from typing import Iterator
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from scripts.agent_session import session_failure_reason
-from scripts.config_paths import expand_path
-from scripts.credential_broker import credential_broker_environment
-from scripts.github_app_auth import GITHUB_API, create_installation_token
+from fabric_agentic.agent_session import session_failure_reason
+from fabric_agentic.config_paths import expand_path
+from fabric_agentic.credential_broker import credential_broker_environment
+from fabric_agentic.github_app_auth import GITHUB_API, create_installation_token
 from scripts.review_vote_publish import app_bot_login
 
 

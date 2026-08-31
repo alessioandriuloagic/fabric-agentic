@@ -1,7 +1,7 @@
 import json
 import unittest
 
-from scripts.agent_session import session_failure_reason
+from fabric_agentic.agent_session import session_failure_reason
 
 
 class AgentSessionTests(unittest.TestCase):

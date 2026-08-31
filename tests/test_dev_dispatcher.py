@@ -169,7 +169,7 @@ class DevDispatcherTests(unittest.TestCase):
         self.assertEqual(failed.outcome, "failed")
 
     def test_git_helper_receives_credential_only_through_local_broker(self) -> None:
-        helper = Path(__file__).resolve().parents[1] / "scripts" / "dev_agent_credential_helper.py"
+        helper = Path(__file__).resolve().parents[1] / "fabric_agentic" / "credential_helper.py"
 
         with credential_broker_environment("installation-token") as environment:
             username = subprocess.run(

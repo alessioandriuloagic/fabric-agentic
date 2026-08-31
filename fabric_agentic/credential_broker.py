@@ -49,7 +49,7 @@ def credential_broker_environment(token: str) -> Iterator[dict[str, str]]:
     broker_thread = threading.Thread(target=broker.serve_forever, daemon=True)
     broker_thread.start()
     with tempfile.TemporaryDirectory(prefix="fabric-agentic-credentials-") as directory:
-        helper_script = Path(__file__).with_name("dev_agent_credential_helper.py")
+        helper_script = Path(__file__).with_name("credential_helper.py")
         real_gh = shutil.which("gh") or "gh"
         helper = write_executable(
             Path(directory), "credential-helper", f'"{sys.executable}" "{helper_script}" git'

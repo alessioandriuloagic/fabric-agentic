@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fabric-agentic"
+version = "0.1.0"
+description = "Reusable delivery kit for agentic Microsoft Fabric projects"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+dependencies = []
+
+[project.optional-dependencies]
+agents = ["pyjwt>=2.8", "cryptography>=42"]
+
+[tool.setuptools]
+packages = ["fabric_agentic"]
