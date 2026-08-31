@@ -163,6 +163,13 @@ viene letto dinamicamente da `/app`, quindi il rail non dipende da un nome scrit
 Il pacchetto può essere preceduto da prosa della sessione: il rail individua l'intestazione e scarta
 quanto la precede, come già fa il publisher del voto di review. Restano rifiutati intestazione
 assente, modalità sconosciuta, sezioni mancanti, duplicate, fuori ordine o vuote.
+
+**Smoke end-to-end 2026-08-31**: sull'intake usa-e-getta #134 il ciclo completo è riuscito senza
+intervento umano — discovery, preparazione clone, sessione, pacchetto, pubblicazione. Esito
+`status: published`, modalità `Work Item Design`, commento firmato `fabric-agentic-issue-agent` con
+marcatore e fingerprint. Tutte e sette le sezioni del contratto sono presenti. Una seconda
+esecuzione non ha prodotto candidati. **Nessun work item è stato creato**: il rail ha pubblicato
+solo il commento, come previsto da ADR-0014.
 ---
 
 ## 3. Trigger del Dev Agent
