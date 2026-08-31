@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Aggiunta la catena deterministica dell'Issue Agent: dispatcher su intake etichettate
+  `issue-agent`, istruzioni versionate in `agents/issue/INSTRUCTIONS.md` e rail
+  `scripts/issue_package_publish.py` che valida il pacchetto e pubblica un solo commento. Il rail
+  non crea work item: il ticket nasce solo dopo l'approvazione umana.
+
+- Aggiunto `ADR-0014`: innesco dell'Issue Agent tramite issue di intake, pubblicazione via rail
+  deterministico, identità applicativa dedicata e cancello umano prima del work item.
+
+### Fixed
+
+- Reso il rail del pacchetto tollerante alla prosa che la sessione antepone all'intestazione,
+  allineandolo al publisher del voto di review. Il contratto delle sezioni resta invariato.
+
+- Resa portabile l'espansione dei percorsi di configurazione: `%VAR%` e `$VAR` sono entrambi
+  supportati e `%USERPROFILE%` ricade sulla home anche su POSIX. La sintassi Windows restava
+  letterale su Linux, quindi la stessa configurazione non era distribuibile.
+
+- Estesa la copertura CI ai dispatcher Review e Issue e all'espansione dei percorsi, che prima non
+  erano protetti dal workflow.
+
 - Completato lo smoke end-to-end del Review Agent sulla PR usa-e-getta #130: discovery,
   preparazione della clone, sessione, esito A1-F4 e voto `CHANGES_REQUESTED` pubblicato
   dall'identità `fabric-agentic-review-agent`, senza intervento umano e senza merge.

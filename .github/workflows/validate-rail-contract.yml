@@ -37,4 +37,4 @@ jobs:
       - name: Validate rail-result schema
         run: python scripts/validate_rail_result_schema.py
       - name: Test deterministic rail helpers
-        run: python -m unittest tests/test_branch_out.py tests/test_sync_workspace.py tests/test_crm_framework.py tests/test_fabric_artifacts.py tests/test_fabric_crm_preflight.py tests/test_pagamenti_load.py tests/test_review_vote_publish.py tests/test_dev_dispatcher.py tests/test_tracker.py
+        run: python -m unittest tests/test_branch_out.py tests/test_sync_workspace.py tests/test_crm_framework.py tests/test_fabric_artifacts.py tests/test_fabric_crm_preflight.py tests/test_pagamenti_load.py tests/test_config_paths.py tests/test_review_vote_publish.py tests/test_review_dispatcher.py tests/test_issue_package_publish.py tests/test_issue_dispatcher.py tests/test_dev_dispatcher.py tests/test_tracker.py

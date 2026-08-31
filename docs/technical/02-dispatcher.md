@@ -139,6 +139,25 @@ token o credenziali.
 Lo stato locale del dispatcher accetta UTF-8 con o senza BOM. Questo consente di inizializzare o
 ispezionare lo state file con PowerShell senza far fallire il ciclo; lo state resta fuori dal repo
 e contiene solo identificativi di work item, commenti e thread già osservati.
+
+`scripts/issue_dispatcher.py` è il dispatcher locale dell'Issue Agent. La coda è una **issue di
+intake** etichettata `issue-agent`, aperta, non ancora approvata e senza pacchetto già pubblicato.
+La sessione produce il pacchetto di lavoro; il rail deterministico `scripts/issue_package_publish.py`
+ne valida la struttura e pubblica **un solo commento** con l'identità applicativa dedicata. Il rail
+non crea, non modifica e non chiude alcun work item: il pacchetto è una proposta e il ticket nasce
+solo dopo l'approvazione umana, che applica l'etichetta `dev-agent`. Vedi ADR-0014.
+
+Finché l'identità dedicata non è provisionata, `configuration/issue_dispatcher.json` contiene
+identificativi a zero e il dispatcher si arresta con `the Issue Agent identity is not provisioned`
+invece di tentare una chiamata con una credenziale inesistente.
+
+**Identità verificata 2026-08-31**: App `fabric-agentic-issue-agent`, installazione limitata al solo
+repository, permessi effettivi `contents:read`, `issues:write`, `metadata:read`. Il login del bot
+viene letto dinamicamente da `/app`, quindi il rail non dipende da un nome scritto a mano.
+
+Il pacchetto può essere preceduto da prosa della sessione: il rail individua l'intestazione e scarta
+quanto la precede, come già fa il publisher del voto di review. Restano rifiutati intestazione
+assente, modalità sconosciuta, sezioni mancanti, duplicate, fuori ordine o vuote.
 ---
 
 ## 3. Trigger del Dev Agent
@@ -184,7 +203,26 @@ Una sola regola copre entrambi i casi: la prima review e ogni re-review dopo una
 
 ---
 
-## 5. Gestione dei token e delle credenziali
+## 5. Trigger dell'Issue Agent
+
+**Uno solo**, come per il Review Agent:
+
+| # | Trigger | Condizione |
+|---|---|---|
+| **1** | Intake da istruire | Issue aperta con etichetta `issue-agent`, senza etichetta `dev-agent` e senza pacchetto già pubblicato dall'identità dell'Issue Agent |
+
+### Note di progettazione
+
+- Il commento del pacchetto è anche il **marcatore di completamento**: l'agente non può risvegliarsi
+  sul proprio artefatto, quindi il loop è chiuso per costruzione come per il trigger B del Dev Agent.
+- L'etichetta `dev-agent` esclude l'intake dalla coda: significa che il pacchetto è già stato
+  approvato e il lavoro appartiene al Dev Agent.
+- Il dispatcher può proporre, non decidere. La trasformazione da proposta a lavoro resta l'unico
+  passaggio umano obbligatorio della catena.
+
+---
+
+## 6. Gestione dei token e delle credenziali
 
 | Aspetto | Regola |
 |---|---|
@@ -204,7 +242,7 @@ Una sola regola copre entrambi i casi: la prima review e ogni re-review dopo una
 
 ---
 
-## 6. Osservabilità
+## 7. Osservabilità
 
 Ogni sessione produce un log persistente, correlabile a work item e PR.
 
@@ -221,7 +259,7 @@ Ogni sessione produce un log persistente, correlabile a work item e PR.
 
 ---
 
-## 7. Modalità di esercizio
+## 8. Modalità di esercizio
 
 | Aspetto | Fase 1 | Fase 2 |
 |---|---|---|
@@ -235,7 +273,7 @@ Ogni sessione produce un log persistente, correlabile a work item e PR.
 
 ---
 
-## 8. Fallimenti e comportamento atteso
+## 9. Fallimenti e comportamento atteso
 
 | Situazione | Comportamento del dispatcher |
 |---|---|

@@ -166,11 +166,20 @@ implemented by the Dev Agent through a pull request. Its remaining `execute` per
 by instructions only, so like the Review Agent it needs a dedicated identity and runtime before it
 can be treated as a production control.
 
+Its trigger is deterministic (ADR-0014): an open issue labelled `issue-agent`, not yet labelled
+`dev-agent` and without a package already published. `scripts/issue_dispatcher.py` detects the
+intake and runs a fresh session in the dedicated clone; the session reads
+`agents/issue/INSTRUCTIONS.md` and emits the work package. The package is published by the
+deterministic rail `scripts/issue_package_publish.py` as a single comment, so the model never holds
+the token. The rail never creates, updates, or closes a work item: the package is a proposal, and
+the human turns it into work by applying the `dev-agent` label.
+
 End-to-end chain: `Issue Agent` (karl + ralph) -> human approval -> ticket -> `Dev Agent` -> PR ->
 `Review Agent` -> human merge.
 
 ## Kaizen Learnings
 
+- **[2026-08-31] Configuration must not carry OS-specific syntax** → [kaizen/20260831-configuration-os-portability.md](kaizen/20260831-configuration-os-portability.md)
 - **[2026-08-31] Run packaged entry points as modules** → [kaizen/20260831-run-packaged-entrypoints-as-modules.md](kaizen/20260831-run-packaged-entrypoints-as-modules.md)
 - **[2026-08-31] Guard tests must be hermetic** → [kaizen/20260831-guard-tests-must-be-hermetic.md](kaizen/20260831-guard-tests-must-be-hermetic.md)
 - **[2026-08-27] Workspace roles must be checked in the workspace UI** → [kaizen/20260827-workspace-roles-evidence.md](kaizen/20260827-workspace-roles-evidence.md)
