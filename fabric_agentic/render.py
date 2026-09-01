@@ -72,6 +72,7 @@ def render_summary(plan: dict) -> str:
             f"## Sorgente `{source['name']}`",
             "",
             f"- Connector: `{source['connector']}`",
+            f"- Adapter operativo: {'disponibile' if source['adapter_available'] else 'da implementare'}",
             f"- Connessione: `{source['connection_ref']}`",
             f"- Lettura incrementale: {'sì' if capabilities['supports_incremental'] else 'no'}",
             f"- Conteggio alla sorgente: {'sì' if capabilities['supports_source_count'] else 'no'}",
@@ -103,15 +104,18 @@ def render_summary(plan: dict) -> str:
 
 
 def _source_plan(source) -> dict:
-    connector = get_connector(source.connector)
+    connection_fields = []
+    if source.adapter_available:
+        connection_fields = list(get_connector(source.connector).connection_fields)
     return {
         "name": source.name,
-        "connector": connector.name,
+        "connector": source.connector,
         "connection_ref": source.connection_ref,
+        "adapter_available": source.adapter_available,
         "capabilities": {
-            "supports_incremental": connector.supports_incremental,
-            "supports_source_count": connector.supports_source_count,
-            "connection_fields": list(connector.connection_fields),
+            "supports_incremental": source.supports_incremental,
+            "supports_source_count": source.supports_source_count,
+            "connection_fields": connection_fields,
         },
         "datasets": [
             {

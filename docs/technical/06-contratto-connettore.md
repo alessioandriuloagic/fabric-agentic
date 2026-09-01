@@ -73,11 +73,13 @@ Ogni connettore espone le stesse operazioni, indipendentemente dalla tipologia:
 
 ### Registry e capacità dichiarate
 
-L'implementazione di questo contratto vive in `fabric_agentic/connectors.py`, che è l'**unico**
-elenco dei connettori ammessi: `instance_profile` lo deriva da lì invece di ridichiararlo.
+Il profilo accetta un identificatore connector aperto. `fabric_agentic/connectors.py` è invece
+l'unico registry degli **adapter eseguibili**: non è una allowlist delle tecnologie descrivibili.
+La UI suggerisce Business Central, CRM, database SQL, Oracle, PostgreSQL, SharePoint e file, ma
+accetta anche identificatori futuri. Vedi ADR-0018.
 
-Ogni connettore dichiara le proprie capacità, e il profilo viene rifiutato in validazione se ne
-chiede una assente:
+Un adapter registrato dichiara capacità autorevoli nel codice. Una sorgente senza adapter le
+dichiara esplicitamente nel profilo; la validazione rifiuta combinazioni incoerenti:
 
 | Campo | Significato |
 |---|---|
@@ -104,9 +106,9 @@ colonna di watermark — senza specificità di connettore. Vedi ADR-0016.
 
 ## 4. Connettore REST — progettazione, non registrato
 
-> **Questa tipologia non è nel registry.** `rest` non è un valore ammesso per `connector` in un
-> profilo di istanza: `get_connector` lo rifiuta. La sezione resta come materiale di progettazione
-> per una fase successiva, non come contratto disponibile.
+> **Questa tipologia non ha un adapter nel registry.** `rest` può essere descritto in un profilo
+> dichiarandone le capacità, ma `plan_request` lo rifiuta finché non viene implementato il planner.
+> La sezione resta materiale di progettazione, non supporto operativo disponibile.
 
 | Aspetto | Trattamento |
 |---|---|
@@ -174,10 +176,12 @@ configurazione.
 
 ---
 
-## 7. Registrazione di un nuovo connettore
+## 7. Descrizione di una sorgente e registrazione di un adapter
 
-Aggiungere una **tipologia** di connettore non è un ticket di onboarding: è un intervento
-architetturale.
+Descrivere una nuova tecnologia nel profilo è configurazione: identificatore, riferimento alla
+connessione, capacità e dataset. Render e validazione funzionano offline anche senza adapter.
+
+Rendere quella tecnologia **eseguibile** da `plan_request` è invece un intervento architetturale:
 
 | Passo | Nota |
 |---|---|

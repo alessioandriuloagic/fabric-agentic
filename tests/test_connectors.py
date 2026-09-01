@@ -7,6 +7,7 @@ from fabric_agentic.connectors import (
     connector_names,
     get_connector,
     plan_request,
+    suggested_connector_names,
     supports_load_mode,
 )
 
@@ -26,6 +27,22 @@ FILE_CONNECTION = {"path": "/data/pagamenti.csv"}
 class RegistryTests(unittest.TestCase):
     def test_declares_the_supported_connectors(self) -> None:
         self.assertEqual(connector_names(), ("crm_dataverse", "file"))
+
+    def test_suggests_common_source_technologies_without_claiming_adapters_exist(self) -> None:
+        self.assertEqual(
+            suggested_connector_names(),
+            (
+                "business_central",
+                "crm",
+                "crm_dataverse",
+                "database",
+                "file",
+                "oracle_database",
+                "postgresql_database",
+                "sharepoint",
+                "sql_database",
+            ),
+        )
 
     def test_rejects_an_unknown_connector(self) -> None:
         with self.assertRaisesRegex(ConnectorError, "unknown connector"):

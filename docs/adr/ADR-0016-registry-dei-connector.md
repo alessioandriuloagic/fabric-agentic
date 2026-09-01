@@ -2,7 +2,7 @@
 
 | Campo | Valore |
 |---|---|
-| Stato | Accettata |
+| Stato | Superata in parte da ADR-0018 |
 | Data | 2026-08-31 |
 | Contesto | Work item #123, #126 |
 
@@ -19,8 +19,8 @@ nella testa di chi aveva scritto il notebook.
 
 ## Decisione
 
-1. `fabric_agentic/connectors.py` è l'unico registry dei connector. `instance_profile` ne deriva
-   l'elenco ammesso invece di ridichiararlo.
+1. `fabric_agentic/connectors.py` è l'unico registry degli adapter eseguibili. La decisione
+   originaria di derivarne anche l'elenco dei connector ammessi è superata da ADR-0018.
 2. Ogni connector dichiara le proprie **capacità**: lettura incrementale, conteggio alla sorgente,
    campi di connessione richiesti. Il profilo viene rifiutato se chiede una capacità assente.
 3. `plan_request` risolve la lettura di un dataset passando dal registry, così l'orchestrazione non
@@ -46,7 +46,8 @@ chiedesse un carico incrementale su file viene rifiutato in validazione anziché
 
 ## Conseguenze
 
-- Aggiungere una sorgente significa registrare un connector e il suo planner, in un punto solo.
+- Aggiungere un adapter eseguibile significa registrare il planner in un punto solo; descrivere una
+   nuova tecnologia sorgente non richiede invece codice (ADR-0018).
 - Le combinazioni impossibili sono rifiutate prima dell'esecuzione.
 - Il core resta senza dipendenze e senza valori di tenant o cliente.
 - Un connector con esigenze di richiesta molto diverse potrebbe non essere coperto da

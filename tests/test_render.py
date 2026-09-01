@@ -76,6 +76,20 @@ class PlanTests(unittest.TestCase):
             [{"name": "execution_credential", "store": "key_vault", "reference": "kv://vault/execution"}],
         )
 
+    def test_carries_declared_capabilities_for_a_connector_without_an_adapter(self) -> None:
+        document = json.loads(json.dumps(PROFILE))
+        document["sources"][0]["connector"] = "postgresql_database"
+        document["sources"][0]["capabilities"] = {
+            "supports_incremental": True,
+            "supports_source_count": True,
+        }
+
+        plan = build_plan(parse_profile(document))
+
+        self.assertEqual(plan["sources"][0]["connector"], "postgresql_database")
+        self.assertTrue(plan["sources"][0]["capabilities"]["supports_incremental"])
+        self.assertFalse(plan["sources"][0]["adapter_available"])
+
 
 class RenderTests(unittest.TestCase):
     def render_bytes(self, directory: Path) -> dict[str, bytes]:
@@ -105,6 +119,19 @@ class RenderTests(unittest.TestCase):
             self.assertIn("accounts", summary)
             self.assertIn("pagamenti", summary)
             self.assertIn("modifiedon", summary)
+
+    def test_the_summary_distinguishes_a_profile_from_an_executable_adapter(self) -> None:
+        document = json.loads(json.dumps(PROFILE))
+        document["sources"][0]["connector"] = "business_central"
+        document["sources"][0]["capabilities"] = {
+            "supports_incremental": True,
+            "supports_source_count": True,
+        }
+        with TemporaryDirectory() as directory:
+            paths = render(parse_profile(document), Path(directory))
+            summary = next(path for path in paths if path.name == "README.md").read_text(encoding="utf-8")
+
+        self.assertIn("Adapter operativo: da implementare", summary)
 
 
 class CommandTests(unittest.TestCase):

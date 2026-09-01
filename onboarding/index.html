@@ -76,16 +76,22 @@
         </section>
 
         <section class="form-section" aria-labelledby="source-heading">
-          <div class="section-heading"><span>04</span><div><h2 id="source-heading">Sorgente e dataset</h2><p>La capacità incrementale deriva dal connector registrato.</p></div></div>
+          <div class="section-heading"><span>04</span><div><h2 id="source-heading">Sorgente e dataset</h2><p>Usa un adapter registrato o descrivi una tecnologia nuova.</p></div></div>
           <div class="field-grid three">
             <label>Nome sorgente<input id="source-name" name="source_name" required></label>
-            <label>Connector<select id="connector" name="connector"></select></label>
+            <label>Connector<input id="connector" name="connector" list="connector-options" spellcheck="false" required><datalist id="connector-options"></datalist><small>Scegli un suggerimento o scrivi un identificatore nuovo.</small></label>
             <label>Riferimento connessione<input id="connection-ref" name="connection_ref" required></label>
             <label>Dataset<input id="dataset-name" name="dataset_name" required></label>
             <label>Chiave primaria<input id="primary-key" name="primary_key" required><small>Più colonne separate da virgola.</small></label>
             <label>Modalità<select id="load-mode" name="load_mode"></select></label>
             <label id="watermark-label">Colonna watermark<input id="watermark" name="watermark"></label>
           </div>
+          <fieldset id="connector-capabilities" class="capability-options" hidden>
+            <legend>Capacità dichiarate</legend>
+            <p>Nessun adapter è ancora registrato per questo connector. Dichiara ciò che la sorgente può fare; l’esecuzione richiederà poi un adapter dedicato.</p>
+            <label><input id="supports-incremental" type="checkbox">Carico incrementale</label>
+            <label><input id="supports-source-count" type="checkbox" checked>Conteggio alla sorgente</label>
+          </fieldset>
         </section>
 
         <section class="form-section" aria-labelledby="credential-heading">
@@ -106,6 +112,7 @@
           <div><dt>Workspace Dev</dt><dd id="workspace-preview">—</dd></div>
           <div><dt>Feature workspace</dt><dd id="feature-preview">—</dd></div>
           <div><dt>Dataset</dt><dd id="dataset-preview">—</dd></div>
+          <div><dt>Adapter operativo</dt><dd id="adapter-preview">—</dd></div>
         </dl>
         <div class="checklist-preview">
           <h3>Prima del primo ticket</h3>
