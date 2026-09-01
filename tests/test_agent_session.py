@@ -1,10 +1,16 @@
 import json
 import unittest
+from unittest.mock import patch
 
-from fabric_agentic.agent_session import session_failure_reason
+from fabric_agentic.agent_session import resolve_agent_command, session_failure_reason
 
 
 class AgentSessionTests(unittest.TestCase):
+    @patch("fabric_agentic.agent_session.shutil.which", return_value=r"C:\Tools\claude.EXE")
+    def test_resolves_a_portable_command_to_the_platform_executable(self, which) -> None:
+        self.assertEqual(resolve_agent_command("claude"), r"C:\Tools\claude.EXE")
+        which.assert_called_once_with("claude")
+
     def test_reports_the_api_error_status_of_a_quota_failure(self) -> None:
         stdout = json.dumps({
             "is_error": True,
@@ -33,6 +39,11 @@ class AgentSessionTests(unittest.TestCase):
         reason = session_failure_reason(2, "traceback: boom")
 
         self.assertEqual(reason, "exit=2")
+
+    def test_reports_stop_reason_without_transcript_content(self) -> None:
+        reason = session_failure_reason(0, json.dumps({"stop_reason": "max_turns", "result": "private"}))
+
+        self.assertEqual(reason, "exit=0, stop_reason=max_turns")
 
 
 if __name__ == "__main__":

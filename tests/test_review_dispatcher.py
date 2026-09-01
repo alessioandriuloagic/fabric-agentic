@@ -8,6 +8,7 @@ from scripts.review_dispatcher import (
     ReviewDispatcherConfig,
     ReviewDispatcherError,
     PullRequestCandidate,
+    launch_review_session,
     prepare_review_clone,
     publisher_command,
     review_candidates,
@@ -28,6 +29,14 @@ class ReviewDispatcherTests(unittest.TestCase):
             repository_path=Path("repository"),
             claude_command="claude",
         )
+
+    @patch("scripts.review_dispatcher.subprocess.run")
+    def test_session_decodes_claude_output_as_utf8(self, run_mock) -> None:
+        run_mock.return_value = MagicMock(returncode=0, stdout=json.dumps({"result": "review"}))
+
+        self.assertEqual(launch_review_session(self.config, Path("task.json")), "review")
+        self.assertEqual(run_mock.call_args.kwargs["encoding"], "utf-8")
+        self.assertEqual(run_mock.call_args.kwargs["errors"], "replace")
 
     def test_publisher_is_invoked_as_a_module(self) -> None:
         command = publisher_command(self.config, {"pull_request": 130}, Path("outcome.txt"))

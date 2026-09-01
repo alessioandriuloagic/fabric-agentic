@@ -16,6 +16,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   l'adapter è ancora da implementare, mentre `plan_request` continua a rifiutarne l'esecuzione.
   Il form usa suggerimenti modificabili anziché una select chiusa.
 
+### Fixed
+
+- I tre dispatcher risolvono ora il comando agentico configurato (`claude`) con il resolver di
+  sistema prima di avviare il processo. Su Windows PowerShell trovava `claude.exe`, ma
+  `subprocess` riceveva il nome senza suffisso e falliva con `WinError 2`; la configurazione resta
+  portabile e non contiene percorsi specifici della macchina. L'output Claude viene inoltre
+  decodificato esplicitamente come UTF-8: il fallback CP1252 di Windows interrompeva il reader su
+  caratteri validi non rappresentabili e lasciava `stdout` nullo. L'Issue Agent richiede infine
+  `work_package` tramite `--json-schema`, invece di affidarsi a testo lungo non vincolato dentro
+  l'envelope CLI.
+
 ### Added
 
 - Aggiunta `docs/technical/13-issue-agent-guida-operativa.md`: guida completa al punto di ingresso

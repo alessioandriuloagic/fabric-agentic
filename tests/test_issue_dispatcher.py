@@ -9,6 +9,7 @@ from scripts.issue_dispatcher import (
     IssueDispatcherError,
     IntakeCandidate,
     intake_candidates,
+    launch_issue_session,
     load_config,
     prepare_issue_clone,
     publisher_command,
@@ -28,6 +29,31 @@ class IssueDispatcherTests(unittest.TestCase):
             repository_path=Path("repository"),
             claude_command="claude",
         )
+
+    @patch("scripts.issue_dispatcher.subprocess.run")
+    def test_session_decodes_claude_output_as_utf8(self, run_mock) -> None:
+        run_mock.return_value = MagicMock(
+            returncode=0,
+            stdout=json.dumps({"structured_output": {"work_package": "pacchetto"}}),
+        )
+
+        self.assertEqual(launch_issue_session(self.config, Path("task.json")), "pacchetto")
+        self.assertIn("--json-schema", run_mock.call_args.args[0])
+        self.assertEqual(run_mock.call_args.kwargs["encoding"], "utf-8")
+        self.assertEqual(run_mock.call_args.kwargs["errors"], "replace")
+
+    @patch("scripts.issue_dispatcher.subprocess.run")
+    def test_schema_validated_package_survives_auxiliary_error_status(self, run_mock) -> None:
+        run_mock.return_value = MagicMock(
+            returncode=0,
+            stdout=json.dumps({
+                "is_error": True,
+                "stop_reason": "max_turns",
+                "structured_output": {"work_package": "pacchetto completo"},
+            }),
+        )
+
+        self.assertEqual(launch_issue_session(self.config, Path("task.json")), "pacchetto completo")
 
     @patch("scripts.issue_dispatcher.issue_comments")
     @patch("scripts.issue_dispatcher.open_intake_issues")

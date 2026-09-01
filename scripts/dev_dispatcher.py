@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Callable
 from urllib.request import Request, urlopen
 
+from fabric_agentic.agent_session import resolve_agent_command
 from fabric_agentic.config_paths import read_json_config
 from fabric_agentic.credential_broker import credential_broker_environment
 from fabric_agentic.github_app_auth import create_installation_token
@@ -294,7 +295,7 @@ def build_session_command(config: DispatcherConfig, task_path: Path) -> list[str
         "Do not access credentials, environment variables, certificate stores, or token caches."
     )
     return [
-        config.claude_command,
+        resolve_agent_command(config.claude_command),
         "-p",
         prompt,
         "--add-dir",
@@ -342,6 +343,8 @@ def launch_session(config: DispatcherConfig, task_path: Path) -> SessionOutcome:
             cwd=config.repository_path,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             env=environment,
             check=False,
         )
@@ -381,7 +384,7 @@ def launch_smoke_session(config: DispatcherConfig, task_path: Path) -> list[str]
     )
     result = subprocess.run(
         [
-            config.claude_command,
+            resolve_agent_command(config.claude_command),
             "-p",
             prompt,
             "--allowedTools",
@@ -394,6 +397,8 @@ def launch_smoke_session(config: DispatcherConfig, task_path: Path) -> list[str]
         cwd=config.repository_path,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         check=False,
     )
     if result.returncode != 0:
