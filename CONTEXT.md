@@ -304,6 +304,7 @@ allowlist: un profilo può dichiarare un identificatore nuovo con capacità espl
 | Ruolo Review Agent nel workspace DEV | Assente; nessun ruolo visibile nel workspace, verificato dalla UI |
 | Federated credential OIDC | GitHub environment `dev`, subject con Organization ID `218064009` e Repository ID `1340835193`; test riuscito senza ruolo subscription |
 | GitHub environments | `dev`, `test`, `prod` presenti; protection rules non disponibili sul piano GitHub Free |
+| GitHub Pages | Onboarding pubblico su `https://alessioandriuloagic.github.io/fabric-agentic/`; build workflow verificata con run `33501784788`, tentativo 3, dopo abilitazione `build_type=workflow` |
 | Governance Git | Branch dedicato obbligatorio, PR verso `main`, review e merge umano; vedi ADR-0010 |
 | Rail `branch_out` | Workflow manuale `.github/workflows/pipe_agent_branch_out.yml`, avviato da `main`; accetta solo work item e slug, deriva `feature/wi-<id>-<slug>` e `ws_agentic_feature_wi<id>`, e pubblica l'artefatto `rail-result.json` v1.1 |
 | Configurazione rail DEV | Configurate nell'environment `dev`: `FABRIC_DEPLOY_CLIENT_ID`, `FABRIC_DEPLOY_TENANT_ID`, `FABRIC_CAPACITY_ID`, `FABRIC_OWNER_OBJECT_ID`, `FABRIC_GIT_CONNECTION_ID` (`GitHubRepo`: `b0dc937b-99fa-46a2-9dd4-93940d57f075`), `FABRIC_GIT_ORGANIZATION`, `FABRIC_GIT_REPOSITORY`; sono tutti identificativi/configurazione, mai credenziali o segreti. La connection è condivisa con il deploy SP come `User` |
