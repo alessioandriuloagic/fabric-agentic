@@ -144,12 +144,20 @@ stati `existing`, `existing`, `connected`, `synchronized`.
 ### 4b. Artefatto `rail-result.json` — schema versionato
 
 Ogni pipeline agentica produce questo artefatto: è il **canale primario** con cui l'agente riceve
-l'esito. Mai dai log della pipeline, sempre da questo artefatto. Lo schema normativo è
-[`schemas/rail-result-v1.0.json`](../../schemas/rail-result-v1.0.json).
+l'esito. Mai dai log della pipeline, sempre da questo artefatto. La v1.0 resta il contratto
+generico; per `run_load` lo schema normativo è
+[`schemas/rail-result-v1.3.json`](../../schemas/rail-result-v1.3.json), che rinomina i due
+conteggi in `loaded_count` e `total_destination_count`.
+
+**La versione dichiarata vale anche sul percorso di fallimento.** `success`,
+`technical_failure` e `quality_failure` sono lo stesso contratto: un artefatto di fallimento che
+non valida è indistinguibile, per il Review Agent, da un artefatto assente. Vale anche per il
+fallback che il workflow scrive quando il processo muore prima di produrne uno. Il guard è
+`scripts/validate_rail_result_schema.py`, eseguito dalla CI su ogni versione pubblicata.
 
 ```json
 {
-  "schema_version": "1.0",
+  "schema_version": "1.3",
   "rail": "run_load",
   "run_id": "...",
   "workspace_id": "...",
@@ -165,6 +173,7 @@ l'esito. Mai dai log della pipeline, sempre da questo artefatto. Lo schema norma
       "pk_check": "passed|failed|not_applicable"
     }
   ],
+  "watermark": "2026-08-21T17:39:25Z",
   "messages": [],
   "diagnostics": {
     "schema_drift": false,
@@ -181,8 +190,22 @@ l'esito. Mai dai log della pipeline, sempre da questo artefatto. Lo schema norma
 - **`loaded_count`**: numero di record caricati o processati nel batch corrente.
 - **`total_destination_count`**: numero totale di record presenti nella destinazione dopo il merge.
   Non rappresenta il delta del batch e può quindi essere maggiore di `loaded_count`.
+- **`watermark`**: watermark confermato dopo il run, o `null`. Vale solo se Bronze e audit sono
+  riusciti: è la trasposizione nell'artefatto della decisione di [ADR-0012](../adr/ADR-0012-watermark-crm-account.md).
 - **`diagnostics`**: opzionale per i carichi, obbligatorio per `diagnose_data`; può contenere solo
   statistiche, indicatori e identificativi mascherati conformi alla policy dati dell'istanza.
+
+### Implementazione e stato di verifica
+
+`run_load` ha due runner: `scripts/run_load.py` per il carico locale deterministico e
+`scripts/fabric_crm_load.py`, invocato da `.github/workflows/pipe_agent_crm_run_load.yml`, per
+l'esecuzione reale nel feature workspace.
+
+Lo stato anello per anello, le discrepanze corrette e quelle ancora aperte sono in
+[`14-inventario-catena-crm-accounts.md`](14-inventario-catena-crm-accounts.md). Due limiti noti
+riguardano direttamente questo contratto: `reconciliation` è oggi scritta come letterale invece
+che calcolata dai conteggi, e l'evidenza Fabric è letta da un percorso fisso non legato al run
+appena sottomesso.
 
 ### Nota critica sulla condizione di successo
 

@@ -8,6 +8,9 @@ from pathlib import Path
 from scripts.crm_load import CrmLoadError, load_staged_accounts
 
 
+UNRESOLVED = "unknown"
+
+
 def execute_load(workspace_id: str, staged_path: Path, bronze_path: Path, audit_path: Path, watermark_path: Path, run_id: str) -> dict:
     if not workspace_id:
         raise CrmLoadError("workspace ID is required")
@@ -57,11 +60,11 @@ def main() -> int:
     except CrmLoadError as error:
         quality_failure = "primary key" in str(error).lower()
         result = {
-            "schema_version": "1.0",
+            "schema_version": "1.3",
             "rail": "run_load",
             "outcome": "quality_failure" if quality_failure else "technical_failure",
-            "run_id": args.run_id,
-            "workspace_id": args.workspace_id,
+            "run_id": args.run_id or UNRESOLVED,
+            "workspace_id": args.workspace_id or UNRESOLVED,
             "datasets": [{
                 "name": "accounts",
                 "status": "failed",

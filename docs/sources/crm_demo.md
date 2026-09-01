@@ -24,22 +24,25 @@
 
 The Fabric Connection owns all credential material. Configuration stores only its identifier.
 
-The local runtime now implements staged extraction, PK validation, idempotent Bronze merge,
+The local runtime implements staged extraction, PK validation, idempotent Bronze merge,
 per-run audit and post-audit watermark persistence in `scripts/crm_load.py`. The Fabric artifact
 `nb_crm_load` implements the same sequence on Delta tables and reads the SP secret directly with
 `notebookutils.credentials.getSecret`; it does not depend on a Fabric Key Vault connection. The
-`run_load` rail publishes the
-v1.0 structured result through `scripts/run_load.py` or the OIDC workflow. The deployer updates
-the notebook binding even when the item already exists. The 2026-08-23 run completed technically
-but showed no tables because this binding was missing; a rerun after the fix is required.
+`run_load` rail publishes a **v1.3** structured result through `scripts/run_load.py` or the OIDC
+workflow, on the success path and on the failure path alike. The deployer updates the notebook
+binding even when the item already exists.
 `test` and `prod` remain unchanged and out of scope.
 
 The real run `32648577263` completed successfully on 2026-08-23 and materialized the Bronze,
-audit and watermark tables in the feature Lakehouse. Counts and the committed watermark are not
-yet propagated into `rail-result.json`; they still require SQL verification.
+audit and watermark tables in the feature Lakehouse. The execution evidence reports 10 rows in
+`crm_demo_accounts`, one row in `crm_demo_load_audit`, and one row in `crm_demo_watermark`. Run
+`32648994929` published `loaded_count=5`, `total_destination_count=10`, passed PK/reconciliation
+checks, and watermark `2026-08-21T17:39:25Z`. Here 5 is the incremental delta and 10 is the total
+Bronze after merge; the v1.3 rail contract distinguishes these counts explicitly.
 
-The execution evidence reports 10 rows in `crm_demo_accounts`, one row in
-`crm_demo_load_audit`, and one row in `crm_demo_watermark`. Run `32648994929` also published
-`loaded_count=5`, `total_destination_count=10`, passed PK/reconciliation checks, and watermark
-`2026-08-21T17:39:25Z`. Here 5 is the incremental delta and 10 is the total Bronze after merge;
-the v1.3 rail contract now distinguishes these counts explicitly.
+Two gaps on this chain remain open and are tracked in
+[`../technical/14-inventario-catena-crm-accounts.md`](../technical/14-inventario-catena-crm-accounts.md):
+`reconciliation` is written as a literal instead of being computed from the counts, and the rail
+reads its evidence from a fixed OneLake path that is not bound to the run it just submitted. The
+initial/idempotent/delta run sequence and the SQL verification against the source evidence have
+not been executed yet.

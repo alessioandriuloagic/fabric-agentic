@@ -77,7 +77,6 @@ def run_load(work_item_id: int) -> dict:
         "schema_version": "1.3",
         "rail": "run_load",
         "outcome": "success",
-        "schema_version": "1.3",
         "run_id": evidence["run_id"],
         "workspace_id": workspace["id"],
         "datasets": [{

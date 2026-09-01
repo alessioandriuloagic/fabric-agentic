@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Il rail `run_load` pubblica ora un artefatto conforme **anche quando fallisce** (#158).
+  `scripts/run_load.py` dichiarava `schema_version: "1.0"` portando però i campi dataset della
+  v1.3: il risultato non validava contro nessuno dei due schemi, proprio nel caso
+  `quality_failure` su cui poggia l'escalation. Lo stesso valeva per il fallback scritto da
+  `pipe_agent_crm_run_load.yml`, che emetteva `workspace_id: null` dove la v1.0 richiede una
+  stringa non vuota. `scripts/validate_rail_result_schema.py` valida ora anche la v1.3 — finora
+  l'unica versione senza guard, pur essendo quella realmente emessa dal rail — e il workflow di
+  validazione del contratto si innesca anche sulle modifiche a `pipe_agent_crm_run_load.yml`.
+  I test che presidiano staging, PK check, merge idempotente, audit e ordine del watermark sono
+  stati aggiunti all'elenco eseguito dalla CI: esistevano ma non venivano eseguiti.
+
+### Added
+
+- Aggiunto `docs/technical/14-inventario-catena-crm-accounts.md` (#158): inventario verificato
+  anello per anello della catena CRM `accounts`, con la classificazione esplicita di ogni
+  affermazione in verificata, documentale o non verificabile. Registra le discrepanze corrette e
+  le due lasciate aperte di proposito — `reconciliation` scritta come letterale invece che
+  calcolata dai conteggi, ed evidenza Fabric letta da un percorso fisso non legato al run appena
+  sottomesso — perché la loro correzione va provata da un carico reale, non da un test. Allineati
+  `CONTEXT.md`, `docs/sources/crm_demo.md`, `docs/technical/03-rail-script.md` e il backlog S1-00,
+  che descrivevano ancora la catena come da implementare e la v1.0 come schema di `run_load`.
+
 ### Changed
 
 - Separato il catalogo aperto delle tecnologie sorgente dal registry degli adapter eseguibili
