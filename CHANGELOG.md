@@ -18,6 +18,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Aggiunta `docs/technical/13-issue-agent-guida-operativa.md`: guida completa al punto di ingresso
+  del ciclo, dalla creazione dell'intake GitHub all'avvio del dispatcher, lettura del pacchetto,
+  approvazione con label `dev-agent`, passaggio al Dev Agent, anti-duplicazione, troubleshooting e
+  confini di sicurezza. Chiarita la differenza tra agente “pronto” e processo effettivamente in
+  polling, e tra custom agent VS Code e flusso operativo sul tracker. Documentato il limite reale
+  emerso sulla #150: `karl` e `ralph` sono disponibili in VS Code ma non nel runtime Claude Code
+  locale; il percorso temporaneo verificato usa custom Issue Agent e publisher deterministico.
+
+- Pubblicata la pagina di onboarding su `https://alessioandriuloagic.github.io/fabric-agentic/`;
+  verificato il workflow GitHub Pages con il run `33501784788` (tentativo 3) dopo l'abilitazione
+  del repository con sorgente GitHub Actions.
+
 - Aggiunta la pagina statica di onboarding (#129) in `onboarding/`: scelta tra nuovo progetto e
   profilo cliente esistente, import locale, form guidato, validazione dei campi non sensibili,
   anteprima dei workspace e download di `instance.json`. Non usa backend, API autenticate o

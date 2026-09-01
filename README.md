@@ -73,7 +73,8 @@ resta oggi una checklist eseguita da un umano, non ancora automatizzabile:
 Per i colleghi che preferiscono un form, la pagina statica in `onboarding/` genera lo stesso
 `instance.json`: nessun backend, nessuna API autenticata e nessun secret store. Il workflow
 `publish-onboarding-pages.yml` costruisce schema e starter direttamente dal package e pubblica
-l'artifact su GitHub Pages dopo il merge su `main`.
+l'artifact su [GitHub Pages](https://alessioandriuloagic.github.io/fabric-agentic/) dopo il merge
+su `main`.
 
 ## Stato e limiti noti
 
@@ -93,11 +94,12 @@ l'artifact su GitHub Pages dopo il merge su `main`.
 | 1 | [CONTEXT.md](CONTEXT.md) | Glossario e stato reale dell'ambiente. Letto dagli agenti a ogni sessione |
 | 2 | [AGENTS.md](AGENTS.md) | Disciplina di lavoro: GitHub Flow, changelog, confine core/operativo |
 | 3 | [docs/technical/01-architettura-agenti.md](docs/technical/01-architettura-agenti.md) | Anatomia dei tre agenti, asimmetria dei permessi |
-| 4 | [docs/technical/02-dispatcher.md](docs/technical/02-dispatcher.md) | Trigger, ciclo continuo, verifiche sul campo |
-| 5 | [docs/technical/12-console-e-avvio.md](docs/technical/12-console-e-avvio.md) | Come si accende oggi |
-| 6 | [docs/technical/06-contratto-connettore.md](docs/technical/06-contratto-connettore.md) | Come si aggiunge una sorgente |
-| 7 | [docs/functional/06-onboarding-nuovo-cliente.md](docs/functional/06-onboarding-nuovo-cliente.md) | Come si propaga a un nuovo cliente |
-| 8 | [docs/prd/PRD-agentic-cicd-fabric.md](docs/prd/PRD-agentic-cicd-fabric.md) | Visione, scope, domande aperte |
+| 4 | [docs/technical/13-issue-agent-guida-operativa.md](docs/technical/13-issue-agent-guida-operativa.md) | Come si crea un intake, si approva il pacchetto e si avvia il giro |
+| 5 | [docs/technical/02-dispatcher.md](docs/technical/02-dispatcher.md) | Trigger, ciclo continuo, verifiche sul campo |
+| 6 | [docs/technical/12-console-e-avvio.md](docs/technical/12-console-e-avvio.md) | Come si accende oggi |
+| 7 | [docs/technical/06-contratto-connettore.md](docs/technical/06-contratto-connettore.md) | Come si aggiunge una sorgente |
+| 8 | [docs/functional/06-onboarding-nuovo-cliente.md](docs/functional/06-onboarding-nuovo-cliente.md) | Come si propaga a un nuovo cliente |
+| 9 | [docs/prd/PRD-agentic-cicd-fabric.md](docs/prd/PRD-agentic-cicd-fabric.md) | Visione, scope, domande aperte |
 | — | [docs/adr/](docs/adr/) | Ogni decisione che vale la pena non ridiscutere |
 
 Indice completo della documentazione tecnica: [docs/technical/README.md](docs/technical/README.md).
