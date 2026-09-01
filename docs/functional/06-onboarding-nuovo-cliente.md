@@ -137,6 +137,10 @@ Solo il **Livello 1** richiede presenza umana. Ed è l'unico che si paga una vol
       generati dal package, lavora solo nel browser e scarica `instance.json` senza chiamare Fabric,
       GitHub API, Azure DevOps o secret store
 - [ ] Compilare i placeholder `REPLACE_WITH_*` in `instance.json`: tracker, connessioni, riferimento al secret store
+- [ ] Per una tecnologia senza adapter registrato (es. Business Central, Oracle, PostgreSQL o
+      SharePoint), dichiarare `capabilities.supports_incremental` e
+      `capabilities.supports_source_count`; un profilo valido descrive la sorgente ma il primo
+      ticket deve ancora implementare e registrare l'adapter operativo
 - [ ] `python -m fabric_agentic validate --config <profilo>` senza errori
 - [ ] `python -m fabric_agentic render --config <profilo> --output .generated` e rilettura del piano
 

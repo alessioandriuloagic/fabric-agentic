@@ -52,9 +52,25 @@ FILE = Connector(
 
 _REGISTRY = {connector.name: connector for connector in (CRM_DATAVERSE, FILE)}
 
+_SUGGESTED_CONNECTORS = (
+    "business_central",
+    "crm",
+    "crm_dataverse",
+    "database",
+    "file",
+    "oracle_database",
+    "postgresql_database",
+    "sharepoint",
+    "sql_database",
+)
+
 
 def connector_names() -> tuple[str, ...]:
     return tuple(sorted(_REGISTRY))
+
+
+def suggested_connector_names() -> tuple[str, ...]:
+    return _SUGGESTED_CONNECTORS
 
 
 def get_connector(name: str) -> Connector:

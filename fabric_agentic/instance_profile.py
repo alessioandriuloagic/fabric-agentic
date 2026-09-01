@@ -5,7 +5,12 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from fabric_agentic.connectors import connector_names, get_connector, supports_load_mode
+from fabric_agentic.connectors import (
+    ConnectorError,
+    connector_names,
+    get_connector,
+    suggested_connector_names,
+)
 
 
 SUPPORTED_SCHEMA_VERSIONS = ("1.0",)
@@ -53,9 +58,18 @@ def profile_schema() -> dict:
                 "required": ["name", "connector", "connection_ref", "datasets"],
                 "properties": {
                     "name": {"type": "string", "minLength": 1},
-                    "connector": {"enum": list(connector_names())},
+                    "connector": {"type": "string", "pattern": SLUG.pattern},
                     "connection_ref": {"type": "string", "minLength": 1},
+                    "capabilities": {"$ref": "#/$defs/capabilities"},
                     "datasets": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/dataset"}},
+                },
+            },
+            "capabilities": {
+                "type": "object",
+                "required": ["supports_incremental", "supports_source_count"],
+                "properties": {
+                    "supports_incremental": {"type": "boolean"},
+                    "supports_source_count": {"type": "boolean"},
                 },
             },
             "dataset": {
@@ -83,6 +97,7 @@ def profile_schema() -> dict:
             },
         },
         "x-fabric-agentic": {
+            "suggested_connectors": list(suggested_connector_names()),
             "connectors": {
                 connector.name: {
                     "supports_incremental": connector.supports_incremental,
@@ -113,6 +128,9 @@ class Source:
     name: str
     connector: str
     connection_ref: str
+    supports_incremental: bool
+    supports_source_count: bool
+    adapter_available: bool
     datasets: tuple[Dataset, ...]
 
 
@@ -181,8 +199,9 @@ def parse_sources(sources: list) -> tuple[Source, ...]:
     seen_datasets: set[str] = set()
     for source in sources:
         connector = source.get("connector")
-        if connector not in connector_names():
-            raise InstanceProfileError(f"unknown connector '{connector}'")
+        if not isinstance(connector, str) or not SLUG.match(connector):
+            raise InstanceProfileError("the connector must be lowercase alphanumeric with underscores")
+        supports_incremental, supports_source_count, adapter_available = _source_capabilities(source, connector)
         if not source.get("connection_ref"):
             raise InstanceProfileError(f"the source '{source.get('name')}' must reference a connection")
         parsed.append(
@@ -190,13 +209,39 @@ def parse_sources(sources: list) -> tuple[Source, ...]:
                 name=str(source.get("name")),
                 connector=connector,
                 connection_ref=str(source["connection_ref"]),
-                datasets=parse_datasets(source.get("datasets") or [], connector, seen_datasets),
+                supports_incremental=supports_incremental,
+                supports_source_count=supports_source_count,
+                adapter_available=adapter_available,
+                datasets=parse_datasets(
+                    source.get("datasets") or [], connector, supports_incremental, seen_datasets
+                ),
             )
         )
     return tuple(parsed)
 
 
-def parse_datasets(datasets: list, connector: str, seen: set[str]) -> tuple[Dataset, ...]:
+def _source_capabilities(source: dict, connector_name: str) -> tuple[bool, bool, bool]:
+    try:
+        adapter = get_connector(connector_name)
+    except ConnectorError:
+        capabilities = source.get("capabilities")
+        if not isinstance(capabilities, dict) or not all(
+            isinstance(capabilities.get(name), bool)
+            for name in ("supports_incremental", "supports_source_count")
+        ):
+            raise InstanceProfileError(
+                f"the connector '{connector_name}' must declare capabilities because no adapter is registered"
+            ) from None
+        return capabilities["supports_incremental"], capabilities["supports_source_count"], False
+    return adapter.supports_incremental, adapter.supports_source_count, True
+
+
+def parse_datasets(
+    datasets: list,
+    connector: str,
+    supports_incremental: bool,
+    seen: set[str],
+) -> tuple[Dataset, ...]:
     parsed = []
     for dataset in datasets:
         name = str(dataset.get("name"))
@@ -211,7 +256,7 @@ def parse_datasets(datasets: list, connector: str, seen: set[str]) -> tuple[Data
         load_mode = dataset.get("load_mode")
         if load_mode not in LOAD_MODES:
             raise InstanceProfileError(f"the dataset '{name}' declares the unknown load mode '{load_mode}'")
-        if not supports_load_mode(connector, load_mode):
+        if load_mode == "incremental" and not supports_incremental:
             raise InstanceProfileError(f"the connector '{connector}' cannot read the dataset '{name}' incrementally")
 
         watermark = dataset.get("watermark_column")

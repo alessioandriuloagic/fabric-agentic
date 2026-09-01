@@ -10,6 +10,10 @@ const elements = {
   trackerOwnerLabel: document.querySelector("#tracker-owner-label"),
   trackerRepoLabel: document.querySelector("#tracker-repo-label"),
   connector: document.querySelector("#connector"),
+  connectorOptions: document.querySelector("#connector-options"),
+  connectorCapabilities: document.querySelector("#connector-capabilities"),
+  supportsIncremental: document.querySelector("#supports-incremental"),
+  supportsSourceCount: document.querySelector("#supports-source-count"),
   sourceName: document.querySelector("#source-name"),
   connectionRef: document.querySelector("#connection-ref"),
   datasetName: document.querySelector("#dataset-name"),
@@ -25,6 +29,7 @@ const elements = {
   workspacePreview: document.querySelector("#workspace-preview"),
   featurePreview: document.querySelector("#feature-preview"),
   datasetPreview: document.querySelector("#dataset-preview"),
+  adapterPreview: document.querySelector("#adapter-preview"),
   download: document.querySelector("#download-profile"),
   importBar: document.querySelector("#import-bar"),
   profileFile: document.querySelector("#profile-file"),
@@ -36,6 +41,10 @@ let importedProfile;
 
 function fillSelect(select, values) {
   select.replaceChildren(...values.map(value => new Option(value.replaceAll("_", " "), value)));
+}
+
+function fillDatalist(datalist, values) {
+  datalist.replaceChildren(...values.map(value => new Option(value, value)));
 }
 
 function value(id) {
@@ -60,19 +69,30 @@ function buildProfile() {
   if (dataset.load_mode === "incremental") dataset.watermark_column = value("watermark");
   const firstImportedSource = importedProfile?.sources?.[0] || {};
   const firstImportedDataset = firstImportedSource.datasets?.[0] || {};
+  const firstDataset = { ...firstImportedDataset, ...dataset };
+  if (dataset.load_mode === "full") delete firstDataset.watermark_column;
+  const source = {
+    ...firstImportedSource,
+    name: value("sourceName"),
+    connector: value("connector"),
+    connection_ref: value("connectionRef"),
+    datasets: [firstDataset, ...(firstImportedSource.datasets?.slice(1) || [])],
+  };
+  if (contract["x-fabric-agentic"].connectors[source.connector]) {
+    delete source.capabilities;
+  } else {
+    source.capabilities = {
+      supports_incremental: elements.supportsIncremental.checked,
+      supports_source_count: elements.supportsSourceCount.checked,
+    };
+  }
   return {
     ...(importedProfile || {}),
     schema_version: contract.properties.schema_version.const,
     project: { slug: value("projectSlug"), display_name: value("displayName") },
     tracker,
     environments,
-    sources: [{
-      ...firstImportedSource,
-      name: value("sourceName"),
-      connector: value("connector"),
-      connection_ref: value("connectionRef"),
-      datasets: [{ ...firstImportedDataset, ...dataset }, ...(firstImportedSource.datasets?.slice(1) || [])],
-    }, ...(importedProfile?.sources?.slice(1) || [])],
+    sources: [source, ...(importedProfile?.sources?.slice(1) || [])],
     credentials: [{
       ...(importedProfile?.credentials?.[0] || {}),
       name: value("credentialName"),
@@ -93,8 +113,9 @@ function validate(profile) {
   const datasetNames = new Set();
   profile.sources.forEach(source => {
     if (!source.name || !source.connection_ref) errors.push("Completa sorgente e riferimento connessione.");
-    const capabilities = contract["x-fabric-agentic"].connectors[source.connector];
-    if (!capabilities) errors.push(`Il connector ${source.connector} non è registrato.`);
+    const connectorPattern = new RegExp(contract.$defs.source.properties.connector.pattern);
+    if (!connectorPattern.test(source.connector)) errors.push("Il connector deve usare minuscole, numeri e underscore.");
+    const capabilities = contract["x-fabric-agentic"].connectors[source.connector] || source.capabilities;
     source.datasets.forEach(dataset => {
       if (!dataset.name || !dataset.primary_key.length) errors.push("Completa dataset e chiave primaria.");
       if (datasetNames.has(dataset.name)) errors.push(`Il dataset ${dataset.name} è dichiarato più volte.`);
@@ -119,8 +140,12 @@ function updateTrackerLabels() {
 }
 
 function updateLoadModes() {
-  const connector = contract["x-fabric-agentic"].connectors[elements.connector.value];
-  const modes = contract.$defs.dataset.properties.load_mode.enum.filter(mode => mode !== "incremental" || connector.supports_incremental);
+  const adapter = contract["x-fabric-agentic"].connectors[elements.connector.value];
+  elements.connectorCapabilities.hidden = Boolean(adapter);
+  const supportsIncremental = adapter
+    ? adapter.supports_incremental
+    : elements.supportsIncremental.checked;
+  const modes = contract.$defs.dataset.properties.load_mode.enum.filter(mode => mode !== "incremental" || supportsIncremental);
   const previous = elements.loadMode.value;
   fillSelect(elements.loadMode, modes);
   if (modes.includes(previous)) elements.loadMode.value = previous;
@@ -139,6 +164,9 @@ function render() {
   elements.workspacePreview.textContent = slug ? `ws_${slug}_${profile.environments[0] || "<ambiente>"}` : "—";
   elements.featurePreview.textContent = slug ? `ws_${slug}_feature_wi<work-item>` : "—";
   elements.datasetPreview.textContent = profile.sources[0].datasets[0].name || "—";
+  elements.adapterPreview.textContent = contract["x-fabric-agentic"].connectors[profile.sources[0].connector]
+    ? "disponibile"
+    : "da implementare";
   elements.validationSummary.textContent = errors[0] || "";
   elements.validationBadge.textContent = errors.length ? `${errors.length} da completare` : "Profilo pronto";
   elements.validationBadge.className = `validation-badge ${errors.length ? "invalid" : "valid"}`;
@@ -158,6 +186,8 @@ function loadProfile(profile) {
   document.querySelectorAll("input[name='environment']").forEach(input => { input.checked = profile.environments?.includes(input.value) || false; });
   elements.sourceName.value = source.name || "";
   elements.connector.value = source.connector || elements.connector.value;
+  elements.supportsIncremental.checked = source.capabilities?.supports_incremental || false;
+  elements.supportsSourceCount.checked = source.capabilities?.supports_source_count ?? true;
   elements.connectionRef.value = source.connection_ref || "";
   elements.datasetName.value = dataset.name || "";
   elements.primaryKey.value = (dataset.primary_key || []).join(", ");
@@ -187,7 +217,7 @@ async function start() {
     contract = await schemaResponse.json();
     const starter = await starterResponse.json();
     fillSelect(elements.trackerType, contract.properties.tracker.properties.type.enum);
-    fillSelect(elements.connector, contract.$defs.source.properties.connector.enum);
+    fillDatalist(elements.connectorOptions, contract["x-fabric-agentic"].suggested_connectors);
     fillSelect(elements.loadMode, contract.$defs.dataset.properties.load_mode.enum);
     document.querySelector(".schema-state").classList.add("ready");
     elements.schemaLabel.textContent = `Schema ${contract.properties.schema_version.const} · locale`;
@@ -200,7 +230,9 @@ async function start() {
 
 elements.form.addEventListener("input", render);
 elements.trackerType.addEventListener("change", render);
-elements.connector.addEventListener("change", () => { updateLoadModes(); render(); });
+elements.connector.addEventListener("input", () => { updateLoadModes(); render(); });
+elements.supportsIncremental.addEventListener("change", () => { updateLoadModes(); render(); });
+elements.supportsSourceCount.addEventListener("change", render);
 elements.loadMode.addEventListener("change", () => { updateLoadModes(); render(); });
 elements.download.addEventListener("click", downloadProfile);
 elements.profileFile.addEventListener("change", async event => {

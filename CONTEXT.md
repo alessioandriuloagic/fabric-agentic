@@ -242,11 +242,11 @@ Lo SP interno `fabric-agentic-deploy` (`db9d4adb-db6a-4238-8e75-c69d21b1b37e`) h
 del tenant `d5e193bb-0b46-467d-9d95-03eb0d012c42`; va modificata o ricreata per usare lo SP
 interno prima del prossimo run. Nessun secret viene versionato nel repository.
 
-### 7.1 Connettori in fase 1
+### 7.1 Adapter eseguibili in fase 1
 
-> L'elenco autorevole dei connettori ammessi è il registry `fabric_agentic/connectors.py`, da cui
-> il profilo di istanza deriva la validazione. Questa tabella è descrittiva: se diverge, vince il
-> registry.
+> Il profilo ammette tecnologie sorgente aperte. Il registry `fabric_agentic/connectors.py` elenca
+> solo gli adapter già eseguibili e ne fornisce le capacità; una tecnologia senza adapter dichiara
+> le capacità nel profilo ma non può ancora essere eseguita da `plan_request` (ADR-0018).
 
 | # | Tipologia | Chiave nel registry | Sorgente concreta | Note |
 |---|---|---|---|---|
@@ -256,9 +256,11 @@ interno prima del prossimo run. Nessun secret viene versionato nel repository.
 Il dataset CRM è il tracer iniziale con dati demo/sintetici. L'anagrafica città File resta il
 secondo connettore e la prova dell'astrazione; le join Silver sono un'evoluzione successiva.
 
-### 7.2 Connettori previsti (fase 2)
+### 7.2 Tecnologie suggerite e adapter futuri
 
-Altro Lakehouse Fabric (shortcut) · Database / DWH · CRM (Dataverse) · SharePoint / Excel
+Business Central · CRM generico · Database / DWH SQL · Oracle Database · PostgreSQL · SharePoint
+· File · Altro Lakehouse Fabric (shortcut). L'elenco è un catalogo iniziale per la UI, non una
+allowlist: un profilo può dichiarare un identificatore nuovo con capacità esplicite.
 
 ### 7.3 Regole vincolanti
 

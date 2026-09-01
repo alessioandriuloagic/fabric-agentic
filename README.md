@@ -52,7 +52,8 @@ docs/             requisiti, decisioni (ADR), documentazione tecnica e funzional
 ```
 
 Il core non importa mai `scripts`: un test lo impone ([ADR-0015](docs/adr/ADR-0015-pacchetto-riutilizzabile-alla-radice.md)).
-L'elenco dei connector ammessi vive solo in `fabric_agentic/connectors.py` ([ADR-0016](docs/adr/ADR-0016-registry-dei-connector.md)).
+Il profilo accetta connector aperti; `fabric_agentic/connectors.py` registra solo gli adapter già
+eseguibili e i suggerimenti del form ([ADR-0018](docs/adr/ADR-0018-profili-connector-aperti.md)).
 
 ## Portare il flusso su un cliente o un collega
 
@@ -78,7 +79,8 @@ l'artifact su GitHub Pages dopo il merge su `main`.
 
 | | Stato |
 |---|---|
-| Connector registrati | `crm_dataverse` (incrementale), `file` (solo carico completo) |
+| Sorgenti descrivibili | Qualsiasi identificatore valido; suggeriti BC, CRM, database SQL, Oracle, PostgreSQL, SharePoint e file |
+| Adapter eseguibili nel core | `crm_dataverse` (incrementale), `file` (solo carico completo) |
 | Runtime dei dispatcher | Locale, tre terminali. Target: event-driven su runner self-hosted ([ADR-0017](docs/adr/ADR-0017-runtime-agenti-event-driven.md)) |
 | **Identità di inferenza** | **Bloccante**: Issue, Dev e Review girano oggi sullo stesso Claude Code sotto l'account personale dell'operatore, non un'identità aziendale. Vedi `CONTEXT.md` e PRD Q-13 |
 | Bootstrap di un collega | `python -m fabric_agentic init` genera profilo e checklist; identità e permessi restano manuali |

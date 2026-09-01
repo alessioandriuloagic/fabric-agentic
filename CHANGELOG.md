@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Separato il catalogo aperto delle tecnologie sorgente dal registry degli adapter eseguibili
+  (ADR-0018). Un profilo può ora descrivere Business Central, CRM, database SQL, Oracle,
+  PostgreSQL, SharePoint, file o un identificatore futuro; se non esiste un adapter, dichiara
+  esplicitamente capacità incrementali e conteggio alla sorgente. Render e UI mostrano che
+  l'adapter è ancora da implementare, mentre `plan_request` continua a rifiutarne l'esecuzione.
+  Il form usa suggerimenti modificabili anziché una select chiusa.
+
 ### Added
 
 - Aggiunta la pagina statica di onboarding (#129) in `onboarding/`: scelta tra nuovo progetto e

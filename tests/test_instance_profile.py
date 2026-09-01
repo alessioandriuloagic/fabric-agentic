@@ -7,6 +7,7 @@ from fabric_agentic.connectors import connector_names
 from fabric_agentic.instance_profile import (
     InstanceProfileError,
     LOAD_MODES,
+    SLUG,
     SUPPORTED_SCHEMA_VERSIONS,
     SUPPORTED_TRACKERS,
     feature_workspace_name,
@@ -55,7 +56,30 @@ class InstanceProfileTests(unittest.TestCase):
         self.assertEqual(schema["properties"]["schema_version"]["const"], SUPPORTED_SCHEMA_VERSIONS[0])
         self.assertEqual(schema["properties"]["tracker"]["properties"]["type"]["enum"], list(SUPPORTED_TRACKERS))
         self.assertEqual(schema["$defs"]["dataset"]["properties"]["load_mode"]["enum"], list(LOAD_MODES))
-        self.assertEqual(schema["$defs"]["source"]["properties"]["connector"]["enum"], list(connector_names()))
+        connector = schema["$defs"]["source"]["properties"]["connector"]
+        self.assertEqual(connector, {"type": "string", "pattern": SLUG.pattern})
+        self.assertIn("oracle_database", schema["x-fabric-agentic"]["suggested_connectors"])
+
+    def test_accepts_an_open_connector_with_explicit_capabilities(self) -> None:
+        document = profile_document()
+        document["sources"][0]["connector"] = "oracle_database"
+        document["sources"][0]["capabilities"] = {
+            "supports_incremental": True,
+            "supports_source_count": True,
+        }
+
+        profile = parse_profile(document)
+
+        self.assertEqual(profile.sources[0].connector, "oracle_database")
+        self.assertTrue(profile.sources[0].supports_incremental)
+        self.assertFalse(profile.sources[0].adapter_available)
+
+    def test_custom_connector_requires_explicit_capabilities(self) -> None:
+        document = profile_document()
+        document["sources"][0]["connector"] = "future_erp"
+
+        with self.assertRaisesRegex(InstanceProfileError, "must declare capabilities"):
+            parse_profile(document)
 
     def assertRejects(self, document: dict, message: str) -> None:
         with self.assertRaisesRegex(InstanceProfileError, message):
@@ -93,10 +117,10 @@ class InstanceProfileTests(unittest.TestCase):
     def test_rejects_an_empty_environment_list(self) -> None:
         self.assertRejects(profile_document(environments=[]), "at least one environment")
 
-    def test_rejects_an_unknown_connector(self) -> None:
+    def test_rejects_an_invalid_connector_identifier(self) -> None:
         document = profile_document()
-        document["sources"][0]["connector"] = "carrier_pigeon"
-        self.assertRejects(document, "unknown connector")
+        document["sources"][0]["connector"] = "Oracle DB"
+        self.assertRejects(document, "lowercase alphanumeric")
 
     def test_rejects_an_incremental_dataset_the_connector_cannot_read(self) -> None:
         document = profile_document()
