@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Il fallback di `pipe_agent_crm_run_load` emette ora un artefatto conforme a
+  `rail-result-v1.3` anche quando il processo termina prima del risultato. Le modifiche al workflow
+  CRM attivano la validazione CI e la suite obbligatoria include i test di staging, Bronze, audit,
+  watermark e artefatto Fabric. Questi file workflow sono separati dalla PR del Dev Agent perché
+  la relativa GitHub App non possiede, correttamente, il permesso `workflows`.
+
 - I tre dispatcher risolvono ora il comando agentico configurato (`claude`) con il resolver di
   sistema prima di avviare il processo. Su Windows PowerShell trovava `claude.exe`, ma
   `subprocess` riceveva il nome senza suffisso e falliva con `WinError 2`; la configurazione resta
