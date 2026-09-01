@@ -4,6 +4,7 @@ import argparse
 from pathlib import Path
 
 from fabric_agentic import __version__
+from fabric_agentic.bootstrap import InitError, init as init_starter
 from fabric_agentic.console import serve
 from fabric_agentic.control import AgentStatus, agent_home, describe_all
 from fabric_agentic.instance_profile import InstanceProfile, InstanceProfileError, load_profile
@@ -28,6 +29,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
     console = commands.add_parser("console", help="apre la console locale in sola lettura")
     console.add_argument("--port", type=int, default=8765)
+
+    init_command = commands.add_parser("init", help="crea un profilo di istanza e la checklist di bootstrap")
+    init_command.add_argument("--directory", type=Path, required=True)
+    init_command.add_argument("--project-slug", help="per default derivato dal nome della cartella")
+    init_command.add_argument("--display-name", help="per default uguale allo slug")
+    init_command.add_argument("--force", action="store_true", help="sovrascrive i file già presenti")
 
     return parser.parse_args(argv)
 
@@ -70,6 +77,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "render":
         return _render(args.config, args.output)
 
+    if args.command == "init":
+        return _init(args.directory, args.project_slug, args.display_name, args.force)
+
     return _doctor(home, args.config)
 
 
@@ -91,6 +101,19 @@ def _render(config_path: Path, output_directory: Path) -> int:
         return 1
     for path in render(profile, output_directory):
         print(f"generato: {path}")
+    return 0
+
+
+def _init(directory: Path, project_slug: str | None, display_name: str | None, force: bool) -> int:
+    try:
+        result = init_starter(directory, project_slug, display_name, force)
+    except InitError as error:
+        print(f"init non riuscito: {error}")
+        return 1
+    for path in result.written:
+        print(f"generato: {path}")
+    for path in result.skipped:
+        print(f"già presente, non sovrascritto (usa --force per rigenerare): {path}")
     return 0
 
 

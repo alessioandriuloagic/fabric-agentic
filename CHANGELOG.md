@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Aggiunto `python -m fabric_agentic init --directory <path>` (#128): genera un `instance.json` di
+  partenza (slug e nome derivati dalla cartella se non passati esplicitamente, sempre con
+  placeholder `REPLACE_WITH_*`, mai un segreto) e una `CHECKLIST.md` con i passaggi umani —
+  identità e permessi, Fabric, Git, secret store — parametrizzata sul progetto e con un rimando a
+  `docs/functional/06-onboarding-nuovo-cliente.md`. Nessuna chiamata esterna: solo scrittura su
+  filesystem locale. Ripetibile e idempotente — un file già presente non viene sovrascritto a meno
+  di `--force`, così un collega non rischia di perdere una modifica fatta a mano rilanciando il
+  comando. L'output è verificabile da `validate` e `doctor` come qualunque altro profilo.
+
 - Aggiunto un `README.md` alla radice: sommario compatto di cosa fa il kit, avvio rapido, struttura
   del repository, come si porta su un cliente o un collega, stato e limiti noti, con link a ogni
   documento di approfondimento. `pyproject.toml` torna a dichiararlo come `readme` del pacchetto,
