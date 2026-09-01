@@ -44,6 +44,8 @@ class DevDispatcherTests(unittest.TestCase):
         self.assertIn("--add-dir", command)
         self.assertEqual(command[command.index("--add-dir") + 1], str(task_path.parent))
         self.assertEqual(mock_run.call_args.kwargs["cwd"], self.config.repository_path)
+        self.assertEqual(mock_run.call_args.kwargs["encoding"], "utf-8")
+        self.assertEqual(mock_run.call_args.kwargs["errors"], "replace")
         self.assertTrue(outcome.succeeded)
         self.assertEqual(outcome.session_id, "abc")
         environment = mock_run.call_args.kwargs["env"]
@@ -314,6 +316,8 @@ class DevDispatcherTests(unittest.TestCase):
 
         self.assertEqual(documents, ["CONTEXT.md", "AGENTS.md"])
         self.assertIn("Read", run_mock.call_args.args[0])
+        self.assertEqual(run_mock.call_args.kwargs["encoding"], "utf-8")
+        self.assertEqual(run_mock.call_args.kwargs["errors"], "replace")
 
     def test_smoke_comment_identifies_the_dev_agent(self) -> None:
         comment = smoke_comment(["CONTEXT.md", "AGENTS.md"])

@@ -12,7 +12,7 @@ from typing import Iterator
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from fabric_agentic.agent_session import session_failure_reason
+from fabric_agentic.agent_session import resolve_agent_command, session_failure_reason
 from fabric_agentic.config_paths import expand_path, read_json_config
 from fabric_agentic.polling import PollingStopped, run_polling
 from fabric_agentic.credential_broker import credential_broker_environment
@@ -23,6 +23,12 @@ from scripts.issue_package_publish import IDENTITY_MARKER, app_bot_login
 PUBLISHER_MODULE = "scripts.issue_package_publish"
 INTAKE_LABEL = "issue-agent"
 APPROVED_LABEL = "dev-agent"
+ISSUE_OUTPUT_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["work_package"],
+    "properties": {"work_package": {"type": "string", "minLength": 1}},
+}
 
 
 class IssueDispatcherError(Exception):
@@ -236,10 +242,22 @@ def launch_issue_session(config: IssueDispatcherConfig, task_path: Path) -> str:
         "modify files, or access credentials, environment variables, token caches, or Fabric."
     )
     result = subprocess.run(
-        [config.claude_command, "-p", prompt, "--add-dir", str(task_path.parent), "--output-format", "json"],
+        [
+            resolve_agent_command(config.claude_command),
+            "-p",
+            prompt,
+            "--add-dir",
+            str(task_path.parent),
+            "--output-format",
+            "json",
+            "--json-schema",
+            json.dumps(ISSUE_OUTPUT_SCHEMA),
+        ],
         cwd=config.repository_path,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         check=False,
     )
     if result.returncode != 0 or not result.stdout.strip():
@@ -250,14 +268,14 @@ def launch_issue_session(config: IssueDispatcherConfig, task_path: Path) -> str:
         payload = json.loads(result.stdout)
     except (TypeError, ValueError, json.JSONDecodeError) as error:
         raise IssueDispatcherError("Issue Agent session returned invalid output") from error
+    package = (payload.get("structured_output") or {}).get("work_package")
+    if isinstance(package, str) and package.strip():
+        return package
     if payload.get("is_error"):
         raise IssueDispatcherError(
             f"Issue Agent session failed ({session_failure_reason(result.returncode, result.stdout)})"
         )
-    package = payload.get("result")
-    if not isinstance(package, str) or not package.strip():
-        raise IssueDispatcherError("Issue Agent session returned no work package")
-    return package
+    raise IssueDispatcherError("Issue Agent session returned no work package")
 
 
 def run_once(config: IssueDispatcherConfig, state_path: Path, task_directory: Path, dry_run: bool) -> list[dict]:

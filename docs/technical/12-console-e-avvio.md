@@ -107,6 +107,10 @@ viene generato alcun segreto.
 
 ## 6. Avvio
 
+Il campo `claude_command` resta portabile (`claude`): il dispatcher lo risolve nel `PATH` della
+macchina prima dell'avvio, incluso il suffisso `.exe` richiesto da Python su Windows. Non inserire
+nel file di configurazione un percorso assoluto legato all'operatore.
+
 Prima verifica, poi avvia. In tre terminali distinti:
 
 ```

@@ -13,7 +13,7 @@ from typing import Iterator
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from fabric_agentic.agent_session import session_failure_reason
+from fabric_agentic.agent_session import resolve_agent_command, session_failure_reason
 from fabric_agentic.config_paths import expand_path, read_json_config
 from fabric_agentic.polling import PollingStopped, run_polling
 from fabric_agentic.credential_broker import credential_broker_environment
@@ -239,10 +239,12 @@ def launch_review_session(config: ReviewDispatcherConfig, task_path: Path) -> st
         "access credentials, environment variables, certificate stores, token caches, or Fabric."
     )
     result = subprocess.run(
-        [config.claude_command, "-p", prompt, "--add-dir", str(task_path.parent), "--output-format", "json"],
+        [resolve_agent_command(config.claude_command), "-p", prompt, "--add-dir", str(task_path.parent), "--output-format", "json"],
         cwd=config.repository_path,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         check=False,
     )
     if result.returncode != 0 or not result.stdout.strip():
