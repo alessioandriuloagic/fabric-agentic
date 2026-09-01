@@ -514,6 +514,7 @@ L'MVP è accettato quando, **senza alcun intervento tecnico dell'owner oltre all
 | ~~Q-7~~ | ~~Quale opzione di hosting degli agenti prima dell'uso su dati cliente?~~ | — | **Chiusa 2026-08-20**: Viewer solo per dati sintetici/open data; con dati cliente Viewer revocato e diagnostica via artefatto (ADR-0008) |
 | ~~Q-9~~ | ~~Cartelle del workspace e task flow sono creabili via API/CLI?~~ | — | **Chiusa 2026-08-20**: cartelle via API; task flow rimane un passo manuale (ADR-0003) |
 | Q-12 | Con quale strumento generiamo l'anagrafica città sintetica, e come la versioniamo? | @reza | Aperta — blocca S4 |
+| Q-13 | Issue, Dev e Review girano oggi sullo stesso account Claude Code **personale** dell'operatore. Quale identità di inferenza aziendale la sostituisce, e con quali seat/policy/budget? | @dave / owner | Aperta — **blocca l'uso su qualunque cliente o collega**, e blocca ADR-0017 passo 0 |
 
 ---
 
