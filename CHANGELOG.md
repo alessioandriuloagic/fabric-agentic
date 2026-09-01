@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Aggiunta la pagina statica di onboarding (#129) in `onboarding/`: scelta tra nuovo progetto e
+  profilo cliente esistente, import locale, form guidato, validazione dei campi non sensibili,
+  anteprima dei workspace e download di `instance.json`. Non usa backend, API autenticate o
+  dipendenze runtime esterne. Schema, connector e starter vengono generati dal contratto Python
+  durante la build, così la UI non mantiene un secondo elenco di regole. Il workflow
+  `publish-onboarding-pages.yml` pubblica l'artifact su GitHub Pages dopo il merge su `main`.
+
 - Aggiunto `python -m fabric_agentic init --directory <path>` (#128): genera un `instance.json` di
   partenza (slug e nome derivati dalla cartella se non passati esplicitamente, sempre con
   placeholder `REPLACE_WITH_*`, mai un segreto) e una `CHECKLIST.md` con i passaggi umani —

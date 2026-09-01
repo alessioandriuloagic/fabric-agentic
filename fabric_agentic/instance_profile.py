@@ -5,7 +5,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from fabric_agentic.connectors import connector_names, supports_load_mode
+from fabric_agentic.connectors import connector_names, get_connector, supports_load_mode
 
 
 SUPPORTED_SCHEMA_VERSIONS = ("1.0",)
@@ -14,6 +14,86 @@ LOAD_MODES = ("full", "incremental")
 
 SLUG = re.compile(r"^[a-z][a-z0-9_]*$")
 SECRET_FIELDS = ("value", "secret", "password", "token", "client_secret")
+
+
+def profile_schema() -> dict:
+    connectors = [get_connector(name) for name in connector_names()]
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://fabric-agentic.local/schemas/instance-profile-v1.0.json",
+        "title": "Fabric Agentic instance profile",
+        "type": "object",
+        "required": ["schema_version", "project", "tracker", "environments", "sources", "credentials"],
+        "properties": {
+            "schema_version": {"const": SUPPORTED_SCHEMA_VERSIONS[0]},
+            "project": {
+                "type": "object",
+                "required": ["slug", "display_name"],
+                "properties": {
+                    "slug": {"type": "string", "pattern": SLUG.pattern},
+                    "display_name": {"type": "string", "minLength": 1},
+                },
+            },
+            "tracker": {
+                "type": "object",
+                "required": ["type"],
+                "properties": {"type": {"enum": list(SUPPORTED_TRACKERS)}},
+            },
+            "environments": {
+                "type": "array",
+                "minItems": 1,
+                "items": {"type": "string", "minLength": 1},
+            },
+            "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}},
+            "credentials": {"type": "array", "items": {"$ref": "#/$defs/credential"}},
+        },
+        "$defs": {
+            "source": {
+                "type": "object",
+                "required": ["name", "connector", "connection_ref", "datasets"],
+                "properties": {
+                    "name": {"type": "string", "minLength": 1},
+                    "connector": {"enum": list(connector_names())},
+                    "connection_ref": {"type": "string", "minLength": 1},
+                    "datasets": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/dataset"}},
+                },
+            },
+            "dataset": {
+                "type": "object",
+                "required": ["name", "primary_key", "load_mode"],
+                "properties": {
+                    "name": {"type": "string", "minLength": 1},
+                    "primary_key": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {"type": "string", "minLength": 1},
+                    },
+                    "load_mode": {"enum": list(LOAD_MODES)},
+                    "watermark_column": {"type": ["string", "null"]},
+                },
+            },
+            "credential": {
+                "type": "object",
+                "required": ["name", "store", "reference"],
+                "properties": {
+                    "name": {"type": "string", "minLength": 1},
+                    "store": {"type": "string", "minLength": 1},
+                    "reference": {"type": "string", "minLength": 1},
+                },
+            },
+        },
+        "x-fabric-agentic": {
+            "connectors": {
+                connector.name: {
+                    "supports_incremental": connector.supports_incremental,
+                    "supports_source_count": connector.supports_source_count,
+                    "connection_fields": list(connector.connection_fields),
+                }
+                for connector in connectors
+            },
+            "forbidden_credential_fields": list(SECRET_FIELDS),
+        },
+    }
 
 
 class InstanceProfileError(Exception):

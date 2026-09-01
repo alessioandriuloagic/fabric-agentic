@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Configura un profilo di istanza Fabric Agentic senza segreti.">
+  <title>Instance Builder | Fabric Agentic</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 rx=%228%22 fill=%22%2316211f%22/><text x=%2232%22 y=%2240%22 text-anchor=%22middle%22 font-family=%22sans-serif%22 font-weight=%22700%22 font-size=%2224%22 fill=%22white%22>FA</text></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Fabric Agentic Instance Builder">
+      <span class="brand-mark" aria-hidden="true">FA</span>
+      <span><strong>Fabric Agentic</strong><small>Instance Builder</small></span>
+    </a>
+    <div class="schema-state"><span class="status-dot" aria-hidden="true"></span><span id="schema-label">Caricamento contratto...</span></div>
+  </header>
+
+  <main>
+    <section class="intro" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">Onboarding statico · nessun dato viene inviato</p>
+        <h1 id="page-title">Prepara un’istanza</h1>
+        <p>Compila il contratto del progetto, verifica i nomi generati e scarica il profilo da passare alla CLI.</p>
+      </div>
+      <div class="mode-switch" role="group" aria-label="Modalità profilo">
+        <button class="mode active" type="button" data-mode="new" aria-pressed="true">Nuovo progetto</button>
+        <button class="mode" type="button" data-mode="existing" aria-pressed="false">Cliente esistente</button>
+      </div>
+    </section>
+
+    <section class="workflow" aria-label="Flusso di delivery">
+      <div class="flow-node"><span>01</span><strong>Issue</strong><small>Definisce</small></div>
+      <i aria-hidden="true"></i>
+      <div class="flow-node"><span>02</span><strong>Dev</strong><small>Implementa</small></div>
+      <i aria-hidden="true"></i>
+      <div class="flow-node"><span>03</span><strong>Review</strong><small>Verifica</small></div>
+      <i aria-hidden="true"></i>
+      <div class="flow-node human"><span>04</span><strong>Umano</strong><small>Decide il merge</small></div>
+    </section>
+
+    <div id="import-bar" class="import-bar" hidden>
+      <div><strong>Riparti da un profilo</strong><span>Il file resta nel browser e non viene caricato altrove.</span></div>
+      <label class="file-action" for="profile-file">↑ Importa JSON</label>
+      <input id="profile-file" type="file" accept="application/json,.json">
+    </div>
+
+    <div class="workspace">
+      <form id="profile-form" novalidate>
+        <section class="form-section" aria-labelledby="project-heading">
+          <div class="section-heading"><span>01</span><div><h2 id="project-heading">Progetto</h2><p>Identità leggibile e stabile dell’istanza.</p></div></div>
+          <div class="field-grid">
+            <label>Nome visualizzato<input id="display-name" name="display_name" autocomplete="organization" required></label>
+            <label>Slug progetto<input id="project-slug" name="project_slug" spellcheck="false" required><small>Minuscole, numeri e underscore.</small></label>
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="tracker-heading">
+          <div class="section-heading"><span>02</span><div><h2 id="tracker-heading">Tracker</h2><p>Dove nascono e avanzano i work item.</p></div></div>
+          <div class="field-grid three">
+            <label>Tipo<select id="tracker-type" name="tracker_type"></select></label>
+            <label id="tracker-owner-label">Owner<input id="tracker-owner" name="tracker_owner" required></label>
+            <label id="tracker-repo-label">Repository<input id="tracker-repository" name="tracker_repository" required></label>
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="environment-heading">
+          <div class="section-heading"><span>03</span><div><h2 id="environment-heading">Ambienti</h2><p>Seleziona gli ambienti previsti dal progetto.</p></div></div>
+          <fieldset class="environment-options">
+            <legend class="sr-only">Ambienti</legend>
+            <label><input type="checkbox" name="environment" value="dev" checked>Dev</label>
+            <label><input type="checkbox" name="environment" value="test">Test</label>
+            <label><input type="checkbox" name="environment" value="prod">Prod</label>
+          </fieldset>
+        </section>
+
+        <section class="form-section" aria-labelledby="source-heading">
+          <div class="section-heading"><span>04</span><div><h2 id="source-heading">Sorgente e dataset</h2><p>La capacità incrementale deriva dal connector registrato.</p></div></div>
+          <div class="field-grid three">
+            <label>Nome sorgente<input id="source-name" name="source_name" required></label>
+            <label>Connector<select id="connector" name="connector"></select></label>
+            <label>Riferimento connessione<input id="connection-ref" name="connection_ref" required></label>
+            <label>Dataset<input id="dataset-name" name="dataset_name" required></label>
+            <label>Chiave primaria<input id="primary-key" name="primary_key" required><small>Più colonne separate da virgola.</small></label>
+            <label>Modalità<select id="load-mode" name="load_mode"></select></label>
+            <label id="watermark-label">Colonna watermark<input id="watermark" name="watermark"></label>
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="credential-heading">
+          <div class="section-heading"><span>05</span><div><h2 id="credential-heading">Credential reference</h2><p>Solo un puntatore al secret store. Mai il valore.</p></div></div>
+          <div class="field-grid three">
+            <label>Nome<input id="credential-name" name="credential_name" required></label>
+            <label>Secret store<input id="credential-store" name="credential_store" required></label>
+            <label>Riferimento<input id="credential-reference" name="credential_reference" required></label>
+          </div>
+          <div class="security-note"><span aria-hidden="true">!</span><p>Non inserire token, password o client secret. Il profilo accetta esclusivamente riferimenti.</p></div>
+        </section>
+      </form>
+
+      <aside class="preview" aria-labelledby="preview-heading">
+        <div class="preview-head"><div><p class="eyebrow">Anteprima locale</p><h2 id="preview-heading">Piano generato</h2></div><span id="validation-badge" class="validation-badge">Da completare</span></div>
+        <div id="validation-summary" class="validation-summary" role="status" aria-live="polite"></div>
+        <dl class="name-preview">
+          <div><dt>Workspace Dev</dt><dd id="workspace-preview">—</dd></div>
+          <div><dt>Feature workspace</dt><dd id="feature-preview">—</dd></div>
+          <div><dt>Dataset</dt><dd id="dataset-preview">—</dd></div>
+        </dl>
+        <div class="checklist-preview">
+          <h3>Prima del primo ticket</h3>
+          <ol>
+            <li>Identità agenti separate</li><li>Permessi Fabric minimi</li><li>Branch protection verificata</li><li>Riferimento nel secret store</li>
+          </ol>
+        </div>
+        <button id="download-profile" class="primary-action" type="button" disabled><span aria-hidden="true">↓</span> Scarica instance.json</button>
+        <a class="text-link" href="https://github.com/alessioandriuloagic/fabric-agentic#portare-il-flusso-su-un-cliente-o-un-collega">Apri la procedura CLI ↗</a>
+      </aside>
+    </div>
+  </main>
+  <footer><span>Fabric Agentic</span><span>Statico · zero backend · zero segreti</span></footer>
+  <script src="app.js" defer></script>
+</body>
+</html>
