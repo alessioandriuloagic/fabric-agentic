@@ -3,11 +3,16 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from fabric_agentic.connectors import connector_names
 from fabric_agentic.instance_profile import (
     InstanceProfileError,
+    LOAD_MODES,
+    SUPPORTED_SCHEMA_VERSIONS,
+    SUPPORTED_TRACKERS,
     feature_workspace_name,
     load_profile,
     parse_profile,
+    profile_schema,
     workspace_name,
 )
 
@@ -43,6 +48,15 @@ def profile_document(**overrides) -> dict:
 
 
 class InstanceProfileTests(unittest.TestCase):
+
+    def test_exported_schema_uses_the_same_contract_constants(self) -> None:
+        schema = profile_schema()
+
+        self.assertEqual(schema["properties"]["schema_version"]["const"], SUPPORTED_SCHEMA_VERSIONS[0])
+        self.assertEqual(schema["properties"]["tracker"]["properties"]["type"]["enum"], list(SUPPORTED_TRACKERS))
+        self.assertEqual(schema["$defs"]["dataset"]["properties"]["load_mode"]["enum"], list(LOAD_MODES))
+        self.assertEqual(schema["$defs"]["source"]["properties"]["connector"]["enum"], list(connector_names()))
+
     def assertRejects(self, document: dict, message: str) -> None:
         with self.assertRaisesRegex(InstanceProfileError, message):
             parse_profile(document)

@@ -69,6 +69,11 @@ prima del primo ticket. È ripetibile: rilanciato non sovrascrive file già modi
 resta oggi una checklist eseguita da un umano, non ancora automatizzabile:
 [docs/functional/06-onboarding-nuovo-cliente.md](docs/functional/06-onboarding-nuovo-cliente.md).
 
+Per i colleghi che preferiscono un form, la pagina statica in `onboarding/` genera lo stesso
+`instance.json`: nessun backend, nessuna API autenticata e nessun secret store. Il workflow
+`publish-onboarding-pages.yml` costruisce schema e starter direttamente dal package e pubblica
+l'artifact su GitHub Pages dopo il merge su `main`.
+
 ## Stato e limiti noti
 
 | | Stato |
@@ -77,7 +82,7 @@ resta oggi una checklist eseguita da un umano, non ancora automatizzabile:
 | Runtime dei dispatcher | Locale, tre terminali. Target: event-driven su runner self-hosted ([ADR-0017](docs/adr/ADR-0017-runtime-agenti-event-driven.md)) |
 | **Identità di inferenza** | **Bloccante**: Issue, Dev e Review girano oggi sullo stesso Claude Code sotto l'account personale dell'operatore, non un'identità aziendale. Vedi `CONTEXT.md` e PRD Q-13 |
 | Bootstrap di un collega | `python -m fabric_agentic init` genera profilo e checklist; identità e permessi restano manuali |
-| Interfaccia web per non tecnici | Non ancora iniziata (#129) |
+| Interfaccia web per non tecnici | Pagina statica `onboarding/`, pubblicata su GitHub Pages |
 
 ## Documentazione, in ordine di lettura
 

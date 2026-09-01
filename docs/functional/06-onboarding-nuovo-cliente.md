@@ -132,6 +132,10 @@ Solo il **Livello 1** richiede presenza umana. Ed è l'unico che si paga una vol
 - [ ] `python -m fabric_agentic init --directory profiles/<cliente> --project-slug <cliente> --display-name "<Nome cliente>"`
       genera `instance.json` e una `CHECKLIST.md` con questa stessa checklist, parametrizzata sul progetto —
       idempotente: rilanciato non sovrascrive file già modificati, a meno di `--force`
+- [ ] In alternativa, usare la pagina statica di onboarding pubblicata da
+      `.github/workflows/publish-onboarding-pages.yml`: il form legge schema e capacità dei connector
+      generati dal package, lavora solo nel browser e scarica `instance.json` senza chiamare Fabric,
+      GitHub API, Azure DevOps o secret store
 - [ ] Compilare i placeholder `REPLACE_WITH_*` in `instance.json`: tracker, connessioni, riferimento al secret store
 - [ ] `python -m fabric_agentic validate --config <profilo>` senza errori
 - [ ] `python -m fabric_agentic render --config <profilo> --output .generated` e rilettura del piano
