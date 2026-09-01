@@ -57,13 +57,16 @@ L'elenco dei connector ammessi vive solo in `fabric_agentic/connectors.py` ([ADR
 ## Portare il flusso su un cliente o un collega
 
 ```
+python -m fabric_agentic init     --directory profiles/<cliente> --project-slug <cliente>
 python -m fabric_agentic validate --config profiles/<cliente>/instance.json
 python -m fabric_agentic render   --config profiles/<cliente>/instance.json --output .generated
 ```
 
-Un solo file JSON senza segreti (parti da `profiles/template/instance.json`) descrive progetto,
-tracker, ambienti, sorgenti. Il resto del bootstrap — identità dedicate, permessi, protezione del
-ramo principale — è oggi una checklist eseguita da un umano, non ancora un comando:
+`init` genera un profilo (`instance.json`, senza segreti: solo placeholder `REPLACE_WITH_*`) e una
+`CHECKLIST.md` con i passaggi umani — identità, permessi, Fabric, Git, secret store — da spuntare
+prima del primo ticket. È ripetibile: rilanciato non sovrascrive file già modificati, a meno di
+`--force`. Il resto del bootstrap — identità dedicate, permessi, protezione del ramo principale —
+resta oggi una checklist eseguita da un umano, non ancora automatizzabile:
 [docs/functional/06-onboarding-nuovo-cliente.md](docs/functional/06-onboarding-nuovo-cliente.md).
 
 ## Stato e limiti noti
@@ -73,7 +76,7 @@ ramo principale — è oggi una checklist eseguita da un umano, non ancora un co
 | Connector registrati | `crm_dataverse` (incrementale), `file` (solo carico completo) |
 | Runtime dei dispatcher | Locale, tre terminali. Target: event-driven su runner self-hosted ([ADR-0017](docs/adr/ADR-0017-runtime-agenti-event-driven.md)) |
 | **Identità di inferenza** | **Bloccante**: Issue, Dev e Review girano oggi sullo stesso Claude Code sotto l'account personale dell'operatore, non un'identità aziendale. Vedi `CONTEXT.md` e PRD Q-13 |
-| Bootstrap di un collega | Manuale via checklist, non ancora un comando (#128) |
+| Bootstrap di un collega | `python -m fabric_agentic init` genera profilo e checklist; identità e permessi restano manuali |
 | Interfaccia web per non tecnici | Non ancora iniziata (#129) |
 
 ## Documentazione, in ordine di lettura

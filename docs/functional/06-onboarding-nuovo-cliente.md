@@ -129,7 +129,10 @@ Solo il **Livello 1** richiede presenza umana. Ed è l'unico che si paga una vol
 
 **Profilo di istanza**
 
-- [ ] Partire da `profiles/template/instance.json` e dichiarare progetto, tracker, ambienti e sorgenti
+- [ ] `python -m fabric_agentic init --directory profiles/<cliente> --project-slug <cliente> --display-name "<Nome cliente>"`
+      genera `instance.json` e una `CHECKLIST.md` con questa stessa checklist, parametrizzata sul progetto —
+      idempotente: rilanciato non sovrascrive file già modificati, a meno di `--force`
+- [ ] Compilare i placeholder `REPLACE_WITH_*` in `instance.json`: tracker, connessioni, riferimento al secret store
 - [ ] `python -m fabric_agentic validate --config <profilo>` senza errori
 - [ ] `python -m fabric_agentic render --config <profilo> --output .generated` e rilettura del piano
 
