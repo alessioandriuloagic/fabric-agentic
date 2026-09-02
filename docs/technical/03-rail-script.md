@@ -220,7 +220,9 @@ Lo stato anello per anello e le discrepanze della catena CRM sono in
 `reconciliation` dai conteggi estratti/staging e considera una divergenza un `quality_failure`.
 Per Fabric, il runner genera il `run_id` prima della sottomissione, lo passa al notebook e legge
 solo l'evidenza per-run `Files/agentic/run_load_results/<run_id>.json`, verificando il valore nel
-payload prima di pubblicare l'artefatto.
+payload prima di pubblicare l'artefatto. Dopo il job, un HTTP 404 OneLake sulla stessa evidenza
+può essere transitorio: il rail ripete la lettura per un massimo di 60 secondi, senza risottomettere
+il notebook e senza mai leggere un file di un altro run.
 
 ### Nota critica sulla condizione di successo
 

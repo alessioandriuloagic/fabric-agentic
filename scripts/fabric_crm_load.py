@@ -3,6 +3,7 @@
 import argparse
 import json
 import subprocess
+import time
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -24,6 +25,8 @@ LAKEHOUSE_NAME = "lh_bronze_crm_demo"
 NOTEBOOK_NAME = "nb_crm_load"
 NOTEBOOK_DIRECTORY = Path("fabric/notebook/nb_crm_load.Notebook")
 RESULT_DIRECTORY = "Files/agentic/run_load_results"
+EVIDENCE_READ_ATTEMPTS = 12
+EVIDENCE_READ_DELAY_SECONDS = 5
 
 
 def storage_access_token() -> str:
@@ -46,11 +49,17 @@ def read_load_result(workspace_id: str, lakehouse_id: str, run_id: str) -> dict:
     path = result_path(run_id)
     url = f"https://onelake.dfs.fabric.microsoft.com/{workspace_id}/{lakehouse_id}/{path}"
     request = Request(url, headers={"Authorization": f"Bearer {storage_access_token()}"})
-    try:
-        with urlopen(request) as response:
-            result = json.loads(response.read().decode("utf-8"))
-    except (HTTPError, OSError, json.JSONDecodeError) as error:
-        raise FabricPreflightError("CRM load evidence is unavailable") from error
+    for attempt in range(EVIDENCE_READ_ATTEMPTS):
+        try:
+            with urlopen(request) as response:
+                result = json.loads(response.read().decode("utf-8"))
+            break
+        except HTTPError as error:
+            if error.code != 404 or attempt == EVIDENCE_READ_ATTEMPTS - 1:
+                raise FabricPreflightError("CRM load evidence is unavailable") from error
+            time.sleep(EVIDENCE_READ_DELAY_SECONDS)
+        except (OSError, json.JSONDecodeError) as error:
+            raise FabricPreflightError("CRM load evidence is unavailable") from error
     if (
         result.get("rail") != "run_load"
         or result.get("outcome") not in {"success", "quality_failure"}
