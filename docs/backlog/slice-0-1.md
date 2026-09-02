@@ -622,6 +622,16 @@ dati CRM.
 creano/riusano Lakehouse e notebook nel feature workspace e usano `RunNotebook`. La prova OIDC
 post-merge resta aperta.
 
+**Inventario 2026-09-01 (#158)**: staging per run, PK check, merge Bronze idempotente, audit per
+`run_id`, watermark post-audit e rail `run_load` risultano implementati e coperti da test; lo
+stato anello per anello è in `../technical/14-inventario-catena-crm-accounts.md`. Corrette in
+quella PR: artefatto di fallimento del rail non conforme ad alcuno schema, fallback del workflow
+con `workspace_id: null`, guard di contratto cieco sulla v1.3, e i test dei criteri 2-6 assenti
+dall'elenco della CI. Restano aperti `reconciliation` asserita invece che calcolata, evidenza
+Fabric non legata al run sottomesso, e la sequenza run iniziale/idempotente/delta con verifica
+SQL: quest'ultima è un blocco B4, perché una sessione dispatchata non può accodare il workflow
+del rail né leggere Fabric.
+
 ---
 
 ### S1-01 · Spike: deploy e binding Power BI con `fabric-cicd`

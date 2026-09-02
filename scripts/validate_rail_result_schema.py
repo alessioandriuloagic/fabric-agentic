@@ -7,6 +7,7 @@ from pathlib import Path
 SCHEMA_PATH = Path("schemas/rail-result-v1.0.json")
 BRANCH_OUT_SCHEMA_PATH = Path("schemas/rail-result-v1.1.json")
 SYNC_WORKSPACE_SCHEMA_PATH = Path("schemas/rail-result-v1.2.json")
+RUN_LOAD_SCHEMA_PATH = Path("schemas/rail-result-v1.3.json")
 EXPECTED_RAILS = {"branch_out", "run_load", "sync_workspace", "diagnose_data", "sweep"}
 EXPECTED_OUTCOMES = {"success", "technical_failure", "quality_failure"}
 REQUIRED_FIELDS = {
@@ -25,6 +26,7 @@ def main() -> None:
     schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
     branch_out_schema = json.loads(BRANCH_OUT_SCHEMA_PATH.read_text(encoding="utf-8"))
     sync_workspace_schema = json.loads(SYNC_WORKSPACE_SCHEMA_PATH.read_text(encoding="utf-8"))
+    run_load_schema = json.loads(RUN_LOAD_SCHEMA_PATH.read_text(encoding="utf-8"))
 
     assert schema["type"] == "object"
     assert set(schema["required"]) == REQUIRED_FIELDS
@@ -66,7 +68,23 @@ def main() -> None:
         "failure_code",
     }
 
-    print("rail-result v1.0, v1.1, and v1.2 contracts are valid")
+    assert run_load_schema["properties"]["schema_version"]["const"] == "1.3"
+    assert run_load_schema["properties"]["rail"]["const"] == "run_load"
+    assert run_load_schema["properties"]["workspace_id"]["type"] == "string"
+
+    run_load_dataset = run_load_schema["properties"]["datasets"]["items"]
+    assert set(run_load_dataset["required"]) == {
+        "name",
+        "status",
+        "loaded_count",
+        "total_destination_count",
+        "supports_source_count",
+        "reconciliation",
+        "pk_check",
+    }
+    assert run_load_dataset["additionalProperties"] is False
+
+    print("rail-result v1.0, v1.1, v1.2, and v1.3 contracts are valid")
 
 
 if __name__ == "__main__":
