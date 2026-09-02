@@ -266,7 +266,11 @@ def ensure_folders(workspace_id: str) -> None:
 
 def sync_workspace(workspace_id: str, connection_created: bool) -> None:
     if connection_created:
-        fabric("POST", f"/workspaces/{workspace_id}/git/initializeConnection")
+        fabric(
+            "POST",
+            f"/workspaces/{workspace_id}/git/initializeConnection",
+            {"initializationStrategy": "PreferRemote"},
+        )
 
 
 def execute(work_item_id: int, slug: str) -> dict:

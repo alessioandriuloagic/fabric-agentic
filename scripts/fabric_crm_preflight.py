@@ -5,6 +5,7 @@ Run as ``python -m scripts.fabric_crm_preflight`` so package imports resolve.
 
 import argparse
 import json
+import os
 import subprocess
 import time
 from pathlib import Path
@@ -31,9 +32,13 @@ def feature_workspace_name(work_item_id: int) -> str:
     return f"ws_agentic_feature_wi{work_item_id}"
 
 
+def azure_cli_command() -> str:
+    return "az.cmd" if os.name == "nt" else "az"
+
+
 def access_token() -> str:
     result = subprocess.run(
-        ["az", "account", "get-access-token", "--resource", "https://api.fabric.microsoft.com", "--query", "accessToken", "--output", "tsv"],
+        [azure_cli_command(), "account", "get-access-token", "--resource", "https://api.fabric.microsoft.com", "--query", "accessToken", "--output", "tsv"],
         capture_output=True,
         text=True,
         check=False,

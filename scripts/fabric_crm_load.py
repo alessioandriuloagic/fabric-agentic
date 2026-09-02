@@ -14,6 +14,7 @@ from scripts.fabric_crm_preflight import (
     FabricClient,
     FabricPreflightError,
     access_token,
+    azure_cli_command,
     find_workspace,
 )
 
@@ -26,7 +27,7 @@ RESULT_PATH = "Files/agentic/run_load_result.json"
 
 def storage_access_token() -> str:
     result = subprocess.run(
-        ["az", "account", "get-access-token", "--resource", "https://storage.azure.com", "--query", "accessToken", "--output", "tsv"],
+        [azure_cli_command(), "account", "get-access-token", "--resource", "https://storage.azure.com", "--query", "accessToken", "--output", "tsv"],
         capture_output=True,
         text=True,
         check=False,
