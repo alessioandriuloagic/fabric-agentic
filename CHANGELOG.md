@@ -46,6 +46,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Fabric, anziché dichiarare un falso timeout dopo 100 secondi mentre l'avvio Spark era ancora in
   corso. Il polling resta bounded e non ritenta la sottomissione del job.
 
+- Il budget del controller CRM è esteso a 30 minuti dopo che il run `33637234261` ha prodotto un
+  `ExitValue` valido ma ha oltrepassato la finestra di cinque minuti prima della conclusione
+  dell'operazione Fabric. Il timeout resta bounded e non avvia un secondo notebook.
+
 - Il preflight CRM decodifica il conteggio Dataverse come `utf-8-sig`, eliminando il BOM
   osservato nella risposta reale (`ï»¿10`) prima della conversione a intero.
 

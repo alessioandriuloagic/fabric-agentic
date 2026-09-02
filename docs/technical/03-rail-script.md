@@ -242,9 +242,11 @@ precedente `$top=0` è stato rifiutato dal run reale con HTTP 400.
 La risposta `text/plain` del conteggio può iniziare con BOM UTF-8; il parsing usa `utf-8-sig`
 prima della conversione a intero.
 
-Il controller attende l'operazione lunga del notebook al massimo cinque minuti, con polling ogni
-cinque secondi. Il limite sostituisce il timeout di 100 secondi che ha interrotto un preflight
-ancora in avvio Spark; allo scadere non viene mai sottomesso un secondo job.
+Il controller attende l'operazione lunga del notebook al massimo 30 minuti, con polling ogni
+cinque secondi. Il limite sostituisce prima il timeout di 100 secondi e poi la finestra di cinque
+minuti: il run `33637234261` ha prodotto `ExitValue` con conteggio sorgente valido `10`, ma il
+controller ha chiuso prima della conclusione dell'operazione Fabric. Allo scadere non viene mai
+sottomesso un secondo job.
 
 L'esito distingue tre casi per una reazione diversa dell'agente:
 

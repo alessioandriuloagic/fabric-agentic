@@ -85,10 +85,10 @@ class FabricCrmPreflightTests(unittest.TestCase):
         with self.assertRaisesRegex(FabricPreflightError, r"notebook run failed with status Failed \(NotebookRunFailed\)"):
             client.wait_lro("https://api.fabric.microsoft.com/v1/operations/test", "notebook run")
 
-    def test_wait_lro_allows_a_notebook_run_to_finish_after_the_old_timeout(self) -> None:
+    def test_wait_lro_allows_a_notebook_run_to_finish_after_five_minutes(self) -> None:
         client = FabricClient("token", sleep=lambda _: None)
         client.request = Mock(side_effect=[
-            *((202, {}, {"status": "Running"}) for _ in range(20)),
+            *((202, {}, {"status": "Running"}) for _ in range(60)),
             (200, {}, {"status": "Succeeded"}),
         ])
 
