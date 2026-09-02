@@ -20,7 +20,7 @@ FABRIC_API = "https://api.fabric.microsoft.com/v1"
 LAKEHOUSE_NAME = "lh_bronze_crm_demo"
 NOTEBOOK_NAME = "nb_crm_preflight"
 NOTEBOOK_DIRECTORY = Path("fabric/notebook/nb_crm_preflight.Notebook")
-LRO_POLL_ATTEMPTS = 60
+LRO_POLL_ATTEMPTS = 360
 LRO_POLL_SECONDS = 5
 
 
