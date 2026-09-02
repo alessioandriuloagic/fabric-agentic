@@ -234,6 +234,11 @@ e come `az` sugli altri sistemi. La differenza è necessaria perché `subprocess
 risolve automaticamente l'entry point `.cmd` di Azure CLI su Windows; non modifica la
 configurazione dell'ambiente o i comandi eseguiti dal workflow Linux.
 
+Il preflight CRM usa il medesimo flusso client-credentials del load: il secret rimane in Key Vault
+e viene letto tramite `notebookutils.credentials.getSecret`. L'API `notebookutils.connections`
+non è parte delle API NotebookUtils supportate dal runtime; il preflight non la utilizza. La query
+resta `$top=0` e produce solo conteggio aggregato, mai record o credenziali.
+
 L'esito distingue tre casi per una reazione diversa dell'agente:
 
 | Esito | Significato | Reazione |

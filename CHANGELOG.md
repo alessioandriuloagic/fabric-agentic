@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Il notebook CRM di preflight usa ora il flusso service principal custodito in Key Vault, già
+  adottato dal load, invece dell'API `notebookutils.connections` non disponibile nel runtime
+  NotebookUtils. Il controllo resta privo di lettura record (`$top=0`).
+
 - Il rail `branch_out` invia ora a Fabric la policy richiesta per inizializzare la connessione
   Git di un workspace feature (`PreferRemote`), allineando il workspace appena creato al branch
   deterministico anziché ricevere il rifiuto `MissingInitializationPolicy`.
