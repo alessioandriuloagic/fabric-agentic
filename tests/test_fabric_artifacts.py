@@ -30,6 +30,7 @@ class FabricArtifactTests(unittest.TestCase):
         self.assertIn('"default_lakehouse_workspace_id":"workspace-id"', source)
         notebook = __import__("json").loads(source)
         self.assertEqual(notebook["cells"][0]["metadata"], {"tags": ["parameters"]})
+        self.assertEqual(notebook["cells"][0]["source"], ['# PARAMETERS CELL\n', 'RUN_ID = ""\n'])
 
     def test_rejects_missing_platform_metadata(self) -> None:
         with TemporaryDirectory() as directory:
