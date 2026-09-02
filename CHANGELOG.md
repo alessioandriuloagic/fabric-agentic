@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Il controller del preflight CRM attende ora fino a cinque minuti l'operazione lunga del notebook
+  Fabric, anziché dichiarare un falso timeout dopo 100 secondi mentre l'avvio Spark era ancora in
+  corso. Il polling resta bounded e non ritenta la sottomissione del job.
+
 - Il preflight CRM decodifica il conteggio Dataverse come `utf-8-sig`, eliminando il BOM
   osservato nella risposta reale (`ï»¿10`) prima della conversione a intero.
 
