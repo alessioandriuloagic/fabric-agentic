@@ -42,6 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Il preflight CRM decodifica il conteggio Dataverse come `utf-8-sig`, eliminando il BOM
+  osservato nella risposta reale (`ï»¿10`) prima della conversione a intero.
+
 - Il preflight CRM usa l'endpoint Dataverse `accounts/$count`, che restituisce esclusivamente il
   conteggio, al posto della query `$top=0` rifiutata con HTTP 400 nel run reale.
 

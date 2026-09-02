@@ -35,6 +35,7 @@ class FabricCrmPreflightTests(unittest.TestCase):
 
         self.assertIn('/api/data/v9.2/accounts/$count', notebook)
         self.assertNotIn("$top=0", notebook)
+        self.assertIn('response.content.decode("utf-8-sig")', notebook)
 
     def test_preflight_binds_and_updates_notebook_default_lakehouse(self) -> None:
         source = Path("scripts/fabric_crm_preflight.py").read_text(encoding="utf-8")

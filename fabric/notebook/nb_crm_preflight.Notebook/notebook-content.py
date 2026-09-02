@@ -57,7 +57,7 @@ if response.status_code != 200:
 notebookutils.notebook.exit(json.dumps({
     "outcome": "success",
     "entity_set": "accounts",
-    "source_count": int(response.text),
+    "source_count": int(response.content.decode("utf-8-sig")),
 }))
 
 # METADATA ********************

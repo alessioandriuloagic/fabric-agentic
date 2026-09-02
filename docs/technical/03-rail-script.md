@@ -239,6 +239,8 @@ e viene letto tramite `notebookutils.credentials.getSecret`. L'API `notebookutil
 non è parte delle API NotebookUtils supportate dal runtime; il preflight non la utilizza. La query
 usa `accounts/$count` e produce solo il conteggio aggregato, mai record o credenziali. Il
 precedente `$top=0` è stato rifiutato dal run reale con HTTP 400.
+La risposta `text/plain` del conteggio può iniziare con BOM UTF-8; il parsing usa `utf-8-sig`
+prima della conversione a intero.
 
 L'esito distingue tre casi per una reazione diversa dell'agente:
 
