@@ -20,6 +20,8 @@ FABRIC_API = "https://api.fabric.microsoft.com/v1"
 LAKEHOUSE_NAME = "lh_bronze_crm_demo"
 NOTEBOOK_NAME = "nb_crm_preflight"
 NOTEBOOK_DIRECTORY = Path("fabric/notebook/nb_crm_preflight.Notebook")
+LRO_POLL_ATTEMPTS = 60
+LRO_POLL_SECONDS = 5
 
 
 class FabricPreflightError(RuntimeError):
@@ -74,7 +76,7 @@ class FabricClient:
             raise FabricPreflightError("Fabric API request failed") from error
 
     def wait_lro(self, location: str, operation_name: str) -> None:
-        for _ in range(20):
+        for _ in range(LRO_POLL_ATTEMPTS):
             status, _, body = self.request("GET", location)
             operation_status = body.get("status")
             if status == 200 and operation_status in {"Succeeded", "Completed"}:
@@ -85,7 +87,7 @@ class FabricClient:
                 raise FabricPreflightError(
                     f"Fabric {operation_name} failed with status {operation_status} ({error_code})"
                 )
-            self.sleep(5)
+            self.sleep(LRO_POLL_SECONDS)
         raise FabricPreflightError(f"Fabric {operation_name} timed out")
 
     def list_items(self, workspace_id: str, item_type: str) -> list[dict]:
