@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Il rail `run_load` attende ora fino a 60 secondi la visibilità OneLake della sola evidenza
+  per-run richiesta dopo il completamento del notebook. Un HTTP 404 transitorio non genera un
+  secondo load e non consente il fallback al file condiviso; gli altri errori restano fallimenti
+  tecnici immediati.
+
 - Il rail CRM calcola ora `reconciliation` confrontando i record estratti e riletti dallo
   staging; una divergenza produce un artefatto `quality_failure` e non avanza Bronze, audit o
   watermark. L'evidenza Fabric è inoltre identificata dal `run_id` generato prima della

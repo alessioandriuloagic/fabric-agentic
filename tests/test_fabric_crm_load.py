@@ -1,14 +1,34 @@
 import json
 import unittest
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from jsonschema import Draft202012Validator, FormatChecker
 
-from scripts.fabric_crm_load import run_load
+from scripts.fabric_crm_load import read_load_result, run_load
 
 
 class FabricCrmLoadTests(unittest.TestCase):
+    @patch("scripts.fabric_crm_load.storage_access_token", return_value="opaque-token")
+    @patch("scripts.fabric_crm_load.urlopen")
+    def test_retries_the_same_per_run_evidence_until_onelake_is_consistent(self, urlopen_mock: Mock, _) -> None:
+        missing = __import__("urllib.error", fromlist=["HTTPError"]).HTTPError(
+            "https://onelake.dfs.fabric.microsoft.com/test",
+            404,
+            "Not Found",
+            None,
+            None,
+        )
+        response = MagicMock()
+        response.__enter__.return_value.read.return_value = b'{"rail":"run_load","outcome":"success","run_id":"submitted-run"}'
+        urlopen_mock.side_effect = [missing, response]
+
+        with patch("scripts.fabric_crm_load.time.sleep"):
+            result = read_load_result("workspace-id", "lakehouse-id", "submitted-run")
+
+        self.assertEqual(result["run_id"], "submitted-run")
+        self.assertEqual(urlopen_mock.call_count, 2)
+
     @patch("scripts.fabric_crm_load.uuid.uuid4", return_value=Mock(hex="submitted-run"))
     @patch("scripts.fabric_crm_load.access_token", return_value="opaque-token")
     @patch("scripts.fabric_crm_load.read_load_result")
