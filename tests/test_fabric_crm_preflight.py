@@ -1,11 +1,15 @@
 import unittest
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
-from scripts.fabric_crm_preflight import FabricClient, FabricPreflightError, feature_workspace_name
+from scripts.fabric_crm_preflight import FabricClient, FabricPreflightError, azure_cli_command, feature_workspace_name
 
 
 class FabricCrmPreflightTests(unittest.TestCase):
+    def test_uses_cmd_launcher_for_azure_cli_on_windows(self) -> None:
+        with patch("scripts.fabric_crm_preflight.os.name", "nt"):
+            self.assertEqual(azure_cli_command(), "az.cmd")
+
     def test_workflow_runs_the_deployer_as_a_module(self) -> None:
         workflow = Path(".github/workflows/pipe_agent_crm_preflight.yml").read_text(encoding="utf-8")
 

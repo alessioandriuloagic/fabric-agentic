@@ -42,6 +42,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Il rail `branch_out` invia ora a Fabric la policy richiesta per inizializzare la connessione
+  Git di un workspace feature (`PreferRemote`), allineando il workspace appena creato al branch
+  deterministico anziché ricevere il rifiuto `MissingInitializationPolicy`.
+
+- I rail locali CRM risolvono Azure CLI come `az.cmd` su Windows e `az` sugli altri sistemi,
+  evitando `WinError 2` durante l'acquisizione dei token Fabric e OneLake da `subprocess`.
+
 - Il fallback di `pipe_agent_crm_run_load` emette ora un artefatto conforme a
   `rail-result-v1.3` anche quando il processo termina prima del risultato. Le modifiche al workflow
   CRM attivano la validazione CI e la suite obbligatoria include i test di staging, Bronze, audit,

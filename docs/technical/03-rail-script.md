@@ -126,6 +126,20 @@ ha riusato `feature/wi-6-smoke-branch-out` e `ws_agentic_feature_wi6`
 sincronizzato il workspace. L'artefatto `rail-result.json` v1.1 riporta `outcome: success` e
 stati `existing`, `existing`, `connected`, `synchronized`.
 
+Il tentativo sul work item `158` del 2026-09-02 (run GitHub Actions `33623226689`) ha creato il
+branch `feature/wi-158-crm-accounts-bronze-audit-watermark`, ma il provisioning del workspace
+`ws_agentic_feature_wi158` ha restituito `technical_failure`, con `failure_stage: workspace` e
+`failure_code: bad_request`. L'OIDC ha completato correttamente; nessun preflight o load CRM è
+stato avviato. Il rail non serializza il body API: verificare fuori dal workflow nome workspace,
+capacity e autorizzazioni del service principal prima del rilancio.
+
+Dopo la riabilitazione della capacity, il retry `33623676980` ha raggiunto l'inizializzazione Git
+ma ha terminato con `failure_stage: sync`, `failure_code: bad_request`, prima dell'esecuzione CRM.
+La causa verificata era la POST `initializeConnection` priva della policy obbligatoria;
+`branch_out` usa ora `initializationStrategy: PreferRemote` per il workspace feature appena
+creato. Il sync dedicato `33624037289`, eseguito prima della correzione, non ha potuto verificare
+lo stato del workspace e ha restituito `failure_stage: unknown`, `failure_code: bad_request`.
+
 ---
 
 ## 4. Contratto — Run load
@@ -214,6 +228,11 @@ qualità falliscono.
 
 > Differenza fra "il codice ha girato" e "il risultato è corretto". Un rail che restituisse
 > `success` sulla sola terminazione porterebbe l'agente ad aprire una PR su un carico sbagliato.
+
+Per l'esecuzione locale dei soli rail CRM, il comando Azure CLI è risolto come `az.cmd` su Windows
+e come `az` sugli altri sistemi. La differenza è necessaria perché `subprocess` di Python non
+risolve automaticamente l'entry point `.cmd` di Azure CLI su Windows; non modifica la
+configurazione dell'ambiente o i comandi eseguiti dal workflow Linux.
 
 L'esito distingue tre casi per una reazione diversa dell'agente:
 

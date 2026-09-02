@@ -13,6 +13,7 @@ from scripts.branch_out import (
     main,
     new_result,
     require_uuid,
+    sync_workspace,
 )
 
 
@@ -149,6 +150,16 @@ class BranchOutTests(unittest.TestCase):
             "POST",
             "/workspaces/workspace-id/assignToCapacity",
             {"capacityId": "capacity-id"},
+        )
+
+    @patch("scripts.branch_out.fabric")
+    def test_initializes_new_git_connection_from_the_remote_branch(self, fabric_mock) -> None:
+        sync_workspace("workspace-id", connection_created=True)
+
+        fabric_mock.assert_called_once_with(
+            "POST",
+            "/workspaces/workspace-id/git/initializeConnection",
+            {"initializationStrategy": "PreferRemote"},
         )
 
 
