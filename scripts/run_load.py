@@ -15,19 +15,20 @@ def execute_load(workspace_id: str, staged_path: Path, bronze_path: Path, audit_
     if not workspace_id:
         raise CrmLoadError("workspace ID is required")
     result = load_staged_accounts(staged_path, bronze_path, audit_path, watermark_path, run_id)
+    reconciliation = "passed" if result.extracted_count == result.loaded_count else "failed"
     return {
         "schema_version": "1.3",
         "rail": "run_load",
-        "outcome": "success",
+        "outcome": "success" if reconciliation == "passed" else "quality_failure",
         "run_id": run_id,
         "workspace_id": workspace_id,
         "datasets": [{
             "name": "accounts",
-            "status": "loaded",
+            "status": "loaded" if reconciliation == "passed" else "failed",
             "loaded_count": result.extracted_count,
             "total_destination_count": result.destination_count,
             "supports_source_count": True,
-            "reconciliation": "passed",
+            "reconciliation": reconciliation,
             "pk_check": "passed",
         }],
         "messages": [],

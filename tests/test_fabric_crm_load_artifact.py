@@ -17,6 +17,9 @@ class FabricCrmLoadArtifactTests(unittest.TestCase):
         self.assertIn("primary key check failed", source)
         self.assertIn("notebookutils.credentials.getSecret", source)
         self.assertNotIn("connections.getCredential", source)
+        self.assertIn('"reconciliation": reconciliation', source)
+        self.assertIn('"outcome": "success" if load_result["reconciliation"] == "passed" else "quality_failure"', source)
+        self.assertIn('run_load_results/{RUN_ID}.json', source)
 
 
 if __name__ == "__main__":

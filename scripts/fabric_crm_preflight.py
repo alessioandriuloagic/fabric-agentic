@@ -127,8 +127,18 @@ class FabricClient:
         elif status != 200:
             raise FabricPreflightError("Fabric item update failed")
 
-    def run_notebook(self, workspace_id: str, notebook_id: str) -> None:
-        status, headers, _ = self.request("POST", f"/workspaces/{workspace_id}/items/{notebook_id}/jobs/instances?jobType=RunNotebook")
+    def run_notebook(self, workspace_id: str, notebook_id: str, parameters: dict[str, str] | None = None) -> None:
+        body = None if parameters is None else {
+            "parameters": [
+                {"name": name, "value": value, "type": "Text"}
+                for name, value in parameters.items()
+            ]
+        }
+        status, headers, _ = self.request(
+            "POST",
+            f"/workspaces/{workspace_id}/items/{notebook_id}/jobs/instances?jobType=RunNotebook",
+            body,
+        )
         if status != 202:
             raise FabricPreflightError("Notebook job submission failed")
         location = headers.get("Location") or headers.get("location")

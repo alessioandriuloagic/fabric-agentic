@@ -71,9 +71,25 @@ class FabricCrmPreflightTests(unittest.TestCase):
 
         FabricClient.run_notebook(client, "workspace-id", "notebook-id")
 
-        client.request.assert_called_once_with("POST", "/workspaces/workspace-id/items/notebook-id/jobs/instances?jobType=RunNotebook")
+        client.request.assert_called_once_with(
+            "POST",
+            "/workspaces/workspace-id/items/notebook-id/jobs/instances?jobType=RunNotebook",
+            None,
+        )
         client.wait_lro.assert_called_once_with(
             "https://api.fabric.microsoft.com/v1/operations/test", "notebook run"
+        )
+
+    def test_run_notebook_sends_per_run_text_parameters(self) -> None:
+        client = Mock(spec=FabricClient)
+        client.request.return_value = (202, {"Location": "https://api.fabric.microsoft.com/v1/operations/test"}, {})
+
+        FabricClient.run_notebook(client, "workspace-id", "notebook-id", {"run_id": "submitted-run"})
+
+        client.request.assert_called_once_with(
+            "POST",
+            "/workspaces/workspace-id/items/notebook-id/jobs/instances?jobType=RunNotebook",
+            {"parameters": [{"name": "run_id", "value": "submitted-run", "type": "Text"}]},
         )
 
     def test_wait_lro_reports_safe_failure_code(self) -> None:

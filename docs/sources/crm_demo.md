@@ -29,8 +29,12 @@ per-run audit and post-audit watermark persistence in `scripts/crm_load.py`. The
 `nb_crm_load` implements the same sequence on Delta tables and reads the SP secret directly with
 `notebookutils.credentials.getSecret`; it does not depend on a Fabric Key Vault connection. The
 `run_load` rail publishes a **v1.3** structured result through `scripts/run_load.py` or the OIDC
-workflow, on the success path and on the failure path alike. The deployer updates the notebook
-binding even when the item already exists.
+workflow, on the success path and on the failure path alike. Reconciliation compares the extracted
+source batch with the staging rows read back before the Bronze merge; a mismatch is a
+`quality_failure`. The Fabric evidence path is per-run
+(`Files/agentic/run_load_results/<run_id>.json`) and the runner validates the same `run_id` it
+generated before job submission. The deployer updates the notebook binding even when the item
+already exists.
 `test` and `prod` remain unchanged and out of scope.
 
 The real run `32648577263` completed successfully on 2026-08-23 and materialized the Bronze,
@@ -40,9 +44,6 @@ audit and watermark tables in the feature Lakehouse. The execution evidence repo
 checks, and watermark `2026-08-21T17:39:25Z`. Here 5 is the incremental delta and 10 is the total
 Bronze after merge; the v1.3 rail contract distinguishes these counts explicitly.
 
-Two gaps on this chain remain open and are tracked in
-[`../technical/14-inventario-catena-crm-accounts.md`](../technical/14-inventario-catena-crm-accounts.md):
-`reconciliation` is written as a literal instead of being computed from the counts, and the rail
-reads its evidence from a fixed OneLake path that is not bound to the run it just submitted. The
-initial/idempotent/delta run sequence and the SQL verification against the source evidence have
-not been executed yet.
+The initial and inclusive-idempotent runs and the SQL verification against source count `10` are
+recorded in [`../technical/14-inventario-catena-crm-accounts.md`](../technical/14-inventario-catena-crm-accounts.md).
+The remaining on-field proof is one controlled CRM delta using the per-run evidence contract.

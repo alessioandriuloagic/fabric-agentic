@@ -7,7 +7,7 @@
 | Campo | Valore |
 |---|---|
 | Work item | #158 (padre #150) |
-| Data | 2026-09-01 |
+| Data | 2026-09-02 |
 | Documenti collegati | `../adr/ADR-0012-watermark-crm-account.md`, `03-rail-script.md`, `../sources/crm_demo.md` |
 
 ---
@@ -45,15 +45,30 @@ del repository. Le affermazioni sono classificate in tre modi, e la classe non v
 | 7 | Audit unico per `run_id` | `crm_load` riscrive la riga dello stesso `run_id`; nel notebook merge su `target.run_id` | Verificato (codice) |
 | 8 | Watermark committato solo dopo Bronze e audit | Ordine di scrittura in `crm_load.load_staged_accounts` e nel notebook, con guard di regressione in `tests/test_fabric_crm_load_artifact.py` | Verificato |
 | 9 | Rail `run_load` locale | `scripts/run_load.py` | Verificato |
-| 10 | Rail `run_load` su Fabric | `scripts/fabric_crm_load.py` + `.github/workflows/pipe_agent_crm_run_load.yml` | Documentale |
+| 10 | Rail `run_load` su Fabric | `scripts/fabric_crm_load.py` + `.github/workflows/pipe_agent_crm_run_load.yml`; run `33643834028`, `33646578126` | Verificato sul campo |
 | 11 | Contratto dell'artefatto | `schemas/rail-result-v1.3.json` | Verificato |
-| 12 | Run reale iniziale, secondo run idempotente, delta controllato | — | Non verificabile |
-| 13 | Verifica SQL e confronto con le evidenze sorgente | — | Non verificabile |
+| 12 | Run reale iniziale, secondo run idempotente, delta controllato | Run iniziale `33643834028`; secondo run `33646578126`; delta da eseguire | Parziale — verificato sul campo |
+| 13 | Verifica SQL e confronto con le evidenze sorgente | SQL endpoint del Lakehouse feature: Bronze, audit e watermark verificati; benchmark sorgente `10` | Verificato sul campo |
 
 **Evidenza documentale degli anelli 10 e 12**: i run GitHub Actions `32648577263` e `32648994929`
 del 2026-08-23 risultano registrati in `../sources/crm_demo.md` con `loaded_count=5`,
 `total_destination_count=10`, PK e riconciliazione superate e watermark `2026-08-21T17:39:25Z`.
 Sono citati come stato riportato: questa sessione non li ha ri-eseguiti né riletti dall'artefatto.
+
+**Evidenza sul campo del 2026-09-02**: il preflight `33643527753` ha completato con `success`
+nel workspace `ws_agentic_feature_wi158`; il notebook ha restituito `source_count=10`. Il load
+iniziale `33643834028` ha restituito `loaded_count=10`, `total_destination_count=10`, `pk_check`
+e `reconciliation` `passed`, con watermark `2026-08-21T17:39:25Z`. Il secondo load
+`33646578126` ha restituito `loaded_count=5`, totale Bronze invariato a `10`, stessi controlli
+passati e watermark invariato. Il batch di cinque record è la riestrazione inclusiva prevista da
+ADR-0012 al confine del watermark; il merge su `accountid` ha impedito duplicati.
+
+**Verifica SQL sul campo del 2026-09-02**: sul database `lh_bronze_crm_demo`, `crm_demo_accounts`
+contiene `10` righe e `10` `accountid` distinti; la query duplicati non restituisce righe. Audit
+contiene i run `20260902T144322Z-bb0290c4` (`extracted_count=10`, `loaded_count=10`,
+`destination_count=10`) e `20260902T150838Z-a37c2cde` (`extracted_count=5`,
+`loaded_count=5`, `destination_count=10`), entrambi `passed` e con watermark
+`2026-08-21T17:39:25Z`. `crm_demo_watermark` contiene due commit con lo stesso watermark.
 
 ---
 
@@ -71,16 +86,15 @@ Sono citati come stato riportato: questa sessione non li ha ri-eseguiti né rile
 | **D6** | `scripts/fabric_crm_load.py` ripeteva `schema_version` due volte nello stesso dict literal | Nessun effetto a runtime; rimosso perché segnala una modifica non riletta |
 | **D7** | Deriva documentale: `../sources/crm_demo.md` dichiarava un risultato «v1.0» e conteneva due paragrafi in contraddizione sui conteggi in `rail-result.json`; `03-rail-script.md` §4b dava la v1.0 come normativa per `run_load`; `CONTEXT.md` affermava che staging, Bronze, audit, watermark e `run_load` «restano da implementare» | Il Dev Agent successivo legge questi documenti come contesto vincolante e reimplementerebbe ciò che esiste già |
 
-### 3.2 Rilevate e **non** corrette qui
+### 3.2 Corrette, da validare nel delta controllato
 
-| # | Discrepanza | Perché non corretta ora |
+| # | Discrepanza | Correzione |
 |---|---|---|
-| **D8** | `reconciliation` è **asserita, non calcolata**. Sia `scripts/run_load.py` sia `nb_crm_load` scrivono `"reconciliation": "passed"` come letterale: nessuno dei due confronta il conteggio letto dalla sorgente con quello effettivamente messo in staging e fuso in Bronze. Il contratto in `03-rail-script.md` §4 richiede invece «conteggi riconciliati» perché l'esito sia `success` | La correzione tocca il percorso di carico. Il principio 2 di `CONTEXT.md` vieta di aprire una PR su codice di carico che non è stato realmente eseguito, e questa sessione non può eseguirlo |
-| **D9** | L'evidenza letta da `scripts/fabric_crm_load.read_load_result` proviene da un percorso OneLake fisso (`Files/agentic/run_load_result.json`) sovrascritto a ogni run e **non è legata al run appena sottomesso**. Se il job notebook risultasse riuscito senza riscrivere il file, il rail ripubblicherebbe i conteggi del run precedente come evidenza di questo | Stessa ragione di D8 |
+| **D8** | `reconciliation` era asserita, non calcolata. | Il runner locale confronta `extracted_count` e `loaded_count`; il notebook confronta la sorgente estratta con lo staging riletto. Una divergenza restituisce `quality_failure` e non procede a merge, audit o watermark. |
+| **D9** | L'evidenza proveniva da un percorso OneLake fisso e non era legata al job appena sottomesso. | Il rail genera `run_id` prima del job, lo passa come parametro al notebook e legge solo `Files/agentic/run_load_results/<run_id>.json`, verificando anche il `run_id` nel payload. |
 
-> D8 e D9 non sono ipotesi da confermare: si leggono direttamente nel codice citato. Sono
-> deliberatamente lasciate aperte perché la loro correzione va validata da un run reale, non da un
-> test.
+> Le correzioni D8/D9 sono verificate da test; il prossimo delta controllato le valida nel runtime
+> Fabric con una prova di evidenza per-run.
 
 ---
 
@@ -94,12 +108,12 @@ Sono citati come stato riportato: questa sessione non li ha ri-eseguiti né rile
 | Merge Bronze idempotente | **Soddisfatto** nel codice (anello 6) |
 | Audit unico per `run_id` | **Soddisfatto** nel codice (anello 7) |
 | `modifiedon` avanza solo dopo Bronze e audit riusciti | **Soddisfatto** nel codice (anello 8), con guard in CI da D5 |
-| Run iniziale, secondo run idempotente e delta controllato eseguiti realmente | **Bloccato B4** |
-| Verifica SQL e confronto con le evidenze sorgente | **Bloccato B4** |
+| Run iniziale, secondo run idempotente e delta controllato eseguiti realmente | **Parziale** — iniziale e idempotenza verificate; delta controllato da eseguire |
+| Verifica SQL e confronto con le evidenze sorgente | **Soddisfatto** — benchmark sorgente `10`, artefatti e SQL Bronze/audit/watermark coerenti |
 
 I quattro criteri «soddisfatti nel codice» restano tali: sono verificati da test deterministici e
-da guard di CI, **non** da un carico eseguito. La promozione a verificato sul campo richiede i due
-criteri bloccati.
+da guard di CI. I due run e la verifica SQL sul campo confermano il comportamento iniziale e
+idempotente; resta da eseguire il delta controllato.
 
 ---
 
@@ -107,14 +121,11 @@ criteri bloccati.
 
 Nell'ordine, e con l'identità che li può eseguire:
 
-1. Accodare `pipe_agent_crm_run_load` sul work item 158 dopo `branch_out` — oggi eseguibile solo
-   dall'owner o da una sessione con `gh workflow run` nell'envelope.
-2. Rieseguirlo subito dopo, senza modifiche, per il secondo run idempotente.
-3. Eseguire un delta controllato modificando un solo record CRM demo e rilanciando.
-4. Leggere i tre `rail-result.json` come unica fonte di verità dell'esito (principio 13 di
-   `CONTEXT.md`), poi confrontare `crm_demo_accounts`, `crm_demo_load_audit` e
-   `crm_demo_watermark` con i conteggi sorgente.
-5. Correggere D8 e D9 nello stesso ciclo, perché è l'unico in cui la correzione può essere provata.
+1. Eseguire un delta controllato modificando un solo record CRM demo e rilanciando il rail.
+2. Leggere il terzo `rail-result.json` e verificare con SQL `crm_demo_accounts`,
+   `crm_demo_load_audit` e `crm_demo_watermark` il solo aggiornamento previsto.
+3. Verificare che il percorso di evidenza sia `Files/agentic/run_load_results/<run_id>.json` e che
+    il `run_id` dell'artefatto coincida con quello del rail.
 
 Finché il punto 1 non è possibile da una sessione dispatchata, il ciclo richiede un intervento
 tecnico umano — che `../functional/01-ciclo-di-vita-ticket.md` §1 impone di tracciare come

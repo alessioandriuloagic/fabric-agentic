@@ -215,11 +215,12 @@ fallback che il workflow scrive quando il processo muore prima di produrne uno. 
 `scripts/fabric_crm_load.py`, invocato da `.github/workflows/pipe_agent_crm_run_load.yml`, per
 l'esecuzione reale nel feature workspace.
 
-Lo stato anello per anello, le discrepanze corrette e quelle ancora aperte sono in
-[`14-inventario-catena-crm-accounts.md`](14-inventario-catena-crm-accounts.md). Due limiti noti
-riguardano direttamente questo contratto: `reconciliation` è oggi scritta come letterale invece
-che calcolata dai conteggi, e l'evidenza Fabric è letta da un percorso fisso non legato al run
-appena sottomesso.
+Lo stato anello per anello e le discrepanze della catena CRM sono in
+[`14-inventario-catena-crm-accounts.md`](14-inventario-catena-crm-accounts.md). Il rail calcola
+`reconciliation` dai conteggi estratti/staging e considera una divergenza un `quality_failure`.
+Per Fabric, il runner genera il `run_id` prima della sottomissione, lo passa al notebook e legge
+solo l'evidenza per-run `Files/agentic/run_load_results/<run_id>.json`, verificando il valore nel
+payload prima di pubblicare l'artefatto.
 
 ### Nota critica sulla condizione di successo
 

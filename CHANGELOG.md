@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Il rail CRM calcola ora `reconciliation` confrontando i record estratti e riletti dallo
+  staging; una divergenza produce un artefatto `quality_failure` e non avanza Bronze, audit o
+  watermark. L'evidenza Fabric è inoltre identificata dal `run_id` generato prima della
+  sottomissione e scritta/letta nel percorso per-run `Files/agentic/run_load_results/<run_id>.json`.
+
 - Il rail `run_load` pubblica ora un artefatto conforme **anche quando fallisce** (#158).
   `scripts/run_load.py` dichiarava `schema_version: "1.0"` portando però i campi dataset della
   v1.3: il risultato non validava contro nessuno dei due schemi, proprio nel caso
