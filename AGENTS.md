@@ -196,6 +196,7 @@ End-to-end chain: `Issue Agent` (karl + ralph) -> human approval -> ticket -> `D
 
 ## Kaizen Learnings
 
+- **[2026-09-02] Interpret inclusive watermark runs correctly** → [kaizen/20260902-inclusive-watermark-idempotency.md](kaizen/20260902-inclusive-watermark-idempotency.md)
 - **[2026-09-02] Use explicit commits for branch recreation** → [kaizen/20260902-explicit-cherry-pick.md](kaizen/20260902-explicit-cherry-pick.md)
 - **[2026-09-01] Connector profiles are open, adapters are registered** → [kaizen/20260901-connectors-are-open.md](kaizen/20260901-connectors-are-open.md)
 - **[2026-08-31] Configuration must not carry OS-specific syntax** → [kaizen/20260831-configuration-os-portability.md](kaizen/20260831-configuration-os-portability.md)

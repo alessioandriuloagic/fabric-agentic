@@ -28,6 +28,8 @@ class FabricArtifactTests(unittest.TestCase):
         source = base64.b64decode(definition["parts"][0]["payload"]).decode("utf-8")
         self.assertIn('"default_lakehouse":"lakehouse-id"', source)
         self.assertIn('"default_lakehouse_workspace_id":"workspace-id"', source)
+        notebook = __import__("json").loads(source)
+        self.assertEqual(notebook["cells"][0]["metadata"], {"tags": ["parameters"]})
 
     def test_rejects_missing_platform_metadata(self) -> None:
         with TemporaryDirectory() as directory:

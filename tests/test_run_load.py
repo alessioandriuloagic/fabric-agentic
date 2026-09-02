@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 from jsonschema import Draft202012Validator, FormatChecker
 
-from scripts.crm_load import extract_accounts
+from scripts.crm_load import LoadResult, extract_accounts
 from scripts.run_load import execute_load, main
 
 
@@ -38,6 +38,17 @@ class RunLoadTests(unittest.TestCase):
             self.assertEqual(result["datasets"][0]["total_destination_count"], 1)
             self.assertEqual(result["datasets"][0]["reconciliation"], "passed")
             self.assertEqual(result["watermark"], "2026-08-21T14:00:00Z")
+
+    def test_fails_reconciliation_when_staged_count_differs_from_extracted_count(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            with patch(
+                "scripts.run_load.load_staged_accounts",
+                return_value=LoadResult("run-6", extracted_count=2, loaded_count=1, destination_count=10, committed_watermark=None),
+            ):
+                result = execute_load("workspace-1", root / "staged.jsonl", root / "bronze.jsonl", root / "audit.jsonl", root / "watermark.json", "run-6")
+
+            self.assertEqual(result["datasets"][0]["reconciliation"], "failed")
 
     def test_publishes_schema_compatible_quality_failure_result(self) -> None:
         with TemporaryDirectory() as directory:

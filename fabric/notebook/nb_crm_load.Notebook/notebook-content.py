@@ -8,6 +8,9 @@
 # META }
 
 # CELL ********************
+# PARAMETERS CELL
+RUN_ID = ""
+
 import json
 import uuid
 from datetime import datetime, timezone
@@ -28,8 +31,9 @@ ENTITY_SET = "accounts"
 BRONZE_TABLE = "crm_demo_accounts"
 AUDIT_TABLE = "crm_demo_load_audit"
 WATERMARK_TABLE = "crm_demo_watermark"
-RESULT_PATH = "Files/agentic/run_load_result.json"
-RUN_ID = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:8]
+if not RUN_ID:
+    RUN_ID = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:8]
+RESULT_PATH = f"Files/agentic/run_load_results/{RUN_ID}.json"
 
 
 def resolve_access_token() -> str:
@@ -92,6 +96,16 @@ def write_staging(records: list[dict]) -> str:
 
 def load_bronze(staged_path: str, extracted_count: int, previous_watermark: str | None) -> dict:
     staged = spark.read.schema("accountid string, name string, modifiedon string").json(staged_path)
+    staged_count = staged.count()
+    reconciliation = "passed" if staged_count == extracted_count else "failed"
+    if reconciliation != "passed":
+        destination_count = spark.table(BRONZE_TABLE).count() if spark.catalog.tableExists(BRONZE_TABLE) else 0
+        return {
+            "loaded_count": staged_count,
+            "total_destination_count": destination_count,
+            "reconciliation": reconciliation,
+            "watermark": previous_watermark,
+        }
     duplicate_keys = staged.groupBy("accountid").count().where(F.col("count") > 1).count()
     if duplicate_keys:
         raise RuntimeError("CRM primary key check failed")
@@ -111,7 +125,7 @@ def load_bronze(staged_path: str, extracted_count: int, previous_watermark: str 
     candidate = staged.select(F.max("modifiedon").alias("watermark")).collect()[0]["watermark"]
     candidate = candidate or previous_watermark
     audit = spark.createDataFrame([(
-        RUN_ID, "accounts", extracted_count, extracted_count, destination_count, "passed", candidate,
+        RUN_ID, "accounts", extracted_count, staged_count, destination_count, reconciliation, candidate,
     )], "run_id string, dataset string, extracted_count long, loaded_count long, destination_count long, reconciliation string, watermark string")
     if spark.catalog.tableExists(AUDIT_TABLE):
         audit_delta = DeltaTable.forName(spark, AUDIT_TABLE)
@@ -127,7 +141,12 @@ def load_bronze(staged_path: str, extracted_count: int, previous_watermark: str 
         committed_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         watermark = spark.createDataFrame([(candidate, committed_at)], "watermark string, committed_at string")
         watermark.write.mode("append").format("delta").saveAsTable(WATERMARK_TABLE)
-    return {"loaded_count": extracted_count, "total_destination_count": destination_count, "watermark": candidate}
+    return {
+        "loaded_count": staged_count,
+        "total_destination_count": destination_count,
+        "reconciliation": reconciliation,
+        "watermark": candidate,
+    }
 
 
 # CELL ********************
@@ -140,7 +159,7 @@ load_result = load_bronze(staging_path, len(accounts), confirmed_watermark)
 evidence = {
     "schema_version": "1.3",
     "rail": "run_load",
-    "outcome": "success",
+    "outcome": "success" if load_result["reconciliation"] == "passed" else "quality_failure",
     "run_id": RUN_ID,
     "staging_path": staging_path,
     "dataset": "accounts",

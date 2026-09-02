@@ -43,7 +43,7 @@ def notebook_definition(notebook_directory: Path, default_lakehouse: dict | None
             cells.append({
                 "cell_type": "code",
                 "execution_count": None,
-                "metadata": {},
+                "metadata": {"tags": ["parameters"]} if code.startswith("# PARAMETERS CELL") else {},
                 "outputs": [],
                 "source": [f"{line}\n" for line in code.splitlines()],
             })
