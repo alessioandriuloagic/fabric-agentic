@@ -40,7 +40,7 @@ def resolve_access_token() -> str:
 # CELL ********************
 access_token = resolve_access_token()
 response = requests.get(
-    f"{ENVIRONMENT_URL}/api/data/v9.2/accounts?$select=accountid&$top=0&$count=true",
+    f"{ENVIRONMENT_URL}/api/data/v9.2/accounts/$count",
     headers={
         "Authorization": f"Bearer {access_token}",
         "OData-MaxVersion": "4.0",
@@ -57,7 +57,7 @@ if response.status_code != 200:
 notebookutils.notebook.exit(json.dumps({
     "outcome": "success",
     "entity_set": "accounts",
-    "source_count": response.json().get("@odata.count"),
+    "source_count": int(response.text),
 }))
 
 # METADATA ********************
