@@ -237,7 +237,8 @@ configurazione dell'ambiente o i comandi eseguiti dal workflow Linux.
 Il preflight CRM usa il medesimo flusso client-credentials del load: il secret rimane in Key Vault
 e viene letto tramite `notebookutils.credentials.getSecret`. L'API `notebookutils.connections`
 non è parte delle API NotebookUtils supportate dal runtime; il preflight non la utilizza. La query
-resta `$top=0` e produce solo conteggio aggregato, mai record o credenziali.
+usa `accounts/$count` e produce solo il conteggio aggregato, mai record o credenziali. Il
+precedente `$top=0` è stato rifiutato dal run reale con HTTP 400.
 
 L'esito distingue tre casi per una reazione diversa dell'agente:
 

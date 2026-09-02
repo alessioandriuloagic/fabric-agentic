@@ -16,7 +16,7 @@ class FabricArtifactTests(unittest.TestCase):
         self.assertEqual(definition["format"], "ipynb")
         self.assertEqual([part["path"] for part in definition["parts"]], ["notebook-content.ipynb"])
         source = base64.b64decode(definition["parts"][0]["payload"]).decode("utf-8")
-        self.assertIn("$top=0&$count=true", source)
+        self.assertIn("/api/data/v9.2/accounts/$count", source)
         self.assertNotIn("print(access_token)", source)
 
     def test_binds_notebook_definition_to_the_discovered_lakehouse(self) -> None:

@@ -42,6 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Il preflight CRM usa l'endpoint Dataverse `accounts/$count`, che restituisce esclusivamente il
+  conteggio, al posto della query `$top=0` rifiutata con HTTP 400 nel run reale.
+
 - Il notebook CRM di preflight usa ora il flusso service principal custodito in Key Vault, già
   adottato dal load, invece dell'API `notebookutils.connections` non disponibile nel runtime
   NotebookUtils. Il controllo resta privo di lettura record (`$top=0`).

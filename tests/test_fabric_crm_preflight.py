@@ -30,6 +30,12 @@ class FabricCrmPreflightTests(unittest.TestCase):
         self.assertIn("notebookutils.credentials.getSecret", notebook)
         self.assertNotIn("notebookutils.connections.getCredential", notebook)
 
+    def test_preflight_uses_the_record_free_dataverse_count_endpoint(self) -> None:
+        notebook = Path("fabric/notebook/nb_crm_preflight.Notebook/notebook-content.py").read_text(encoding="utf-8")
+
+        self.assertIn('/api/data/v9.2/accounts/$count', notebook)
+        self.assertNotIn("$top=0", notebook)
+
     def test_preflight_binds_and_updates_notebook_default_lakehouse(self) -> None:
         source = Path("scripts/fabric_crm_preflight.py").read_text(encoding="utf-8")
 
