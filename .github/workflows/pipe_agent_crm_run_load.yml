@@ -38,7 +38,7 @@ jobs:
         if: always()
         run: |
           if [ ! -f rail-result.json ]; then
-            printf '{"schema_version":"1.0","rail":"run_load","outcome":"technical_failure","run_id":"crm-load-wi%s","workspace_id":null,"datasets":[],"messages":["run_load process ended before writing a result"],"timestamp":"%s"}\n' "${{ inputs.work_item_id }}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > rail-result.json
+            printf '{"schema_version":"1.3","rail":"run_load","outcome":"technical_failure","run_id":"crm-load-wi%s","workspace_id":"unknown","datasets":[],"messages":["run_load process ended before writing a result"],"timestamp":"%s"}\n' "${{ inputs.work_item_id }}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > rail-result.json
           fi
 
       - name: Publish rail result
