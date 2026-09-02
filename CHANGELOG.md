@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Il rail CRM acquisisce ora il token OneLake subito dopo la sottomissione del notebook, prima
+  dell'attesa lunga dell'operazione Fabric, e lo riusa in memoria per leggere l'evidenza per-run.
+  Nel delta reale il token richiesto solo dopo il job non era più acquisibile dall'identità OIDC.
+
 - Il notebook CRM mantiene ora `RUN_ID` in una parameter cell Fabric dedicata, senza import o
   configurazione aggiuntivi. Il run reale generava un ID fallback invece di ricevere quello del
   Job Scheduler, impedendo al rail di leggere la corrispondente evidenza per-run.

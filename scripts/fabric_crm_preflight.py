@@ -127,7 +127,14 @@ class FabricClient:
         elif status != 200:
             raise FabricPreflightError("Fabric item update failed")
 
-    def run_notebook(self, workspace_id: str, notebook_id: str, parameters: dict[str, str] | None = None) -> None:
+    def run_notebook(
+        self,
+        workspace_id: str,
+        notebook_id: str,
+        parameters: dict[str, str] | None = None,
+        *,
+        wait: bool = True,
+    ) -> str | None:
         body = None if parameters is None else {
             "parameters": [
                 {"name": name, "value": value, "type": "Text"}
@@ -144,7 +151,10 @@ class FabricClient:
         location = headers.get("Location") or headers.get("location")
         if not location:
             raise FabricPreflightError("Notebook job did not return an operation location")
-        self.wait_lro(location, "notebook run")
+        if wait:
+            self.wait_lro(location, "notebook run")
+            return None
+        return location
 
 
 def find_workspace(client: FabricClient, work_item_id: int) -> dict:
