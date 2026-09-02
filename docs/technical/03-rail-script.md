@@ -223,6 +223,9 @@ solo l'evidenza per-run `Files/agentic/run_load_results/<run_id>.json`, verifica
 payload prima di pubblicare l'artefatto. Dopo il job, un HTTP 404 OneLake sulla stessa evidenza
 può essere transitorio: il rail ripete la lettura per un massimo di 60 secondi, senza risottomettere
 il notebook e senza mai leggere un file di un altro run.
+La parameter cell del notebook contiene soltanto il default `RUN_ID`; il runtime inserisce il
+valore inviato dal Job Scheduler nella cella successiva. In questo modo il percorso dell'evidenza
+è quello dell'ID noto al rail, non l'ID fallback generato dal notebook.
 
 ### Nota critica sulla condizione di successo
 

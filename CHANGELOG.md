@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Il notebook CRM mantiene ora `RUN_ID` in una parameter cell Fabric dedicata, senza import o
+  configurazione aggiuntivi. Il run reale generava un ID fallback invece di ricevere quello del
+  Job Scheduler, impedendo al rail di leggere la corrispondente evidenza per-run.
+
 - Il rail `run_load` attende ora fino a 60 secondi la visibilità OneLake della sola evidenza
   per-run richiesta dopo il completamento del notebook. Un HTTP 404 transitorio non genera un
   secondo load e non consente il fallback al file condiviso; gli altri errori restano fallimenti

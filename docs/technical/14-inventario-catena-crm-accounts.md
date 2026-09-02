@@ -91,7 +91,7 @@ contiene i run `20260902T144322Z-bb0290c4` (`extracted_count=10`, `loaded_count=
 | # | Discrepanza | Correzione |
 |---|---|---|
 | **D8** | `reconciliation` era asserita, non calcolata. | Il runner locale confronta `extracted_count` e `loaded_count`; il notebook confronta la sorgente estratta con lo staging riletto. Una divergenza restituisce `quality_failure` e non procede a merge, audit o watermark. |
-| **D9** | L'evidenza proveniva da un percorso OneLake fisso e non era legata al job appena sottomesso. | Il rail genera `run_id` prima del job, lo passa come parametro al notebook e legge solo `Files/agentic/run_load_results/<run_id>.json`, verificando anche il `run_id` nel payload. Gestisce soltanto un 404 OneLake transitorio con retry bounded sullo stesso file. |
+| **D9** | L'evidenza proveniva da un percorso OneLake fisso e non era legata al job appena sottomesso. | Il rail genera `run_id` prima del job, lo passa al default isolato nella parameter cell del notebook e legge solo `Files/agentic/run_load_results/<run_id>.json`, verificando anche il `run_id` nel payload. Gestisce soltanto un 404 OneLake transitorio con retry bounded sullo stesso file. |
 
 > Le correzioni D8/D9 sono verificate da test; il prossimo delta controllato le valida nel runtime
 > Fabric con una prova di evidenza per-run.
