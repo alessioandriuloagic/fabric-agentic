@@ -145,7 +145,25 @@ def main() -> int:
             "messages": [str(error)],
             "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         }
-    args.output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    except Exception as error:
+        # Catch any unexpected exceptions to ensure result file is written
+        result = {
+            "schema_version": "1.3",
+            "rail": "run_load",
+            "outcome": "technical_failure",
+            "run_id": f"crm-load-wi{args.work_item_id}",
+            "workspace_id": "unknown",
+            "datasets": [],
+            "messages": [f"Unexpected error: {type(error).__name__}: {error}"],
+            "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        }
+    try:
+        args.output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    except Exception as error:
+        # If even writing fails, at least exit with failure code
+        import sys
+        sys.stderr.write(f"Failed to write result file: {error}\n")
+        return 1
     return 0 if result["outcome"] == "success" else 1
 
 
