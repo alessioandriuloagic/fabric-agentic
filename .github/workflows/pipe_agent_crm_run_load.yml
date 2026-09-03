@@ -29,6 +29,9 @@ jobs:
           tenant-id: ${{ vars.FABRIC_DEPLOY_TENANT_ID }}
           allow-no-subscriptions: true
 
+      - name: Install dependencies
+        run: pip install -q -r requirements-framework.txt
+
       - name: Deploy and run CRM load notebook
         id: run-load
         continue-on-error: true
