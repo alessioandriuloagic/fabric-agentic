@@ -9,10 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Il metodo `ensure_item` ritorna ora una tupla `(item, is_new)`. La definizione è aggiornata
-  solo se l'item esiste già (is_new=False); gli item appena creati non vengono aggiornati
-  immediatamente (Fabric API rifiuta updateDefinition subito dopo creation con HTTP 404).
-  Questo assicura che i notebook esistenti ricevano la definizione aggiornata.
+- I notebook creati con definizione inline in Fabric non supportano updateDefinition.
+  Il rail CRM ora passa la definizione inline al momento della creazione e non tenta mai un update
+  successivo. Questo risolve i delta che fallivano con HTTP 404 al stage "definition".
 
 - Il rail CRM classifica i failure con uno stage preciso (workspace, lakehouse, notebook,
   submission, storage_token, notebook_run, evidence) così i retry diagnostici non esigono accesso ai
