@@ -41,7 +41,6 @@ class FabricCrmLoadTests(unittest.TestCase):
             {"id": "lakehouse-id"},
             {"id": "notebook-id"},
         ]
-        client.update_item_definition.return_value = None
         client.run_notebook.return_value = "https://api.fabric.microsoft.com/v1/operations/test"
         read_load_result.return_value = {
             "rail": "run_load",
@@ -73,7 +72,6 @@ class FabricCrmLoadTests(unittest.TestCase):
         storage_access_token.assert_called_once_with()
         client.wait_lro.assert_called_once_with("https://api.fabric.microsoft.com/v1/operations/test", "notebook run")
         read_load_result.assert_called_once_with("workspace-id", "lakehouse-id", "submitted-run", "storage-token")
-        client.update_item_definition.assert_called_once()
         self.assertEqual(client.ensure_item.call_args_list[0].args[1:3], ("lh_bronze_crm_demo", "Lakehouse"))
         self.assertEqual(client.ensure_item.call_args_list[1].args[1:3], ("nb_crm_load", "Notebook"))
         self.assertTrue(Path("fabric/notebook/nb_crm_load.Notebook/notebook-content.py").exists())

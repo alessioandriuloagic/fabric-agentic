@@ -84,8 +84,6 @@ def run_load(work_item_id: int) -> dict:
         )
         stage = "notebook"
         notebook = client.ensure_item(workspace["id"], NOTEBOOK_NAME, "Notebook", definition)
-        stage = "definition"
-        client.update_item_definition(workspace["id"], notebook["id"], definition)
         stage = "submission"
         location = client.run_notebook(workspace["id"], notebook["id"], {"run_id": run_id}, wait=False)
         stage = "storage_token"
