@@ -38,8 +38,8 @@ class FabricCrmLoadTests(unittest.TestCase):
     def test_deploys_and_runs_deterministic_load_artifacts(self, client_class: Mock, find_workspace: Mock, read_load_result: Mock, access_token: Mock, storage_access_token: Mock, _) -> None:
         client = client_class.return_value
         client.ensure_item.side_effect = [
-            {"id": "lakehouse-id"},
-            {"id": "notebook-id"},
+            ({"id": "lakehouse-id"}, False),  # Lakehouse exists (not new)
+            ({"id": "notebook-id"}, True),    # Notebook is new
         ]
         client.run_notebook.return_value = "https://api.fabric.microsoft.com/v1/operations/test"
         read_load_result.return_value = {
@@ -84,7 +84,7 @@ class FabricCrmLoadTests(unittest.TestCase):
     @patch("scripts.fabric_crm_load.uuid.uuid4", return_value=Mock(hex="submitted-run"))
     def test_publishes_quality_failure_from_correlated_reconciliation_evidence(self, _, client_class: Mock, find_workspace: Mock, read_load_result: Mock, storage_access_token: Mock, access_token: Mock) -> None:
         client = client_class.return_value
-        client.ensure_item.side_effect = [{"id": "lakehouse-id"}, {"id": "notebook-id"}]
+        client.ensure_item.side_effect = [({"id": "lakehouse-id"}, False), ({"id": "notebook-id"}, True)]
         read_load_result.return_value = {
             "rail": "run_load",
             "outcome": "quality_failure",

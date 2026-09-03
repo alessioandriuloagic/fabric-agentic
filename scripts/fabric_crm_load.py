@@ -77,7 +77,7 @@ def run_load(work_item_id: int) -> dict:
     try:
         workspace = find_workspace(client, work_item_id)
         stage = "lakehouse"
-        lakehouse = client.ensure_item(workspace["id"], LAKEHOUSE_NAME, "Lakehouse")
+        lakehouse, _ = client.ensure_item(workspace["id"], LAKEHOUSE_NAME, "Lakehouse")
         definition = notebook_definition(
             NOTEBOOK_DIRECTORY,
             {"id": lakehouse["id"], "displayName": LAKEHOUSE_NAME, "workspace_id": workspace["id"]},
