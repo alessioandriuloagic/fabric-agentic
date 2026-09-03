@@ -86,7 +86,13 @@ def run_load(work_item_id: int) -> dict:
         notebook, is_new = client.ensure_item(workspace["id"], NOTEBOOK_NAME, "Notebook", definition)
         stage = "definition"
         if not is_new:
-            client.update_item_definition(workspace["id"], notebook["id"], definition)
+            # Existing notebook: update definition
+            # Log item ID for diagnostics
+            notebook_id = notebook.get("id", "unknown-id")
+            try:
+                client.update_item_definition(workspace["id"], notebook_id, definition)
+            except FabricPreflightError as error:
+                raise FabricPreflightError(f"Fabric API update failed for notebook {notebook_id}: {error}") from error
         stage = "submission"
         location = client.run_notebook(workspace["id"], notebook["id"], {"run_id": run_id}, wait=False)
         stage = "storage_token"
