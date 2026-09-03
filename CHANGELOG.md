@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Il rail CRM classifica i failure con uno stage preciso (workspace, lakehouse, notebook, definition,
+  submission, storage_token, notebook_run, evidence) così i retry diagnostici non esigono accesso ai
+  log GitHub; il messaggio non espone body API, token o ID sensibili.
+
 - Il rail CRM acquisisce ora il token OneLake subito dopo la sottomissione del notebook, prima
   dell'attesa lunga dell'operazione Fabric, e lo riusa in memoria per leggere l'evidenza per-run.
   Nel delta reale il token richiesto solo dopo il job non era più acquisibile dall'identità OIDC.
