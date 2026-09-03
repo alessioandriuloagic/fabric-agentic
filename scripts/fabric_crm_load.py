@@ -77,13 +77,16 @@ def run_load(work_item_id: int) -> dict:
     try:
         workspace = find_workspace(client, work_item_id)
         stage = "lakehouse"
-        lakehouse = client.ensure_item(workspace["id"], LAKEHOUSE_NAME, "Lakehouse")
+        lakehouse, _ = client.ensure_item(workspace["id"], LAKEHOUSE_NAME, "Lakehouse")
         definition = notebook_definition(
             NOTEBOOK_DIRECTORY,
             {"id": lakehouse["id"], "displayName": LAKEHOUSE_NAME, "workspace_id": workspace["id"]},
         )
         stage = "notebook"
-        notebook = client.ensure_item(workspace["id"], NOTEBOOK_NAME, "Notebook", definition)
+        notebook, is_new = client.ensure_item(workspace["id"], NOTEBOOK_NAME, "Notebook", definition)
+        stage = "definition"
+        if not is_new:
+            client.update_item_definition(workspace["id"], notebook["id"], definition)
         stage = "submission"
         location = client.run_notebook(workspace["id"], notebook["id"], {"run_id": run_id}, wait=False)
         stage = "storage_token"

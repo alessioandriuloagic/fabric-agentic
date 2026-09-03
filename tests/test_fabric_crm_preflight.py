@@ -53,9 +53,10 @@ class FabricCrmPreflightTests(unittest.TestCase):
         client = Mock(spec=FabricClient)
         client.list_items.return_value = [{"id": "lakehouse-id", "displayName": "lh_bronze_crm_demo"}]
 
-        result = FabricClient.ensure_item(client, "workspace-id", "lh_bronze_crm_demo", "Lakehouse")
+        item, is_new = FabricClient.ensure_item(client, "workspace-id", "lh_bronze_crm_demo", "Lakehouse")
 
-        self.assertEqual(result["id"], "lakehouse-id")
+        self.assertEqual(item["id"], "lakehouse-id")
+        self.assertFalse(is_new)  # Existing item
         client.request.assert_not_called()
 
     def test_ensure_item_rejects_duplicate_item_names(self) -> None:

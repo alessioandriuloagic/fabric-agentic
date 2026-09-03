@@ -94,10 +94,11 @@ class FabricClient:
         _, _, body = self.request("GET", f"/workspaces/{workspace_id}/items?type={item_type}")
         return body.get("value", [])
 
-    def ensure_item(self, workspace_id: str, display_name: str, item_type: str, definition: dict | None = None) -> dict:
+    def ensure_item(self, workspace_id: str, display_name: str, item_type: str, definition: dict | None = None) -> tuple[dict, bool]:
+        """Create or return existing item. Returns (item_dict, is_new)."""
         matches = [item for item in self.list_items(workspace_id, item_type) if item.get("displayName") == display_name]
         if len(matches) == 1:
-            return matches[0]
+            return matches[0], False  # Existing item, not new
         if len(matches) > 1:
             raise FabricPreflightError("multiple Fabric items match the deterministic name")
         body = {"displayName": display_name, "type": item_type}
@@ -112,10 +113,10 @@ class FabricClient:
             matches = [item for item in self.list_items(workspace_id, item_type) if item.get("displayName") == display_name]
             if len(matches) != 1:
                 raise FabricPreflightError("Fabric item creation could not be resolved")
-            return matches[0]
+            return matches[0], True  # Newly created item
         if status != 201 or not created.get("id"):
             raise FabricPreflightError("Fabric item creation failed")
-        return created
+        return created, True  # Newly created item
 
     def update_item_definition(self, workspace_id: str, item_id: str, definition: dict) -> None:
         status, headers, _ = self.request("POST", f"/workspaces/{workspace_id}/items/{item_id}/updateDefinition", {"definition": definition})
@@ -170,7 +171,7 @@ def run_preflight(work_item_id: int) -> dict:
     configuration = load_configuration(Path("configuration/crm_demo.json"))
     client = FabricClient(access_token())
     workspace = find_workspace(client, work_item_id)
-    lakehouse = client.ensure_item(workspace["id"], LAKEHOUSE_NAME, "Lakehouse")
+    lakehouse, _ = client.ensure_item(workspace["id"], LAKEHOUSE_NAME, "Lakehouse")
     definition = notebook_definition(
         NOTEBOOK_DIRECTORY,
         {
@@ -179,8 +180,9 @@ def run_preflight(work_item_id: int) -> dict:
             "workspace_id": workspace["id"],
         },
     )
-    notebook = client.ensure_item(workspace["id"], NOTEBOOK_NAME, "Notebook", definition)
-    client.update_item_definition(workspace["id"], notebook["id"], definition)
+    notebook, is_new = client.ensure_item(workspace["id"], NOTEBOOK_NAME, "Notebook", definition)
+    if not is_new:
+        client.update_item_definition(workspace["id"], notebook["id"], definition)
     client.run_notebook(workspace["id"], notebook["id"])
     return {
         "outcome": "success",
