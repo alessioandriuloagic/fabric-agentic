@@ -226,6 +226,9 @@ il notebook e senza mai leggere un file di un altro run.
 La parameter cell del notebook contiene soltanto il default `RUN_ID`; il runtime inserisce il
 valore inviato dal Job Scheduler nella cella successiva. In questo modo il percorso dell'evidenza
 è quello dell'ID noto al rail, non l'ID fallback generato dal notebook.
+Il token OneLake viene acquisito immediatamente dopo la sottomissione del notebook e mantenuto
+soltanto in memoria fino alla lettura dell'evidenza: un job Spark lungo può superare la finestra
+in cui Azure CLI riesce a ottenere un nuovo token Storage dall'identità OIDC.
 
 ### Nota critica sulla condizione di successo
 

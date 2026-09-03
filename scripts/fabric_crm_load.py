@@ -45,10 +45,10 @@ def result_path(run_id: str) -> str:
     return f"{RESULT_DIRECTORY}/{run_id}.json"
 
 
-def read_load_result(workspace_id: str, lakehouse_id: str, run_id: str) -> dict:
+def read_load_result(workspace_id: str, lakehouse_id: str, run_id: str, storage_token: str) -> dict:
     path = result_path(run_id)
     url = f"https://onelake.dfs.fabric.microsoft.com/{workspace_id}/{lakehouse_id}/{path}"
-    request = Request(url, headers={"Authorization": f"Bearer {storage_access_token()}"})
+    request = Request(url, headers={"Authorization": f"Bearer {storage_token}"})
     for attempt in range(EVIDENCE_READ_ATTEMPTS):
         try:
             with urlopen(request) as response:
@@ -92,8 +92,10 @@ def run_load(work_item_id: int) -> dict:
             {"id": lakehouse["id"], "displayName": LAKEHOUSE_NAME, "workspace_id": workspace["id"]},
         ),
     )
-    client.run_notebook(workspace["id"], notebook["id"], {"run_id": run_id})
-    evidence = read_load_result(workspace["id"], lakehouse["id"], run_id)
+    location = client.run_notebook(workspace["id"], notebook["id"], {"run_id": run_id}, wait=False)
+    storage_token = storage_access_token()
+    client.wait_lro(location, "notebook run")
+    evidence = read_load_result(workspace["id"], lakehouse["id"], run_id, storage_token)
     outcome = evidence["outcome"]
     reconciliation = evidence["reconciliation"]
     if (outcome == "success") != (reconciliation == "passed"):

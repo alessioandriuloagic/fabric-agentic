@@ -24,23 +24,25 @@ class FabricCrmLoadTests(unittest.TestCase):
         urlopen_mock.side_effect = [missing, response]
 
         with patch("scripts.fabric_crm_load.time.sleep"):
-            result = read_load_result("workspace-id", "lakehouse-id", "submitted-run")
+            result = read_load_result("workspace-id", "lakehouse-id", "submitted-run", "storage-token")
 
         self.assertEqual(result["run_id"], "submitted-run")
         self.assertEqual(urlopen_mock.call_count, 2)
 
     @patch("scripts.fabric_crm_load.uuid.uuid4", return_value=Mock(hex="submitted-run"))
     @patch("scripts.fabric_crm_load.access_token", return_value="opaque-token")
+    @patch("scripts.fabric_crm_load.storage_access_token", return_value="storage-token")
     @patch("scripts.fabric_crm_load.read_load_result")
     @patch("scripts.fabric_crm_load.find_workspace", return_value={"id": "workspace-id"})
     @patch("scripts.fabric_crm_load.FabricClient")
-    def test_deploys_and_runs_deterministic_load_artifacts(self, client_class: Mock, find_workspace: Mock, read_load_result: Mock, access_token: Mock, _) -> None:
+    def test_deploys_and_runs_deterministic_load_artifacts(self, client_class: Mock, find_workspace: Mock, read_load_result: Mock, access_token: Mock, storage_access_token: Mock, _) -> None:
         client = client_class.return_value
         client.ensure_item.side_effect = [
             {"id": "lakehouse-id"},
             {"id": "notebook-id"},
         ]
         client.update_item_definition.return_value = None
+        client.run_notebook.return_value = "https://api.fabric.microsoft.com/v1/operations/test"
         read_load_result.return_value = {
             "rail": "run_load",
             "outcome": "success",
@@ -66,19 +68,23 @@ class FabricCrmLoadTests(unittest.TestCase):
             "workspace-id",
             "notebook-id",
             {"run_id": "submitted-run"},
+            wait=False,
         )
-        read_load_result.assert_called_once_with("workspace-id", "lakehouse-id", "submitted-run")
+        storage_access_token.assert_called_once_with()
+        client.wait_lro.assert_called_once_with("https://api.fabric.microsoft.com/v1/operations/test", "notebook run")
+        read_load_result.assert_called_once_with("workspace-id", "lakehouse-id", "submitted-run", "storage-token")
         client.update_item_definition.assert_called_once()
         self.assertEqual(client.ensure_item.call_args_list[0].args[1:3], ("lh_bronze_crm_demo", "Lakehouse"))
         self.assertEqual(client.ensure_item.call_args_list[1].args[1:3], ("nb_crm_load", "Notebook"))
         self.assertTrue(Path("fabric/notebook/nb_crm_load.Notebook/notebook-content.py").exists())
 
     @patch("scripts.fabric_crm_load.access_token", return_value="opaque-token")
+    @patch("scripts.fabric_crm_load.storage_access_token", return_value="storage-token")
     @patch("scripts.fabric_crm_load.read_load_result")
     @patch("scripts.fabric_crm_load.find_workspace", return_value={"id": "workspace-id"})
     @patch("scripts.fabric_crm_load.FabricClient")
     @patch("scripts.fabric_crm_load.uuid.uuid4", return_value=Mock(hex="submitted-run"))
-    def test_publishes_quality_failure_from_correlated_reconciliation_evidence(self, _, client_class: Mock, find_workspace: Mock, read_load_result: Mock, access_token: Mock) -> None:
+    def test_publishes_quality_failure_from_correlated_reconciliation_evidence(self, _, client_class: Mock, find_workspace: Mock, read_load_result: Mock, storage_access_token: Mock, access_token: Mock) -> None:
         client = client_class.return_value
         client.ensure_item.side_effect = [{"id": "lakehouse-id"}, {"id": "notebook-id"}]
         read_load_result.return_value = {
