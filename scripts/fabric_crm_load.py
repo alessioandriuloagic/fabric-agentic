@@ -73,29 +73,29 @@ def run_load(work_item_id: int) -> dict:
     run_id = uuid.uuid4().hex
     configuration = load_configuration(Path("configuration/crm_demo.json"))
     client = FabricClient(access_token())
-    workspace = find_workspace(client, work_item_id)
-    lakehouse = client.ensure_item(workspace["id"], LAKEHOUSE_NAME, "Lakehouse")
-    notebook = client.ensure_item(
-        workspace["id"],
-        NOTEBOOK_NAME,
-        "Notebook",
-        notebook_definition(
+    stage = "workspace"
+    try:
+        workspace = find_workspace(client, work_item_id)
+        stage = "lakehouse"
+        lakehouse = client.ensure_item(workspace["id"], LAKEHOUSE_NAME, "Lakehouse")
+        definition = notebook_definition(
             NOTEBOOK_DIRECTORY,
             {"id": lakehouse["id"], "displayName": LAKEHOUSE_NAME, "workspace_id": workspace["id"]},
-        ),
-    )
-    client.update_item_definition(
-        workspace["id"],
-        notebook["id"],
-        notebook_definition(
-            NOTEBOOK_DIRECTORY,
-            {"id": lakehouse["id"], "displayName": LAKEHOUSE_NAME, "workspace_id": workspace["id"]},
-        ),
-    )
-    location = client.run_notebook(workspace["id"], notebook["id"], {"run_id": run_id}, wait=False)
-    storage_token = storage_access_token()
-    client.wait_lro(location, "notebook run")
-    evidence = read_load_result(workspace["id"], lakehouse["id"], run_id, storage_token)
+        )
+        stage = "notebook"
+        notebook = client.ensure_item(workspace["id"], NOTEBOOK_NAME, "Notebook", definition)
+        stage = "definition"
+        client.update_item_definition(workspace["id"], notebook["id"], definition)
+        stage = "submission"
+        location = client.run_notebook(workspace["id"], notebook["id"], {"run_id": run_id}, wait=False)
+        stage = "storage_token"
+        storage_token = storage_access_token()
+        stage = "notebook_run"
+        client.wait_lro(location, "notebook run")
+        stage = "evidence"
+        evidence = read_load_result(workspace["id"], lakehouse["id"], run_id, storage_token)
+    except FabricPreflightError as error:
+        raise FabricPreflightError(f"CRM load failed at {stage}: {error}") from error
     outcome = evidence["outcome"]
     reconciliation = evidence["reconciliation"]
     if (outcome == "success") != (reconciliation == "passed"):
