@@ -9,7 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Il rail CRM classifica i failure con uno stage preciso (workspace, lakehouse, notebook, definition,
+- Il rail CRM non effettua più un updateDefinition redundante dopo aver creato il notebook con
+  definizione inline; Fabric API rifiuta una modifica della definizione subito dopo la creazione
+  con HTTP 404. Questa rimozione elimina lo stage "definition" dal critpath e risolve la radice
+  del delta run 33736863581.
+
+- Il rail CRM classifica i failure con uno stage preciso (workspace, lakehouse, notebook,
   submission, storage_token, notebook_run, evidence) così i retry diagnostici non esigono accesso ai
   log GitHub; il messaggio non espone body API, token o ID sensibili.
 
