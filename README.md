@@ -41,6 +41,12 @@ python -m scripts.review_dispatcher --config ... --state ... --tasks ... --poll
 Prima volta: aggiungi `--once --dry-run` a un comando per vedere cosa raccoglierebbe senza avviare
 sessioni né scrivere su GitHub. Dettagli e layout canonico: [docs/technical/12-console-e-avvio.md](docs/technical/12-console-e-avvio.md).
 
+Se il materiale di partenza è ancora locale o grezzo, usa prima `@Issue Agent` in VS Code/chat per
+trasformarlo in un pacchetto di lavoro. Il dispatcher automatico vede solo la GitHub Issue, i suoi
+commenti e ciò che è già nel repository remoto aggiornabile dalla clone dedicata; gli attachment
+locali devono essere committati e pushati sotto `attachments/<issue-number>/` oppure riassunti nel
+body della issue.
+
 ## Struttura del repository
 
 ```

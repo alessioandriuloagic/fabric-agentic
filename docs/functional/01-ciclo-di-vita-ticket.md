@@ -12,6 +12,11 @@ Il ticket può essere redatto dall'Issue Agent, ma **non diventa esecutivo senza
 umana**. Tutto ciò che sta in mezzo è automatico — ma **niente di ciò che sta in mezzo può
 raggiungere `main` da solo**.
 
+Quando il ticket nasce da materiale grezzo locale, la preparazione può avvenire prima in una
+sessione Issue Agent dentro VS Code/chat. Quel passaggio produce il pacchetto, ma non sostituisce
+il cancello operativo: il pacchetto o la sintesi devono finire in una GitHub Issue e l'umano deve
+approvarli prima di applicare il tag del Dev Agent.
+
 Corollario operativo: se ti accorgi di dover intervenire tecnicamente durante il ciclo (aprire
 un workspace, correggere una pipeline a mano, rilanciare un carico), **non è un contrattempo:
 è un difetto del sistema**. Va tracciato come tale, non assorbito con una correzione manuale
