@@ -16,9 +16,10 @@ Quando il ticket nasce da materiale grezzo locale, la preparazione può avvenire
 sessione Issue Agent dentro VS Code/chat. Quel passaggio produce il pacchetto, ma non sostituisce
 il cancello operativo: il pacchetto o la sintesi devono finire in una GitHub Issue e l'umano deve
 approvarli prima di applicare il tag del Dev Agent.
-Non sostituisce nemmeno l'avvio del runtime completo: se la catena deve restare attiva, i tre
-dispatcher Issue, Dev e Review vanno avviati insieme. L'Issue Agent manuale è un modo più ricco di
-preparare il lavoro, non un componente operativo alternativo.
+Quel passaggio usa il runtime Copilot/VS Code. Non usa il motore del dispatcher Issue e non va fatto
+rieseguire dallo stesso dispatcher sul medesimo intake. Se si vuole mantenere anche l'ingresso
+automatico per nuovi intake, l'Issue dispatcher resta acceso; se l'ingresso è manuale per quel caso,
+la catena operativa riparte dall'approvazione e dal Dev dispatcher.
 
 Corollario operativo: se ti accorgi di dover intervenire tecnicamente durante il ciclo (aprire
 un workspace, correggere una pipeline a mano, rilanciare un carico), **non è un contrattempo:

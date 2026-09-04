@@ -28,9 +28,20 @@ ma non attiva il ciclo GitHub, non pubblica il pacchetto e non passa il lavoro a
 È però il percorso migliore quando il materiale iniziale è ancora locale, incompleto o troppo
 grezzo per essere già committato: in chat può ricevere selezioni, file del workspace, allegati e
 note operative, produrre il pacchetto, e solo dopo l'umano riversa il risultato nella issue.
-Questo non trasforma il runtime operativo in una catena a due agenti: quando il sistema resta
-acceso, si avviano comunque Issue, Dev e Review dispatcher. La sessione VS Code/chat serve a
-preparare meglio l'intake o il pacchetto, non a rimuovere l'Issue dispatcher dal ciclo.
+In questo caso il pacchetto è prodotto dal runtime di VS Code/Copilot, non dal motore configurato
+nel dispatcher. Il dispatcher Issue usa invece `agent.claude_command` dal proprio file di
+configurazione e avvia una sessione separata nella clone dedicata.
+
+Ne discendono due modalità operative:
+
+- **automatica**: Issue dispatcher acceso, pacchetto prodotto dal motore configurato nel dispatcher,
+  poi approvazione umana e label `dev-agent`;
+- **ibrida/manuale**: Issue Agent in VS Code/chat produce il pacchetto con tutto il contesto locale,
+  l'umano lo pubblica nella issue e poi Dev/Review proseguono via dispatcher.
+
+Nel modo ibrido il dispatcher Issue non deve rieseguire lo stesso intake. Resta utile tenerlo
+acceso solo se si vogliono intercettare altri intake automatici o usare il percorso di pubblicazione
+deterministica quando abilitato.
 
 > **Limite attuale verificato sulla #150**: `karl` e `ralph` sono custom agent VS Code, ma non sono
 > installati come subagent nel runtime Claude Code usato dal dispatcher locale. Finché Q-13 non
@@ -40,8 +51,8 @@ preparare meglio l'intake o il pacchetto, non a rimuovere l'Issue dispatcher dal
 
 | Canale | Quando usarlo | Avvia il ciclo operativo |
 |---|---|---|
-| GitHub Issue con label `issue-agent` | Richiesta reale da tracciare e approvare | Sì, quando il runtime dispone dei subagent richiesti |
-| `@Issue Agent` in VS Code/chat + publisher deterministico | Materiale grezzo locale o allegato alla chat, da trasformare in pacchetto prima della issue operativa | Sì, dopo pubblicazione del pacchetto e approvazione umana |
+| GitHub Issue con label `issue-agent` | Richiesta reale da tracciare e approvare | Sì, tramite motore configurato nel dispatcher quando il runtime dispone dei subagent richiesti |
+| `@Issue Agent` in VS Code/chat + publisher deterministico | Materiale grezzo locale o allegato alla chat, da trasformare in pacchetto prima della issue operativa | Sì, ma il pacchetto è prodotto da Copilot/VS Code; non dallo stesso processo del dispatcher |
 | Console locale | Controllare configurazione e recuperare il comando | No |
 
 ## 3. Creare un intake
@@ -125,10 +136,10 @@ Il dispatcher automatico non usa lo stato della working copy aperta in VS Code. 
 dalla clone dedicata dell'agente, cioè presente su `origin/main` oppure incluso nel body/commenti
 della issue.
 
-Anche quando un pacchetto è stato preparato con `@Issue Agent` in VS Code/chat, il presidio normale
-resta tenere acceso anche questo dispatcher insieme a Dev e Review. Serve per intake successivi,
-anti-duplicazione, stato locale e pubblicazione deterministica quando il percorso automatico è
-abilitato.
+Quando un pacchetto è stato preparato con `@Issue Agent` in VS Code/chat, quel singolo pacchetto non
+è stato prodotto dal motore del dispatcher. In quel caso avviare anche l'Issue dispatcher serve solo
+come presidio per intake successivi o per il percorso automatico quando è abilitato; la prosecuzione
+del lavoro approvato passa comunque dal Dev dispatcher e poi dal Review dispatcher.
 
 ## 5. Leggere il pacchetto
 

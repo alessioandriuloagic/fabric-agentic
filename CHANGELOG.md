@@ -62,9 +62,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Chiarito il percorso operativo fra Issue Agent usato in VS Code/chat e dispatcher automatico:
   il primo può consumare materiale grezzo locale o allegato alla sessione, mentre il secondo vede
   solo issue/commenti GitHub e file già presenti nel repository remoto aggiornato dalla clone
-  dedicata. Esplicitato inoltre che l'uso manuale dell'Issue Agent non elimina l'avvio del relativo
-  dispatcher: il runtime operativo resta composto da Issue, Dev e Review. Aggiornate guida Issue
-  Agent, guida ticket, console/avvio, README e regole sugli attachment.
+  dedicata. Distinto inoltre il motore del modo ibrido/manuale, che usa VS Code/Copilot, dal motore
+  del dispatcher Issue, che usa `agent.claude_command`: un pacchetto prodotto manualmente non va
+  rigenerato dallo stesso dispatcher. Aggiornate guida Issue Agent, guida ticket, console/avvio,
+  README e regole sugli attachment.
 
 - Separato il catalogo aperto delle tecnologie sorgente dal registry degli adapter eseguibili
   (ADR-0018). Un profilo può ora descrivere Business Central, CRM, database SQL, Oracle,

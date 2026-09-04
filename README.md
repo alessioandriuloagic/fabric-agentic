@@ -51,6 +51,11 @@ Questo non cambia l'avvio operativo: quando il sistema resta in ascolto, si avvi
 e tre i dispatcher. L'uso in chat prepara meglio l'intake; non elimina il processo Issue dalla
 catena.
 
+Il motore non è lo stesso: `@Issue Agent` in chat usa il runtime VS Code/Copilot, mentre
+`scripts.issue_dispatcher` usa il comando dichiarato in `agent.claude_command`. Nel percorso
+ibrido, il pacchetto manuale non viene rigenerato dal dispatcher Issue; quel dispatcher resta utile
+per nuovi intake automatici o per il percorso automatico di pubblicazione quando è abilitato.
+
 ## Struttura del repository
 
 ```
