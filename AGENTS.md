@@ -196,6 +196,7 @@ End-to-end chain: `Issue Agent` (karl + ralph) -> human approval -> ticket -> `D
 
 ## Kaizen Learnings
 
+- **[2026-09-04] Issue dispatcher resta acceso** → [kaizen/20260904-issue-dispatcher-resta-acceso.md](kaizen/20260904-issue-dispatcher-resta-acceso.md)
 - **[2026-09-04] Attachments devono essere nel remoto** → [kaizen/20260904-attachments-remoti.md](kaizen/20260904-attachments-remoti.md)
 - **[2026-09-02] Interpret inclusive watermark runs correctly** → [kaizen/20260902-inclusive-watermark-idempotency.md](kaizen/20260902-inclusive-watermark-idempotency.md)
 - **[2026-09-02] Use explicit commits for branch recreation** → [kaizen/20260902-explicit-cherry-pick.md](kaizen/20260902-explicit-cherry-pick.md)

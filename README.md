@@ -47,6 +47,10 @@ commenti e ciò che è già nel repository remoto aggiornabile dalla clone dedic
 locali devono essere committati e pushati sotto `attachments/<issue-number>/` oppure riassunti nel
 body della issue.
 
+Questo non cambia l'avvio operativo: quando il sistema resta in ascolto, si avviano comunque tutti
+e tre i dispatcher. L'uso in chat prepara meglio l'intake; non elimina il processo Issue dalla
+catena.
+
 ## Struttura del repository
 
 ```

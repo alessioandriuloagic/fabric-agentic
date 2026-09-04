@@ -120,6 +120,12 @@ python -m scripts.dev_dispatcher    --config ... --state ... --tasks ... --log .
 python -m scripts.review_dispatcher --config ... --state ... --tasks ... --poll
 ```
 
+L'eventuale uso di `@Issue Agent` in VS Code/chat per lavorare materiale grezzo non riduce il
+runtime operativo a due processi. La catena resta a tre dispatcher: Issue in ascolto sugli intake e
+sulla pubblicazione dei pacchetti, Dev in ascolto sul lavoro approvato, Review in ascolto sulle PR.
+La sessione manuale prepara o affina il pacchetto; non sostituisce il processo Issue quando il
+sistema deve restare acceso.
+
 Aggiungere `--once --dry-run` mostra cosa verrebbe raccolto senza avviare alcuna sessione e senza
 scrivere su GitHub: è il modo corretto per la prima prova. `--cycles N` limita il numero di giri,
 utile per una verifica breve.

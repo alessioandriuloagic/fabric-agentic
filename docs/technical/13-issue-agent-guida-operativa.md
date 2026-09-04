@@ -28,6 +28,9 @@ ma non attiva il ciclo GitHub, non pubblica il pacchetto e non passa il lavoro a
 È però il percorso migliore quando il materiale iniziale è ancora locale, incompleto o troppo
 grezzo per essere già committato: in chat può ricevere selezioni, file del workspace, allegati e
 note operative, produrre il pacchetto, e solo dopo l'umano riversa il risultato nella issue.
+Questo non trasforma il runtime operativo in una catena a due agenti: quando il sistema resta
+acceso, si avviano comunque Issue, Dev e Review dispatcher. La sessione VS Code/chat serve a
+preparare meglio l'intake o il pacchetto, non a rimuovere l'Issue dispatcher dal ciclo.
 
 > **Limite attuale verificato sulla #150**: `karl` e `ralph` sono custom agent VS Code, ma non sono
 > installati come subagent nel runtime Claude Code usato dal dispatcher locale. Finché Q-13 non
@@ -121,6 +124,11 @@ Il dispatcher automatico non usa lo stato della working copy aperta in VS Code. 
 `--poll`, ogni attachment o documento di supporto citato nella issue deve essere già raggiungibile
 dalla clone dedicata dell'agente, cioè presente su `origin/main` oppure incluso nel body/commenti
 della issue.
+
+Anche quando un pacchetto è stato preparato con `@Issue Agent` in VS Code/chat, il presidio normale
+resta tenere acceso anche questo dispatcher insieme a Dev e Review. Serve per intake successivi,
+anti-duplicazione, stato locale e pubblicazione deterministica quando il percorso automatico è
+abilitato.
 
 ## 5. Leggere il pacchetto
 
