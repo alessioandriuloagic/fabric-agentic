@@ -59,6 +59,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Chiarito il percorso operativo fra Issue Agent usato in VS Code/chat e dispatcher automatico:
+  il primo può consumare materiale grezzo locale o allegato alla sessione, mentre il secondo vede
+  solo issue/commenti GitHub e file già presenti nel repository remoto aggiornato dalla clone
+  dedicata. Aggiornate guida Issue Agent, guida ticket, README e regole sugli attachment.
+
 - Separato il catalogo aperto delle tecnologie sorgente dal registry degli adapter eseguibili
   (ADR-0018). Un profilo può ora descrivere Business Central, CRM, database SQL, Oracle,
   PostgreSQL, SharePoint, file o un identificatore futuro; se non esiste un adapter, dichiara

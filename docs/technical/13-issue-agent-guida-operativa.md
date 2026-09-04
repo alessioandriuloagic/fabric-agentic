@@ -25,6 +25,9 @@ lettura e non avvia sessioni.
 
 Esiste anche il custom agent `@Issue Agent` in VS Code. È utile per esplorare una richiesta in chat,
 ma non attiva il ciclo GitHub, non pubblica il pacchetto e non passa il lavoro al Dev Agent.
+È però il percorso migliore quando il materiale iniziale è ancora locale, incompleto o troppo
+grezzo per essere già committato: in chat può ricevere selezioni, file del workspace, allegati e
+note operative, produrre il pacchetto, e solo dopo l'umano riversa il risultato nella issue.
 
 > **Limite attuale verificato sulla #150**: `karl` e `ralph` sono custom agent VS Code, ma non sono
 > installati come subagent nel runtime Claude Code usato dal dispatcher locale. Finché Q-13 non
@@ -35,7 +38,7 @@ ma non attiva il ciclo GitHub, non pubblica il pacchetto e non passa il lavoro a
 | Canale | Quando usarlo | Avvia il ciclo operativo |
 |---|---|---|
 | GitHub Issue con label `issue-agent` | Richiesta reale da tracciare e approvare | Sì, quando il runtime dispone dei subagent richiesti |
-| `@Issue Agent` in VS Code + publisher deterministico | Percorso operativo temporaneo verificato sulla #150 | Sì |
+| `@Issue Agent` in VS Code/chat + publisher deterministico | Materiale grezzo locale o allegato alla chat, da trasformare in pacchetto prima della issue operativa | Sì, dopo pubblicazione del pacchetto e approvazione umana |
 | Console locale | Controllare configurazione e recuperare il comando | No |
 
 ## 3. Creare un intake
@@ -47,6 +50,16 @@ ma non attiva il ciclo GitHub, non pubblica il pacchetto e non passa il lavoro a
 
 Un intake non deve già contenere una soluzione completa. Deve però rendere chiaro il problema e il
 confine entro cui l'Issue Agent può progettare il pacchetto.
+
+Se il materiale grezzo è in file locali, ci sono due percorsi distinti:
+
+- **percorso VS Code/chat**: allegare o indicare i file nella sessione e far produrre il pacchetto
+  all'Issue Agent manuale; poi copiare il pacchetto nella issue;
+- **percorso dispatcher automatico**: committare e pushare i file nel repository remoto, referenziarli
+  nella issue e solo dopo avviare o lasciare in ascolto il dispatcher.
+
+Un file presente solo nella working copy locale non è visibile al dispatcher: prima della sessione
+la clone isolata dell'Issue Agent viene aggiornata da `origin/main`.
 
 ### Esempio
 
@@ -103,6 +116,11 @@ dispatcher controlla GitHub ogni 30 secondi e avvia una sola sessione fresca per
 Prima di usare `--poll` come percorso automatico, verificare che il runtime configurato possa
 invocare davvero `karl` e `ralph`. La presenza dei due agenti nel selettore VS Code non li rende
 automaticamente disponibili a Claude Code.
+
+Il dispatcher automatico non usa lo stato della working copy aperta in VS Code. Prima di lanciare
+`--poll`, ogni attachment o documento di supporto citato nella issue deve essere già raggiungibile
+dalla clone dedicata dell'agente, cioè presente su `origin/main` oppure incluso nel body/commenti
+della issue.
 
 ## 5. Leggere il pacchetto
 
