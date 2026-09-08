@@ -44,6 +44,12 @@ così disponibili nella clone isolata senza dipendere dal servizio `user-attachm
 Usare solo materiali necessari al lavoro; non inserire segreti, token o dati personali non
 necessari. Ogni file deve restare sotto 10 MiB.
 
+La cartella `attachments/<issue-number>/` è un contratto di repository, non una cartella di scambio
+locale: finché i file non sono committati e pushati sul remoto letto dagli agenti, il dispatcher non
+li vede. Se il materiale è ancora grezzo o locale, usarlo prima in una sessione Issue Agent in
+VS Code/chat, produrre il pacchetto e poi riportare nella issue solo il riassunto operativo o i file
+che possono essere versionati.
+
 ### 3.1 Sezioni obbligatorie (tutti i tipi)
 
 | Sezione | Contenuto |
