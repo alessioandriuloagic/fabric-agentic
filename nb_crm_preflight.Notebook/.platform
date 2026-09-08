@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "nb_crm_preflight"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "ea923a9c-6212-bbbe-4cf5-93eca6d15518"
+  }
+}
