@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Il Dev dispatcher distingue ora un runtime bloccato da un ticket difettoso. Una sessione fermata
+  da quota esaurita o login scaduto è classificata `agent_quota_exhausted` o
+  `agent_authentication_failed`, produce l'esito `blocked` e **rilascia** il work item, che resta
+  disponibile per il ciclo successivo invece di risultare già dispatchato.
+
+- Il contesto passato alla sessione include ora le risposte umane presenti nei commenti del work
+  item, non solo il body. Una decisione scritta in un commento non viene più persa, e gli allegati
+  referenziati nei commenti sono riconosciuti.
+
+- L'allowlist della sessione Dev Agent consente `gh issue comment` e `gh issue edit`, necessari per
+  dichiarare un blocco con `waiting-input` secondo il protocollo di escalation.
+
+- Il fallimento del refresh della clone isolata riporta il passo Git che non è riuscito, invece di
+  un messaggio indistinguibile.
+
+- La discovery dei test è ancorata a `tests/`, così un file omonimo nella radice del repository non
+  interrompe più l'esecuzione della suite.
+
 - I notebook creati con definizione inline in Fabric non supportano updateDefinition.
   Il rail CRM ora passa la definizione inline al momento della creazione e non tenta mai un update
   successivo. Questo risolve i delta che fallivano con HTTP 404 al stage "definition".

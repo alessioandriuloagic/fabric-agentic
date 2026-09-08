@@ -75,7 +75,7 @@ class WorkItemTracker(ABC):
 
     def context(self, item_id: int | str) -> dict:
         """Return safe work-item context for the agent handoff."""
-        return {"title": "", "body": "", "attachments": []}
+        return {"title": "", "body": "", "comments": [], "attachments": []}
 
 
 class AzureDevOpsTracker(WorkItemTracker):
@@ -271,11 +271,18 @@ class GitHubIssuesTracker(WorkItemTracker):
         return comments
 
     def context(self, item_id: int | str) -> dict:
-        """Return issue body and allowlisted GitHub user-attachment URLs."""
+        """Return issue body, human answers, and allowlisted GitHub user-attachment URLs."""
         issue = self._rest("GET", f"/repos/{self.owner}/{self.repository}/issues/{int(item_id)}")
         body = issue.get("body") or ""
-        attachments = sorted(set(re.findall(r"https://github\.com/user-attachments/[^)\s]+", body)))
-        return {"title": issue.get("title", ""), "body": body, "attachments": attachments}
+        # A human answer often lives in a comment: without it the agent re-asks a settled question.
+        comments = [
+            {"author": comment.author, "text": comment.text}
+            for comment in self.comments(item_id)
+            if not comment.is_agent_comment and comment.text.strip()
+        ]
+        attachment_text = "\n".join([body, *(comment["text"] for comment in comments)])
+        attachments = sorted(set(re.findall(r"https://github\.com/user-attachments/[^)\s]+", attachment_text)))
+        return {"title": issue.get("title", ""), "body": body, "comments": comments, "attachments": attachments}
 
     def add_comment(self, item_id: int | str, text: str) -> None:
         """Add a comment to an issue."""

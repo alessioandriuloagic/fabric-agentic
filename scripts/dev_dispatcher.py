@@ -17,7 +17,12 @@ from pathlib import Path
 from typing import Callable
 from urllib.request import Request, urlopen
 
-from fabric_agentic.agent_session import resolve_agent_command
+from fabric_agentic.agent_session import (
+    RETRYABLE_FAILURE_CLASSES,
+    classify_session_failure,
+    resolve_agent_command,
+    session_failure_reason,
+)
 from fabric_agentic.config_paths import read_json_config
 from fabric_agentic.credential_broker import credential_broker_environment
 from fabric_agentic.github_app_auth import create_installation_token
@@ -144,12 +149,18 @@ def stage_work_item_context(config: DispatcherConfig, tracker: WorkItemTracker, 
     context = tracker.context(work_item_id)
     repository_attachments = config.repository_path / "attachments" / str(work_item_id)
     local_attachments = sorted(path for path in repository_attachments.iterdir() if path.is_file()) if repository_attachments.is_dir() else []
-    if not context.get("body") and not context.get("attachments") and not local_attachments:
+    comments = context.get("comments", [])
+    if not context.get("body") and not comments and not context.get("attachments") and not local_attachments:
         return None
     context_directory = task_directory / f"work-item-{work_item_id}"
     context_directory.mkdir(parents=True, exist_ok=True)
     context_path = context_directory / "issue-context.md"
     lines = [f"# {context.get('title', '')}", "", str(context.get("body", "")), ""]
+    if comments:
+        lines.append("## Risposte umane")
+        lines.append("")
+        for comment in comments:
+            lines.extend([f"### {comment.get('author', '')}", str(comment.get("text", "")), ""])
     for index, attachment_path in enumerate(local_attachments, start=1):
         if attachment_path.stat().st_size > MAX_ATTACHMENT_BYTES:
             raise DispatcherError("work-item attachment is too large")
@@ -248,7 +259,7 @@ def refresh_clone(config: DispatcherConfig) -> None:
     for command in commands:
         result = subprocess.run(command, capture_output=True, text=True, env=environment, check=False)
         if result.returncode != 0:
-            raise DispatcherError("isolated repository refresh failed")
+            raise DispatcherError(f"isolated repository refresh failed at 'git {command[3] if command[3] != '-c' else command[5]}'")
 
 
 @dataclass(frozen=True)
@@ -258,13 +269,22 @@ class SessionOutcome:
     session_id: str | None
     num_turns: int | None
     changed_repository: bool
+    failure_class: str | None = None
+    failure_reason: str | None = None
 
     @property
     def succeeded(self) -> bool:
         return self.returncode == 0 and not self.is_error
 
     @property
+    def retryable(self) -> bool:
+        """A blocked runtime must leave the work item available for the next cycle."""
+        return not self.succeeded and self.failure_class in RETRYABLE_FAILURE_CLASSES
+
+    @property
     def outcome(self) -> str:
+        if self.retryable:
+            return "blocked"
         if not self.succeeded:
             return "failed"
         return "productive" if self.changed_repository else "no_work"
@@ -281,6 +301,8 @@ DEV_AGENT_ALLOWED_TOOLS = (
     "Bash(git commit *)",
     "Bash(git push origin HEAD:refs/heads/feature/*)",
     "Bash(gh pr create *)",
+    "Bash(gh issue comment *)",
+    "Bash(gh issue edit *)",
     "Bash(python -m pytest *)",
 )
 
@@ -354,12 +376,15 @@ def launch_session(config: DispatcherConfig, task_path: Path) -> SessionOutcome:
         payload = {}
     if not isinstance(payload, dict):
         payload = {}
+    failed = result.returncode != 0 or bool(payload.get("is_error", False))
     return SessionOutcome(
         returncode=result.returncode,
         is_error=bool(payload.get("is_error", False)),
         session_id=payload.get("session_id"),
         num_turns=payload.get("num_turns"),
         changed_repository=repository_changed(config),
+        failure_class=classify_session_failure(result.returncode, result.stdout) if failed else None,
+        failure_reason=session_failure_reason(result.returncode, result.stdout) if failed else None,
     )
 
 
@@ -487,9 +512,15 @@ def run_once(config: DispatcherConfig, state_path: Path, task_directory: Path, d
             num_turns=outcome.num_turns,
             changed_repository=outcome.changed_repository,
             outcome=outcome.outcome,
+            failure_class=outcome.failure_class,
+            failure_reason=outcome.failure_reason,
         )
+    if outcome.retryable:
+        state["dispatched_work_items"] = sorted(dispatched, key=str)
+        save_state(state_path, state)
+        raise DispatcherError(f"Dev Agent session blocked ({outcome.failure_class})")
     if not outcome.succeeded:
-        raise DispatcherError("Dev Agent session failed")
+        raise DispatcherError(f"Dev Agent session failed ({outcome.failure_class})")
     return [task]
 
 

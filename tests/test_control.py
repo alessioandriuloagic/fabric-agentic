@@ -6,7 +6,7 @@ from contextlib import redirect_stdout
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from fabric_agentic.cli import main, render_text
+from fabric_agentic.cli import main, render_text, use_unicode_output
 from fabric_agentic.console import render_html
 from fabric_agentic.control import describe_agent, describe_all
 
@@ -146,6 +146,17 @@ class RenderingTests(unittest.TestCase):
             report = render_text(describe_all(home), home)
 
             self.assertIn("python -m scripts.issue_dispatcher", report)
+
+    def test_the_report_survives_a_legacy_console_codepage(self) -> None:
+        stream = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
+
+        with redirect_stdout(stream):
+            use_unicode_output()
+            with TemporaryDirectory() as directory:
+                home = Path(directory)
+                print(render_text(describe_all(home), home))
+
+        self.assertEqual(stream.encoding, "utf-8")
 
 
 class CommandTests(unittest.TestCase):

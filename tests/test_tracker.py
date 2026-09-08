@@ -189,8 +189,9 @@ class GitHubIssuesTrackerTests(unittest.TestCase):
         self.assertIn("test-repo", url)
         self.assertIn("/issues/42", url)
 
+    @patch.object(GitHubIssuesTracker, "comments", return_value=[])
     @patch.object(GitHubIssuesTracker, "_rest")
-    def test_context_returns_issue_body_and_allowlisted_attachments(self, mock_rest) -> None:
+    def test_context_returns_issue_body_and_allowlisted_attachments(self, mock_rest, _) -> None:
         mock_rest.return_value = {
             "title": "Call transcript",
             "body": "Transcript\nhttps://github.com/user-attachments/assets/file-1\nhttps://example.com/ignored",
@@ -201,6 +202,20 @@ class GitHubIssuesTrackerTests(unittest.TestCase):
         self.assertEqual(context["title"], "Call transcript")
         self.assertEqual(context["body"], mock_rest.return_value["body"])
         self.assertEqual(context["attachments"], ["https://github.com/user-attachments/assets/file-1"])
+
+    @patch.object(GitHubIssuesTracker, "comments")
+    @patch.object(GitHubIssuesTracker, "_rest")
+    def test_context_carries_human_answers_and_drops_agent_comments(self, mock_rest, mock_comments) -> None:
+        mock_rest.return_value = {"title": "Tabella Bronze", "body": "Tipo dati da confermare"}
+        mock_comments.return_value = [
+            WorkItemComment(id=1, author="owner", text="Tipo colonna stringa", is_agent_comment=False),
+            WorkItemComment(id=2, author="dev-agent", text="[fabric-agentic-dev-agent] nota", is_agent_comment=True),
+            WorkItemComment(id=3, author="owner", text="   ", is_agent_comment=False),
+        ]
+
+        context = self.tracker.context(182)
+
+        self.assertEqual(context["comments"], [{"author": "owner", "text": "Tipo colonna stringa"}])
 
     @patch("scripts.tracker.create_installation_token")
     @patch("scripts.tracker.urlopen")

@@ -1,6 +1,7 @@
 """Command line entry point: validate a profile, render it, and check what is provisioned."""
 
 import argparse
+import sys
 from pathlib import Path
 
 from fabric_agentic import __version__
@@ -63,8 +64,16 @@ def render_text(statuses: tuple[AgentStatus, ...], home: Path) -> str:
     return "\n".join(lines)
 
 
+def use_unicode_output() -> None:
+    """The default Windows console codepage cannot encode the status marks or accented Italian."""
+    reconfigure = getattr(sys.stdout, "reconfigure", None)
+    if reconfigure is not None:
+        reconfigure(encoding="utf-8", errors="replace")
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
+    use_unicode_output()
     home = args.home or agent_home()
 
     if args.command == "console":
