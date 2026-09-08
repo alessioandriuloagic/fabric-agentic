@@ -26,6 +26,7 @@ from fabric_agentic.agent_session import (
 from fabric_agentic.config_paths import read_json_config
 from fabric_agentic.credential_broker import credential_broker_environment
 from fabric_agentic.github_app_auth import create_installation_token
+from fabric_agentic.polling import PollingStopped, run_polling as run_bounded_polling
 from scripts.tracker import AzureDevOpsTracker, GitHubIssuesTracker, WorkItemTracker
 
 
@@ -302,7 +303,7 @@ DEV_AGENT_ALLOWED_TOOLS = (
     "Bash(git push origin HEAD:refs/heads/feature/*)",
     "Bash(gh pr create *)",
     "Bash(gh issue comment *)",
-    "Bash(gh issue edit *)",
+    "Bash(gh issue edit * --add-label *)",
     "Bash(python -m pytest *)",
 )
 
@@ -532,24 +533,34 @@ def run_polling(
     cycles: int | None = None,
     sleep: Callable[[float], None] = time.sleep,
 ) -> None:
-    completed_cycles = 0
-    while cycles is None or completed_cycles < cycles:
+    duration_ms = 0
+
+    def cycle() -> list[dict]:
+        nonlocal duration_ms
         started_at = time.monotonic()
         try:
-            tasks = run_once(config, state_path, task_directory, dry_run=False, log_path=log_path)
-            log_event(
-                log_path,
-                "poll_completed",
-                task_count=len(tasks),
-                work_item_ids=[task["work_item_id"] for task in tasks],
-                triggers=[task["trigger"] for task in tasks],
-                duration_ms=round((time.monotonic() - started_at) * 1000),
-            )
-        except DispatcherError as error:
-            log_event(log_path, "poll_failed", reason=str(error))
-        completed_cycles += 1
-        if cycles is None or completed_cycles < cycles:
-            sleep(config.poll_seconds)
+            return run_once(config, state_path, task_directory, dry_run=False, log_path=log_path)
+        finally:
+            duration_ms = round((time.monotonic() - started_at) * 1000)
+
+    # The bounded loop is shared with the other dispatchers: a blocked runtime must not be retried
+    # at every interval, because a released work item would relaunch the same session forever.
+    run_bounded_polling(
+        cycle=cycle,
+        poll_seconds=config.poll_seconds,
+        errors=(DispatcherError,),
+        cycles=cycles,
+        sleep=sleep,
+        on_cycle=lambda tasks: log_event(
+            log_path,
+            "poll_completed",
+            task_count=len(tasks),
+            work_item_ids=[task["work_item_id"] for task in tasks],
+            triggers=[task["trigger"] for task in tasks],
+            duration_ms=duration_ms,
+        ),
+        on_error=lambda error: log_event(log_path, "poll_failed", reason=str(error)),
+    )
 
 
 def parse_args() -> argparse.Namespace:
@@ -587,6 +598,10 @@ def main() -> int:
             log_event(args.log, "dry_run_completed" if args.dry_run else "once_completed", task_count=len(tasks), work_item_ids=[task["work_item_id"] for task in tasks], triggers=[task["trigger"] for task in tasks])
             if args.dry_run:
                 print(json.dumps({"tasks": tasks}))
+    except PollingStopped as error:
+        log_event(args.log, "polling_stopped", reason=str(error))
+        print(json.dumps({"error": str(error)}))
+        return 1
     except DispatcherError as error:
         print(json.dumps({"error": str(error)}))
         return 1

@@ -18,8 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   item, non solo il body. Una decisione scritta in un commento non viene più persa, e gli allegati
   referenziati nei commenti sono riconosciuti.
 
-- L'allowlist della sessione Dev Agent consente `gh issue comment` e `gh issue edit`, necessari per
-  dichiarare un blocco con `waiting-input` secondo il protocollo di escalation.
+- L'allowlist della sessione Dev Agent consente `gh issue comment` e `gh issue edit --add-label`,
+  necessari per dichiarare un blocco con `waiting-input` secondo il protocollo di escalation. Il
+  permesso è ristretto all'etichettatura: la sessione non può riscrivere il work item.
+
+- Il Dev dispatcher usa ora il loop limitato condiviso in `fabric_agentic/polling.py` e registra
+  `polling_stopped` dopo tre cicli falliti consecutivi. Prima aveva un ciclo proprio senza limite:
+  con il rilascio del work item su esito `blocked` avrebbe rilanciato la stessa sessione a ogni
+  intervallo, e la documentazione descriveva un limite che per questo dispatcher non esisteva.
 
 - Il fallimento del refresh della clone isolata riporta il passo Git che non è riuscito, invece di
   un messaggio indistinguibile.

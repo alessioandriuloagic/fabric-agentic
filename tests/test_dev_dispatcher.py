@@ -7,7 +7,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import MagicMock, patch
 
-from scripts.dev_dispatcher import DispatcherConfig, SessionOutcome, build_session_command, credential_broker_environment, human_reply_tasks, launch_session, launch_smoke_session, load_state, review_thread_tasks, run_once, run_polling, run_smoke, smoke_comment, stage_work_item_context
+from scripts.dev_dispatcher import DispatcherConfig, DispatcherError, SessionOutcome, build_session_command, credential_broker_environment, human_reply_tasks, launch_session, launch_smoke_session, load_state, review_thread_tasks, run_once, run_polling, run_smoke, smoke_comment, stage_work_item_context
+from fabric_agentic.polling import PollingStopped
 from scripts.tracker import WorkItemComment
 
 
@@ -251,6 +252,24 @@ class DevDispatcherTests(unittest.TestCase):
         command = build_session_command(self.config, Path("/tasks/work-item-97/task.json"))
 
         self.assertNotIn("Bash(gh pr merge *)", command)
+
+    def test_the_work_item_may_only_be_labelled_not_rewritten(self) -> None:
+        allowed_tools = build_session_command(self.config, Path("/tasks/work-item-97/task.json"))
+
+        self.assertIn("Bash(gh issue edit * --add-label *)", allowed_tools)
+        self.assertNotIn("Bash(gh issue edit *)", allowed_tools)
+
+    @patch("scripts.dev_dispatcher.run_once", side_effect=DispatcherError("Dev Agent session blocked (agent_quota_exhausted)"))
+    def test_polling_gives_up_instead_of_relaunching_a_blocked_session(self, _) -> None:
+        with TemporaryDirectory() as directory:
+            log_path = Path(directory) / "dispatcher.log"
+
+            with self.assertRaises(PollingStopped):
+                run_polling(self.config, Path(directory) / "state.json", Path(directory) / "tasks", log_path, sleep=lambda _: None)
+
+            events = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines()]
+
+        self.assertEqual([event["event"] for event in events], ["poll_failed"] * 3)
 
     @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
     @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
