@@ -18,7 +18,18 @@ come completato con successo e lo stato conserva l'ID già assegnato per evitare
 log della sessione classifica inoltre l'esito come `productive`, `no_work` o `failed`, così una
 sessione terminata senza modificare la clone non è più indistinguibile da una riuscita produttiva.
 
-Per GitHub il handoff include il body dell'issue. Gli allegati destinati all'automazione sono
+Un fallimento del **runtime del modello** non è però un difetto del ticket. Se la sessione si ferma
+per quota esaurita o login scaduto, l'esito è `blocked` con `failure_class`
+`agent_quota_exhausted` o `agent_authentication_failed`: il work item viene **rilasciato** dallo
+stato locale e resta disponibile per il ciclo successivo, invece di risultare consumato. È la
+distinzione che mancava quando un `HTTP 429` veniva registrato come sessione fallita. Il rilascio
+non apre un ciclo caldo: il loop limitato descritto sotto si arresta dopo tre cicli falliti
+consecutivi, quindi una quota esaurita ferma il dispatcher invece di rilanciare la stessa sessione
+ogni trenta secondi.
+
+Per GitHub il handoff include il body dell'issue **e le risposte umane presenti nei commenti**: una
+decisione scritta in un commento non viene persa e non costringe l'agente a richiederla di nuovo.
+Gli allegati destinati all'automazione sono
 versionati in `attachments/<issue-number>/` e vengono letti direttamente dalla clone isolata;
 non si dipende dal download degli URL `user-attachments`, che non ha un endpoint GitHub App
 documentato. Ogni file è limitato a 10 MiB; token e contenuti non entrano nei log.
@@ -185,7 +196,8 @@ Il loop si **ferma dopo tre cicli falliti consecutivi**. Non è prudenza generic
 anti-loop avanza solo quando un ciclo riesce, quindi un errore persistente rilancerebbe la stessa
 sessione a ogni intervallo — un ciclo caldo e costoso, non un retry. Un ciclo riuscito azzera il
 contatore, così un errore transitorio non ferma l'agente. La configurazione viene letta una sola
-volta all'avvio: un file invalido fallisce subito.
+volta all'avvio: un file invalido fallisce subito. Anche il Dev dispatcher usa ora questo loop
+condiviso, e registra `polling_stopped` quando si arresta.
 
 **Verifica sul campo 2026-08-31**: Issue dispatcher eseguito con `--poll --cycles 2` contro il
 repository reale; due cicli puliti, exit code `0`. Con una configurazione inesistente l'errore è

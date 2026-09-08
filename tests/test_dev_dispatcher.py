@@ -7,7 +7,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import MagicMock, patch
 
-from scripts.dev_dispatcher import DispatcherConfig, SessionOutcome, build_session_command, credential_broker_environment, human_reply_tasks, launch_session, launch_smoke_session, load_state, review_thread_tasks, run_once, run_polling, run_smoke, smoke_comment, stage_work_item_context
+from scripts.dev_dispatcher import DispatcherConfig, DispatcherError, SessionOutcome, build_session_command, credential_broker_environment, human_reply_tasks, launch_session, launch_smoke_session, load_state, review_thread_tasks, run_once, run_polling, run_smoke, smoke_comment, stage_work_item_context
+from fabric_agentic.polling import PollingStopped
 from scripts.tracker import WorkItemComment
 
 
@@ -122,6 +123,23 @@ class DevDispatcherTests(unittest.TestCase):
             self.assertIn(str(attachment_directory / "call.txt"), context_path.read_text(encoding="utf-8"))
             mock_tracker.download_attachment.assert_not_called()
 
+    def test_stages_human_answers_so_the_session_sees_the_decision(self) -> None:
+        mock_tracker = MagicMock()
+        mock_tracker.context.return_value = {
+            "title": "Creare la tabella Bronze test",
+            "body": "Tipo dati da confermare",
+            "comments": [{"author": "owner", "text": "Tipo colonna stringa"}],
+            "attachments": [],
+        }
+
+        with TemporaryDirectory() as temp_dir:
+            context_path = stage_work_item_context(self.config, mock_tracker, 182, Path(temp_dir))
+
+            staged = context_path.read_text(encoding="utf-8")
+
+        self.assertIn("Risposte umane", staged)
+        self.assertIn("Tipo colonna stringa", staged)
+
     @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
     @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
     @patch("scripts.dev_dispatcher.launch_session", return_value=SessionOutcome(returncode=0, is_error=False, session_id="abc", num_turns=5, changed_repository=True))
@@ -235,9 +253,27 @@ class DevDispatcherTests(unittest.TestCase):
 
         self.assertNotIn("Bash(gh pr merge *)", command)
 
+    def test_the_work_item_may_only_be_labelled_not_rewritten(self) -> None:
+        allowed_tools = build_session_command(self.config, Path("/tasks/work-item-97/task.json"))
+
+        self.assertIn("Bash(gh issue edit * --add-label *)", allowed_tools)
+        self.assertNotIn("Bash(gh issue edit *)", allowed_tools)
+
+    @patch("scripts.dev_dispatcher.run_once", side_effect=DispatcherError("Dev Agent session blocked (agent_quota_exhausted)"))
+    def test_polling_gives_up_instead_of_relaunching_a_blocked_session(self, _) -> None:
+        with TemporaryDirectory() as directory:
+            log_path = Path(directory) / "dispatcher.log"
+
+            with self.assertRaises(PollingStopped):
+                run_polling(self.config, Path(directory) / "state.json", Path(directory) / "tasks", log_path, sleep=lambda _: None)
+
+            events = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines()]
+
+        self.assertEqual([event["event"] for event in events], ["poll_failed"] * 3)
+
     @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
     @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
-    @patch("scripts.dev_dispatcher.launch_session", return_value=SessionOutcome(returncode=1, is_error=True, session_id=None, num_turns=None, changed_repository=False))
+    @patch("scripts.dev_dispatcher.launch_session", return_value=SessionOutcome(returncode=1, is_error=True, session_id=None, num_turns=None, changed_repository=False, failure_class="session_error"))
     @patch("scripts.dev_dispatcher.refresh_clone")
     @patch("scripts.dev_dispatcher.create_tracker")
     def test_failed_session_raises_after_persisting_dispatch(self, mock_create_tracker, _, __, ___, ____) -> None:
@@ -253,6 +289,51 @@ class DevDispatcherTests(unittest.TestCase):
             state = json.loads(state_path.read_text(encoding="utf-8"))
 
         self.assertEqual(state["dispatched_work_items"], [6])
+
+    @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
+    @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
+    @patch("scripts.dev_dispatcher.launch_session", return_value=SessionOutcome(returncode=1, is_error=True, session_id=None, num_turns=1, changed_repository=False, failure_class="agent_quota_exhausted"))
+    @patch("scripts.dev_dispatcher.refresh_clone")
+    @patch("scripts.dev_dispatcher.create_tracker")
+    def test_blocked_runtime_releases_the_work_item_for_a_later_retry(self, mock_create_tracker, _, __, ___, ____) -> None:
+        mock_tracker = MagicMock()
+        mock_tracker.new_items.return_value = [183]
+        mock_tracker.item_url.return_value = "https://example.com/item/183"
+        mock_create_tracker.return_value = mock_tracker
+
+        with TemporaryDirectory() as directory:
+            state_path = Path(directory) / "state.json"
+            log_path = Path(directory) / "dispatcher.log"
+            with self.assertRaisesRegex(Exception, "agent_quota_exhausted"):
+                run_once(self.config, state_path, Path(directory) / "tasks", dry_run=False, log_path=log_path)
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            events = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines()]
+
+        self.assertEqual(state["dispatched_work_items"], [])
+        self.assertEqual(events[0]["outcome"], "blocked")
+        self.assertEqual(events[0]["failure_class"], "agent_quota_exhausted")
+
+    @patch("scripts.dev_dispatcher.repository_changed", return_value=False)
+    @patch("scripts.dev_dispatcher.create_installation_token")
+    @patch("scripts.dev_dispatcher.subprocess.run")
+    def test_session_reports_a_quota_block_instead_of_a_generic_failure(self, mock_run, mock_token, _) -> None:
+        mock_token.return_value.token = "installation-token"
+        mock_run.return_value = MagicMock(
+            returncode=1,
+            stdout=json.dumps({
+                "is_error": True,
+                "api_error_status": 429,
+                "result": "You've hit your session limit",
+                "num_turns": 1,
+            }),
+        )
+
+        outcome = launch_session(self.config, Path("/tasks/work-item-183/task.json"))
+
+        self.assertEqual(outcome.failure_class, "agent_quota_exhausted")
+        self.assertTrue(outcome.retryable)
+        self.assertEqual(outcome.outcome, "blocked")
+        self.assertNotIn("session limit", outcome.failure_reason)
 
     def test_human_reply_ignores_agent_comments_and_seen_comments(self) -> None:
         mock_tracker = MagicMock()

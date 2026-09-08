@@ -19,3 +19,6 @@ fabric-agentic = "fabric_agentic.cli:main"
 
 [tool.setuptools]
 packages = ["fabric_agentic"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

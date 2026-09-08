@@ -2,7 +2,7 @@ import json
 import unittest
 from unittest.mock import patch
 
-from fabric_agentic.agent_session import resolve_agent_command, session_failure_reason
+from fabric_agentic.agent_session import classify_session_failure, resolve_agent_command, session_failure_reason
 
 
 class AgentSessionTests(unittest.TestCase):
@@ -44,6 +44,19 @@ class AgentSessionTests(unittest.TestCase):
         reason = session_failure_reason(0, json.dumps({"stop_reason": "max_turns", "result": "private"}))
 
         self.assertEqual(reason, "exit=0, stop_reason=max_turns")
+
+    def test_classifies_a_session_limit_as_a_quota_block(self) -> None:
+        stdout = json.dumps({"is_error": True, "api_error_status": 429, "result": "You've hit your session limit"})
+
+        self.assertEqual(classify_session_failure(1, stdout), "agent_quota_exhausted")
+
+    def test_classifies_an_expired_login_as_an_authentication_block(self) -> None:
+        stdout = json.dumps({"is_error": True, "result": "Failed to authenticate: OAuth session expired"})
+
+        self.assertEqual(classify_session_failure(1, stdout), "agent_authentication_failed")
+
+    def test_classifies_an_unknown_failure_as_a_session_error(self) -> None:
+        self.assertEqual(classify_session_failure(1, "traceback: boom"), "session_error")
 
 
 if __name__ == "__main__":
