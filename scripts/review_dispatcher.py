@@ -24,13 +24,16 @@ from scripts.review_vote_publish import app_bot_login
 PUBLISHER_MODULE = "scripts.review_vote_publish"
 
 # Read-only: the Review Agent inspects the diff but never writes, merges, or fetches new refs.
+# The session already runs with cwd=config.repository_path (like the Dev Agent), so these are
+# plain git commands rather than "git -C <path>" — an arbitrary -C target would let the model pick
+# a directory outside the review clone, which the prompt below explicitly forbids.
 REVIEW_AGENT_ALLOWED_TOOLS = (
     "Read",
-    "Bash(git -C * status *)",
-    "Bash(git -C * diff *)",
-    "Bash(git -C * show *)",
-    "Bash(git -C * log *)",
-    "Bash(git -C * rev-parse *)",
+    "Bash(git status *)",
+    "Bash(git diff *)",
+    "Bash(git show *)",
+    "Bash(git log *)",
+    "Bash(git rev-parse *)",
     "Bash(gh pr view *)",
     "Bash(gh pr diff *)",
 )
@@ -259,6 +262,7 @@ def launch_review_session(config: ReviewDispatcherConfig, task_path: Path) -> st
             str(task_path.parent),
             "--output-format",
             "json",
+            "--no-session-persistence",
             "--permission-mode",
             "dontAsk",
             "--allowedTools",

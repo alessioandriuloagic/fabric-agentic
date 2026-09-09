@@ -59,10 +59,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Il Review Agent non aveva alcun permesso per leggere il diff di una PR: `launch_review_session`
   non impostava né `--permission-mode` né un allowlist esplicita, quindi ogni `git`/`gh` richiedeva
   un'approvazione interattiva mai disponibile in un dispatcher headless. La sessione riceve ora un
-  `REVIEW_AGENT_ALLOWED_TOOLS` di sola lettura (`git -C * status/diff/show/log/rev-parse`,
-  `gh pr view/diff`) e `--permission-mode dontAsk`, coerente con l'allowlist già in uso per il Dev
-  Agent. Prima di questo fix il Review Agent, correttamente, si rifiutava di inventare un esito
-  A1-F4 e segnalava il blocco invece di votare al buio.
+  `REVIEW_AGENT_ALLOWED_TOOLS` di sola lettura (`git status/diff/show/log/rev-parse`,
+  `gh pr view/diff`), `--permission-mode dontAsk` e `--no-session-persistence`, coerente con
+  l'allowlist già in uso per il Dev Agent: comandi git piani nella `cwd` già impostata su
+  `config.repository_path`, non `git -C <path>`, che avrebbe permesso di scegliere una directory
+  arbitraria da leggere. Prima di questo fix il Review Agent, correttamente, si rifiutava di
+  inventare un esito A1-F4 e segnalava il blocco invece di votare al buio.
 
 - Il rail CRM classifica i failure con uno stage preciso (workspace, lakehouse, notebook,
   submission, storage_token, notebook_run, evidence) così i retry diagnostici non esigono accesso ai
