@@ -86,6 +86,7 @@ Entrambi vengono clonati da **ciascuno** dei tre agenti, nei rispettivi ambienti
 | Identificativi di tenant e capacity | Configurazione di istanza, in un unico punto parametrico |
 | File Power BI binari (`.pbix`) | Da nessuna parte: si usa il formato testuale versionabile |
 | Log di sessione degli agenti | Fuori dal repo, nel perimetro locale |
+| Ledger dei tentativi del dispatcher (`attempts.json`) | Fuori dal repo, nel perimetro locale: è stato di esecuzione, non sorgente |
 | Dati | In Fabric, mai nel repo |
 
 ---

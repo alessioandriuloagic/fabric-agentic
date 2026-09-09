@@ -49,8 +49,8 @@ Un dispatcher **per agente**, in esecuzione nel rispettivo ambiente isolato.
 | Frequenza di polling | ~30 secondi |
 | Autenticazione | Con il service principal **del proprio agente**, mai un'identità condivisa |
 | Gestione del token | Ottenuto per client credentials, in cache, rinnovato a ogni ciclo e a ogni avvio di sessione |
-| Concorrenza | Una sola sessione attiva per agente: se una sessione è in corso, il ciclo di polling non ne avvia un'altra |
-| Persistenza | Nessuna: lo stato è nel tracker |
+| Concorrenza | Una sola sessione attiva per agente: se una sessione è in corso, il ciclo di polling non ne avvia un'altra. Fra processi diversi il vincolo è imposto dal claim sul work item, non dalla buona volontà |
+| Persistenza | Il tracker resta la fonte di verità del ticket; il dispatcher tiene nel perimetro locale il ledger dei tentativi e i marcatori anti-loop |
 
 ### Ciclo di vita
 
@@ -86,8 +86,48 @@ token, credenziali o output della sessione. Resta da verificare il lancio operat
 con lo smoke S0-14.
 
 La classificazione viene scritta nell'evento `session_completed` insieme a exit code, errore,
-identificativo sessione, numero di turni e `changed_repository`; non viene registrato l'output
-integrale di Claude.
+identificativo sessione, numero di turni, `changed_repository` e il tentativo che l'ha prodotta;
+non viene registrato l'output integrale di Claude.
+
+### Attempt ledger, claim e lease
+
+Prima di avviare una sessione il Dev dispatcher **prende il work item**, e la presa è registrata.
+Il ledger è `attempts.json`, accanto allo `state.json` nel perimetro locale dell'agente
+(`--ledger` ne cambia il percorso); l'implementazione condivisa è `fabric_agentic/attempt_ledger.py`.
+
+| Campo del tentativo | Significato |
+|---|---|
+| `attempt_id` | Identificativo del singolo tentativo, non del work item |
+| `work_item_id` | Il ticket a cui il tentativo si riferisce |
+| `source_revision` | Commit della clone isolata da cui il tentativo è partito, letto dopo il refresh |
+| `state` | `running`, `succeeded`, `failed`, `released` o `expired` |
+| `lease_owner` e `lease_expires_at` | Chi tiene il work item e fino a quando |
+| `retry_count` | Quanti tentativi lo hanno preceduto sullo stesso work item |
+
+Tre proprietà, e nessuna di esse dipende dalla disciplina del chiamante:
+
+- **Il claim è atomico.** La sequenza leggi-modifica-scrivi è serializzata da un lock file creato
+  con `O_CREAT | O_EXCL`, atomico sia su Windows sia su POSIX. Due dispatcher che partono insieme
+  sullo stesso work item producono un solo tentativo: il secondo riceve `None` e il ciclo registra
+  `attempt_not_claimed` senza avviare nulla.
+- **Il lease scade.** Un dispatcher ucciso a metà sessione non blocca il ticket per sempre: alla
+  scadenza il tentativo viene chiuso come `expired` e il successivo lo riprende con `retry_count`
+  incrementato. Vale anche per un errore imprevisto fra il claim e la fine della sessione.
+- **Il lease viene rinnovato mentre la sessione gira.** Senza rinnovo il lease dovrebbe durare più
+  della sessione più lunga possibile, e un crash terrebbe il ticket per tutto quel tempo. Il valore
+  di default è 900 secondi, configurabile con `agent.lease_seconds`.
+
+Un tentativo `succeeded` o `failed` **non** rimette il work item in coda: il dispatcher non rilancia
+una sessione alla cieca. Lo rimettono in coda solo `released` — il runtime bloccato di cui sopra — e
+`expired`. Il ledger contiene identificativi, stati e istanti: nessun token, nessuna credenziale,
+nessun contenuto del work item.
+
+Il work item preso in carico prima dell'introduzione del ledger resta elencato in
+`dispatched_work_items` nello `state.json`: quella lista viene ancora **letta** perché un
+aggiornamento non produca una seconda sessione sullo stesso ticket, e non viene più scritta.
+
+La sessione riceve nel task record `attempt_id`, `source_revision` e `retry_count`, così l'evidenza
+della PR è riconducibile al tentativo che l'ha prodotta.
 
 La sessione Dev Agent usa una allowlist versionata in `DEV_AGENT_ALLOWED_TOOLS`: consente lettura,
 modifica, test, branch, commit, push esclusivamente verso `refs/heads/feature/*` e apertura di
@@ -324,8 +364,9 @@ Ogni sessione produce un log persistente, correlabile a work item e PR.
 |---|---|
 | Tracker irraggiungibile | Ritenta al ciclo successivo, registra a log, non avvia sessioni |
 | Ottenimento del token fallito | Ritenta con attesa crescente, poi si arresta con errore esplicito |
-| Sessione terminata in errore | Registra l'esito e torna in polling. **Non rilancia automaticamente**: un rilancio cieco può ripetere l'errore all'infinito |
+| Sessione terminata in errore | Registra l'esito, chiude il tentativo come `failed` e torna in polling. **Non rilancia automaticamente**: un rilancio cieco può ripetere l'errore all'infinito |
 | Sessione bloccata oltre una soglia di durata | La interrompe e registra l'evento come anomalia |
+| Dispatcher ucciso durante una sessione | Nessuna azione: il lease sul work item scade e il ciclo successivo riprende il ticket come nuovo tentativo, con `retry_count` incrementato |
 
 > Il dispatcher **non interpreta** gli errori dell'agente: li registra. L'interpretazione è
 > lavoro dell'agente o dell'owner. Un dispatcher che prova a essere intelligente diventa un

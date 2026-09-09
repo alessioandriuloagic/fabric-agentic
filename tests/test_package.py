@@ -24,6 +24,7 @@ class PackageTests(unittest.TestCase):
     def test_the_core_modules_are_importable_without_installation(self) -> None:
         from fabric_agentic import (  # noqa: F401
             agent_session,
+            attempt_ledger,
             config_paths,
             credential_broker,
             github_app_auth,

@@ -23,6 +23,16 @@ from fabric_agentic.agent_session import (
     resolve_agent_command,
     session_failure_reason,
 )
+from fabric_agentic.attempt_ledger import (
+    DEFAULT_LEASE_SECONDS,
+    FAILED,
+    RELEASED,
+    SUCCEEDED,
+    Attempt,
+    AttemptLedger,
+    AttemptLedgerError,
+    lease_heartbeat,
+)
 from fabric_agentic.config_paths import read_json_config
 from fabric_agentic.credential_broker import credential_broker_environment
 from fabric_agentic.github_app_auth import create_installation_token
@@ -51,6 +61,7 @@ class DispatcherConfig:
     claude_command: str
     poll_seconds: int
     tracker_type: str = "azure_devops"  # "azure_devops" or "github_issues"
+    lease_seconds: int = DEFAULT_LEASE_SECONDS
 
 
 def load_config(config_path: Path) -> DispatcherConfig:
@@ -72,6 +83,7 @@ def load_config(config_path: Path) -> DispatcherConfig:
             claude_command=config["agent"]["claude_command"],
             poll_seconds=int(config["agent"]["poll_seconds"]),
             tracker_type=config.get("dispatcher", {}).get("tracker_type", "azure_devops"),
+            lease_seconds=int(config["agent"].get("lease_seconds", DEFAULT_LEASE_SECONDS)),
         )
     except (KeyError, OSError, ValueError, TypeError) as error:
         raise DispatcherError("dispatcher configuration is invalid") from error
@@ -123,9 +135,17 @@ $token = if ($accessToken.Token -is [System.Security.SecureString]) {{
     return result.stdout.strip()
 
 
+LEDGER_NAME = "attempts.json"
+
+
+def open_ledger(config: DispatcherConfig, state_path: Path, ledger_path: Path | None) -> AttemptLedger:
+    """The ledger lives beside the state, in the local perimeter of the agent, never in the repo."""
+    return AttemptLedger(ledger_path or state_path.with_name(LEDGER_NAME), lease_seconds=config.lease_seconds)
+
+
 def load_state(state_path: Path) -> dict:
     if not state_path.exists():
-        return {"dispatched_work_items": [], "seen_comment_ids": [], "seen_review_thread_ids": []}
+        return {"seen_comment_ids": [], "seen_review_thread_ids": []}
     try:
         return json.loads(state_path.read_text(encoding="utf-8-sig"))
     except (OSError, ValueError) as error:
@@ -182,7 +202,7 @@ def stage_work_item_context(config: DispatcherConfig, tracker: WorkItemTracker, 
     return context_path
 
 
-def task_record(config: DispatcherConfig, tracker: WorkItemTracker, work_item_id: int | str, trigger: str = "new_work", pull_request_url: str | None = None, context_path: Path | None = None) -> dict:
+def task_record(config: DispatcherConfig, tracker: WorkItemTracker, work_item_id: int | str, trigger: str = "new_work", pull_request_url: str | None = None, context_path: Path | None = None, attempt: Attempt | None = None) -> dict:
     record = {
         "work_item_id": work_item_id,
         "trigger": trigger,
@@ -192,6 +212,10 @@ def task_record(config: DispatcherConfig, tracker: WorkItemTracker, work_item_id
     }
     if context_path is not None:
         record["issue_context_path"] = str(context_path)
+    if attempt is not None:
+        record["attempt_id"] = attempt.attempt_id
+        record["source_revision"] = attempt.source_revision
+        record["retry_count"] = attempt.retry_count
     return record
 
 
@@ -261,6 +285,19 @@ def refresh_clone(config: DispatcherConfig) -> None:
         result = subprocess.run(command, capture_output=True, text=True, env=environment, check=False)
         if result.returncode != 0:
             raise DispatcherError(f"isolated repository refresh failed at 'git {command[3] if command[3] != '-c' else command[5]}'")
+
+
+def current_revision(config: DispatcherConfig) -> str:
+    """Name the revision an attempt starts from: without it the attempt has no evidence."""
+    result = subprocess.run(
+        ["git", "-C", str(config.repository_path), "rev-parse", "HEAD"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0 or not result.stdout.strip():
+        raise DispatcherError("the source revision of the isolated clone is unavailable")
+    return result.stdout.strip()
 
 
 @dataclass(frozen=True)
@@ -473,11 +510,27 @@ query($owner: String!, $repository: String!) {
 """
 
 
-def run_once(config: DispatcherConfig, state_path: Path, task_directory: Path, dry_run: bool, log_path: Path | None = None) -> list[dict]:
+def close_attempt(ledger: AttemptLedger, attempt: Attempt, state: str, log_path: Path | None) -> None:
+    closed = ledger.close(attempt.attempt_id, state)
+    if log_path is not None:
+        log_event(
+            log_path,
+            "attempt_closed",
+            work_item_id=closed.work_item_id,
+            attempt_id=closed.attempt_id,
+            state=closed.state,
+            retry_count=closed.retry_count,
+        )
+
+
+def run_once(config: DispatcherConfig, state_path: Path, task_directory: Path, dry_run: bool, log_path: Path | None = None, ledger_path: Path | None = None) -> list[dict]:
     ado_token_provider = lambda: acquire_ado_token(config)
     tracker = create_tracker(config, ado_token_provider)
     state = load_state(state_path)
-    dispatched = set(state.get("dispatched_work_items", []))
+    ledger = open_ledger(config, state_path, ledger_path)
+    # The ledger owns the claim; the flat list only survives for work items dispatched before the
+    # ledger existed, so an upgrade does not send them to a second session. It is never written again.
+    dispatched = ledger.claimed_work_items() | set(state.get("dispatched_work_items", []))
     new_work = [task_record(config, tracker, work_item_id) for work_item_id in tracker.new_items() if work_item_id not in dispatched]
     human_replies, seen_comments = human_reply_tasks(config, tracker, set(state.get("seen_comment_ids", [])))
     review_payload = github_graphql(config, REVIEW_THREADS_QUERY, {"owner": config.github_owner, "repository": config.github_repository})
@@ -492,21 +545,41 @@ def run_once(config: DispatcherConfig, state_path: Path, task_directory: Path, d
 
     task = tasks[0]
     refresh_clone(config)
-    task_directory.mkdir(parents=True, exist_ok=True)
-    context_path = stage_work_item_context(config, tracker, task["work_item_id"], task_directory)
-    task = task_record(config, tracker, task["work_item_id"], trigger=task["trigger"], pull_request_url=task.get("pull_request_url"), context_path=context_path)
-    task_path = task_directory / f"{uuid.uuid4()}.json"
-    task_path.write_text(json.dumps(task, indent=2) + "\n", encoding="utf-8")
-    state["dispatched_work_items"] = [*dispatched, task["work_item_id"]]
     state["seen_comment_ids"] = sorted(seen_comments)
     state["seen_review_thread_ids"] = sorted(seen_threads)
     save_state(state_path, state)
-    outcome = launch_session(config, task_path)
+    attempt = ledger.claim(task["work_item_id"], current_revision(config))
+    if attempt is None:
+        # Another dispatcher holds a live lease on this work item: this cycle has nothing to do.
+        if log_path is not None:
+            log_event(log_path, "attempt_not_claimed", work_item_id=task["work_item_id"], trigger=task["trigger"])
+        return []
+    if log_path is not None:
+        log_event(
+            log_path,
+            "attempt_claimed",
+            work_item_id=attempt.work_item_id,
+            attempt_id=attempt.attempt_id,
+            source_revision=attempt.source_revision,
+            retry_count=attempt.retry_count,
+            lease_expires_at=attempt.lease_expires_at,
+            trigger=task["trigger"],
+        )
+    task_directory.mkdir(parents=True, exist_ok=True)
+    context_path = stage_work_item_context(config, tracker, task["work_item_id"], task_directory)
+    task = task_record(config, tracker, task["work_item_id"], trigger=task["trigger"], pull_request_url=task.get("pull_request_url"), context_path=context_path, attempt=attempt)
+    task_path = task_directory / f"{uuid.uuid4()}.json"
+    task_path.write_text(json.dumps(task, indent=2) + "\n", encoding="utf-8")
+    with lease_heartbeat(ledger, attempt.attempt_id, max(1.0, config.lease_seconds / 3)):
+        outcome = launch_session(config, task_path)
     if log_path is not None:
         log_event(
             log_path,
             "session_completed",
             work_item_id=task["work_item_id"],
+            attempt_id=attempt.attempt_id,
+            retry_count=attempt.retry_count,
+            source_revision=attempt.source_revision,
             returncode=outcome.returncode,
             is_error=outcome.is_error,
             session_id=outcome.session_id,
@@ -517,11 +590,12 @@ def run_once(config: DispatcherConfig, state_path: Path, task_directory: Path, d
             failure_reason=outcome.failure_reason,
         )
     if outcome.retryable:
-        state["dispatched_work_items"] = sorted(dispatched, key=str)
-        save_state(state_path, state)
+        close_attempt(ledger, attempt, RELEASED, log_path)
         raise DispatcherError(f"Dev Agent session blocked ({outcome.failure_class})")
     if not outcome.succeeded:
+        close_attempt(ledger, attempt, FAILED, log_path)
         raise DispatcherError(f"Dev Agent session failed ({outcome.failure_class})")
+    close_attempt(ledger, attempt, SUCCEEDED, log_path)
     return [task]
 
 
@@ -532,6 +606,7 @@ def run_polling(
     log_path: Path,
     cycles: int | None = None,
     sleep: Callable[[float], None] = time.sleep,
+    ledger_path: Path | None = None,
 ) -> None:
     duration_ms = 0
 
@@ -539,7 +614,7 @@ def run_polling(
         nonlocal duration_ms
         started_at = time.monotonic()
         try:
-            return run_once(config, state_path, task_directory, dry_run=False, log_path=log_path)
+            return run_once(config, state_path, task_directory, dry_run=False, log_path=log_path, ledger_path=ledger_path)
         finally:
             duration_ms = round((time.monotonic() - started_at) * 1000)
 
@@ -548,7 +623,7 @@ def run_polling(
     run_bounded_polling(
         cycle=cycle,
         poll_seconds=config.poll_seconds,
-        errors=(DispatcherError,),
+        errors=(DispatcherError, AttemptLedgerError),
         cycles=cycles,
         sleep=sleep,
         on_cycle=lambda tasks: log_event(
@@ -568,6 +643,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--state", type=Path, required=True)
     parser.add_argument("--tasks", type=Path, required=True)
+    parser.add_argument("--ledger", type=Path)
     parser.add_argument("--once", action="store_true")
     parser.add_argument("--poll", action="store_true")
     parser.add_argument("--smoke-work-item-id", type=int)
@@ -589,12 +665,12 @@ def main() -> int:
         if args.smoke_work_item_id is not None and args.dry_run:
             raise DispatcherError("smoke mode cannot be combined with --dry-run")
         if args.poll:
-            run_polling(config, args.state, args.tasks, args.log, args.cycles)
+            run_polling(config, args.state, args.tasks, args.log, args.cycles, ledger_path=args.ledger)
         elif args.smoke_work_item_id is not None:
             documents = run_smoke(config, args.smoke_work_item_id, args.tasks)
             log_event(args.log, "smoke_completed", work_item_id=args.smoke_work_item_id, documents_read=documents)
         else:
-            tasks = run_once(config, args.state, args.tasks, args.dry_run, log_path=args.log)
+            tasks = run_once(config, args.state, args.tasks, args.dry_run, log_path=args.log, ledger_path=args.ledger)
             log_event(args.log, "dry_run_completed" if args.dry_run else "once_completed", task_count=len(tasks), work_item_ids=[task["work_item_id"] for task in tasks], triggers=[task["trigger"] for task in tasks])
             if args.dry_run:
                 print(json.dumps({"tasks": tasks}))
@@ -602,7 +678,7 @@ def main() -> int:
         log_event(args.log, "polling_stopped", reason=str(error))
         print(json.dumps({"error": str(error)}))
         return 1
-    except DispatcherError as error:
+    except (DispatcherError, AttemptLedgerError) as error:
         print(json.dumps({"error": str(error)}))
         return 1
     return 0

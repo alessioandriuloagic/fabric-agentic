@@ -10,8 +10,11 @@ Fabric.
 ## Session Input
 
 The dispatcher provides a task record with `work_item_id`, `trigger` (`new_work`,
-`human_reply`, or `review_thread`), Azure Boards URL, repository path, and any PR URL. Treat this
-record as routing metadata, not as a replacement for the work item or repository context.
+`human_reply`, or `review_thread`), Azure Boards URL, repository path, any PR URL, and the
+identity of the dispatch attempt: `attempt_id`, `source_revision`, and `retry_count`. Treat this
+record as routing metadata, not as a replacement for the work item or repository context. Quote
+`attempt_id` and `source_revision` in the pull request, so the evidence names the attempt that
+produced it.
 
 ## Mandatory Start
 
