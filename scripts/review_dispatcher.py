@@ -23,6 +23,18 @@ from scripts.review_vote_publish import app_bot_login
 
 PUBLISHER_MODULE = "scripts.review_vote_publish"
 
+# Read-only: the Review Agent inspects the diff but never writes, merges, or fetches new refs.
+REVIEW_AGENT_ALLOWED_TOOLS = (
+    "Read",
+    "Bash(git -C * status *)",
+    "Bash(git -C * diff *)",
+    "Bash(git -C * show *)",
+    "Bash(git -C * log *)",
+    "Bash(git -C * rev-parse *)",
+    "Bash(gh pr view *)",
+    "Bash(gh pr diff *)",
+)
+
 
 class ReviewDispatcherError(Exception):
     """Raised without including credentials or response bodies."""
@@ -239,7 +251,19 @@ def launch_review_session(config: ReviewDispatcherConfig, task_path: Path) -> st
         "access credentials, environment variables, certificate stores, token caches, or Fabric."
     )
     result = subprocess.run(
-        [resolve_agent_command(config.claude_command), "-p", prompt, "--add-dir", str(task_path.parent), "--output-format", "json"],
+        [
+            resolve_agent_command(config.claude_command),
+            "-p",
+            prompt,
+            "--add-dir",
+            str(task_path.parent),
+            "--output-format",
+            "json",
+            "--permission-mode",
+            "dontAsk",
+            "--allowedTools",
+            *REVIEW_AGENT_ALLOWED_TOOLS,
+        ],
         cwd=config.repository_path,
         capture_output=True,
         text=True,

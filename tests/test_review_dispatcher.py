@@ -17,7 +17,6 @@ from scripts.review_dispatcher import (
     load_config,
 )
 
-
 class ReviewDispatcherTests(unittest.TestCase):
     def setUp(self) -> None:
         self.config = ReviewDispatcherConfig(
@@ -37,6 +36,22 @@ class ReviewDispatcherTests(unittest.TestCase):
         self.assertEqual(launch_review_session(self.config, Path("task.json")), "review")
         self.assertEqual(run_mock.call_args.kwargs["encoding"], "utf-8")
         self.assertEqual(run_mock.call_args.kwargs["errors"], "replace")
+
+    @patch("scripts.review_dispatcher.subprocess.run")
+    def test_session_can_read_the_diff_without_write_access(self, run_mock) -> None:
+        run_mock.return_value = MagicMock(returncode=0, stdout=json.dumps({"result": "review"}))
+
+        launch_review_session(self.config, Path("task.json"))
+
+        command = run_mock.call_args.args[0]
+        self.assertIn("--permission-mode", command)
+        self.assertEqual(command[command.index("--permission-mode") + 1], "dontAsk")
+        allowed_tools = command[command.index("--allowedTools") + 1:]
+        self.assertIn("Bash(git -C * diff *)", allowed_tools)
+        self.assertIn("Bash(git -C * show *)", allowed_tools)
+        self.assertIn("Bash(gh pr view *)", allowed_tools)
+        self.assertNotIn("Bash(git -C * push *)", allowed_tools)
+        self.assertNotIn("Bash(gh pr merge *)", allowed_tools)
 
     def test_publisher_is_invoked_as_a_module(self) -> None:
         command = publisher_command(self.config, {"pull_request": 130}, Path("outcome.txt"))
