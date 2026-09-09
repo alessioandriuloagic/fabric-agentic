@@ -1,0 +1,12 @@
+{
+  "version": "2.0",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "config": {
+    "logicalId": "5f2b8d13-6c47-4e59-9b21-8e4a3c0d7b62"
+  },
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "nb_create_bronze_test",
+    "description": "Creates the empty Bronze Delta table test with the single declared column name."
+  }
+}

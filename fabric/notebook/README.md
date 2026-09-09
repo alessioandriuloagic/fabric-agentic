@@ -28,6 +28,17 @@ connection identifier. The column contract it declares is mirrored by `scripts/p
 which is what the unit tests exercise; `tests/test_pagamenti_load.py` fails if the two drift apart.
 The dataset is documented in `docs/sources/pagamenti.md`.
 
+`nb_create_bronze_test.Notebook` is the one-off Bronze table creation requested by work item #182.
+It creates the empty Delta table `test` in the default Lakehouse with a single declared column,
+`name`, of type string and nullable, and it adds no technical metadata column. Creation is guarded
+by `spark.catalog.tableExists`, so a rerun writes nothing and exits with `status: already_exists`;
+a table whose schema differs from the declared one fails the run instead of being altered
+implicitly. It loads no data and needs no credential: the notebook contains no secret and no
+connection identifier. The column contract is mirrored by `scripts/bronze_test_table.py`, which is
+what `tests/test_bronze_test_table.py` exercises, and that test fails if the two drift apart. Like
+the other notebooks it names no workspace: the default Lakehouse binding is applied at deployment
+time through `scripts/fabric_artifacts.notebook_definition`.
+
 All notebooks in this folder are versioned in the Fabric Git source format
 (`notebook-content.py` plus `.platform`), which is the shape the rest of the repository already
 uses. The JSON notebook that the Items API receives — `cells` plus `metadata` — is derived from

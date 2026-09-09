@@ -72,6 +72,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Aggiunto il notebook `fabric/notebook/nb_create_bronze_test.Notebook` (#182): crea una sola volta
+  la tabella Delta Bronze `test` con l'unica colonna approvata `name` di tipo stringa, dichiarata
+  esplicitamente con `StructType`/`StructField` e senza alcuna colonna di metadato tecnico. La
+  creazione è idempotente: una riesecuzione trova la tabella con `spark.catalog.tableExists`, non
+  riscrive nulla e termina con `status: already_exists`; uno schema divergente fallisce in modo
+  esplicito invece di essere allineato implicitamente. Il contratto di colonna è specchiato da
+  `scripts/bronze_test_table.py` ed è presidiato da `tests/test_bronze_test_table.py`, che fallisce
+  se notebook e runtime divergono. La tabella nasce vuota: questa issue non carica dati.
+
 - Aggiunto `docs/technical/14-inventario-catena-crm-accounts.md` (#158): inventario verificato
   anello per anello della catena CRM `accounts`, con la classificazione esplicita di ogni
   affermazione in verificata, documentale o non verificabile. Registra le discrepanze corrette e
