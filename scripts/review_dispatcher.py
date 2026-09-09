@@ -23,6 +23,21 @@ from scripts.review_vote_publish import app_bot_login
 
 PUBLISHER_MODULE = "scripts.review_vote_publish"
 
+# Read-only: the Review Agent inspects the diff but never writes, merges, or fetches new refs.
+# The session already runs with cwd=config.repository_path (like the Dev Agent), so these are
+# plain git commands rather than "git -C <path>" — an arbitrary -C target would let the model pick
+# a directory outside the review clone, which the prompt below explicitly forbids.
+REVIEW_AGENT_ALLOWED_TOOLS = (
+    "Read",
+    "Bash(git status *)",
+    "Bash(git diff *)",
+    "Bash(git show *)",
+    "Bash(git log *)",
+    "Bash(git rev-parse *)",
+    "Bash(gh pr view *)",
+    "Bash(gh pr diff *)",
+)
+
 
 class ReviewDispatcherError(Exception):
     """Raised without including credentials or response bodies."""
@@ -239,7 +254,20 @@ def launch_review_session(config: ReviewDispatcherConfig, task_path: Path) -> st
         "access credentials, environment variables, certificate stores, token caches, or Fabric."
     )
     result = subprocess.run(
-        [resolve_agent_command(config.claude_command), "-p", prompt, "--add-dir", str(task_path.parent), "--output-format", "json"],
+        [
+            resolve_agent_command(config.claude_command),
+            "-p",
+            prompt,
+            "--add-dir",
+            str(task_path.parent),
+            "--output-format",
+            "json",
+            "--no-session-persistence",
+            "--permission-mode",
+            "dontAsk",
+            "--allowedTools",
+            *REVIEW_AGENT_ALLOWED_TOOLS,
+        ],
         cwd=config.repository_path,
         capture_output=True,
         text=True,

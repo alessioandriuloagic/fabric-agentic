@@ -8,6 +8,7 @@ from scripts.review_dispatcher import (
     ReviewDispatcherConfig,
     ReviewDispatcherError,
     PullRequestCandidate,
+    REVIEW_AGENT_ALLOWED_TOOLS,
     launch_review_session,
     prepare_review_clone,
     publisher_command,
@@ -37,6 +38,40 @@ class ReviewDispatcherTests(unittest.TestCase):
         self.assertEqual(launch_review_session(self.config, Path("task.json")), "review")
         self.assertEqual(run_mock.call_args.kwargs["encoding"], "utf-8")
         self.assertEqual(run_mock.call_args.kwargs["errors"], "replace")
+
+    @patch("scripts.review_dispatcher.subprocess.run")
+    def test_session_can_read_the_diff_without_write_access(self, run_mock) -> None:
+        run_mock.return_value = MagicMock(returncode=0, stdout=json.dumps({"result": "review"}))
+
+        launch_review_session(self.config, Path("task.json"))
+
+        command = run_mock.call_args.args[0]
+        self.assertIn("--no-session-persistence", command)
+        self.assertIn("--permission-mode", command)
+        self.assertEqual(command[command.index("--permission-mode") + 1], "dontAsk")
+        allowed_tools = command[command.index("--allowedTools") + 1:]
+        self.assertEqual(tuple(allowed_tools), REVIEW_AGENT_ALLOWED_TOOLS)
+        self.assertIn("Bash(git diff *)", allowed_tools)
+        self.assertIn("Bash(git show *)", allowed_tools)
+        self.assertIn("Bash(gh pr view *)", allowed_tools)
+        for tool in allowed_tools:
+            # No wildcard "-C <path>" target: the session must stay inside the cwd
+            # (config.repository_path), never pick an arbitrary directory to read.
+            self.assertNotIn(" -C ", tool)
+        self.assertNotIn("Bash(git push *)", allowed_tools)
+        self.assertNotIn("Bash(gh pr merge *)", allowed_tools)
+
+    @patch("scripts.review_dispatcher.subprocess.run")
+    def test_session_prompt_only_suggests_allowed_git_commands(self, run_mock) -> None:
+        run_mock.return_value = MagicMock(returncode=0, stdout=json.dumps({"result": "review"}))
+
+        launch_review_session(self.config, Path("task.json"))
+
+        prompt = run_mock.call_args.args[0][run_mock.call_args.args[0].index("-p") + 1]
+        self.assertIn("git diff origin/main", prompt)
+        self.assertIn("git show", prompt)
+        self.assertNotIn("git -C", prompt)
+
 
     def test_publisher_is_invoked_as_a_module(self) -> None:
         command = publisher_command(self.config, {"pull_request": 130}, Path("outcome.txt"))
