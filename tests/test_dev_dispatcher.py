@@ -7,7 +7,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import MagicMock, patch
 
-from scripts.dev_dispatcher import DispatcherConfig, DispatcherError, SessionOutcome, build_session_command, credential_broker_environment, human_reply_tasks, launch_session, launch_smoke_session, load_state, review_thread_tasks, run_once, run_polling, run_smoke, smoke_comment, stage_work_item_context
+from scripts.dev_dispatcher import DispatcherConfig, DispatcherError, SessionOutcome, build_session_command, credential_broker_environment, current_revision, human_reply_tasks, launch_session, launch_smoke_session, load_state, review_thread_tasks, run_once, run_polling, run_smoke, smoke_comment, stage_work_item_context
+from fabric_agentic.attempt_ledger import FAILED, RELEASED, RUNNING, SUCCEEDED, AttemptLedger
 from fabric_agentic.polling import PollingStopped
 from scripts.tracker import WorkItemComment
 
@@ -81,6 +82,8 @@ class DevDispatcherTests(unittest.TestCase):
 
             tasks = run_once(self.config, state_path, Path(directory) / "tasks", dry_run=True)
 
+            self.assertFalse((Path(directory) / "attempts.json").exists())
+
         self.assertEqual([task["work_item_id"] for task in tasks], [7])
         self.assertEqual(tasks[0]["trigger"], "new_work")
 
@@ -140,12 +143,13 @@ class DevDispatcherTests(unittest.TestCase):
         self.assertIn("Risposte umane", staged)
         self.assertIn("Tipo colonna stringa", staged)
 
+    @patch("scripts.dev_dispatcher.current_revision", return_value="0f1e2d3")
     @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
     @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
     @patch("scripts.dev_dispatcher.launch_session", return_value=SessionOutcome(returncode=0, is_error=False, session_id="abc", num_turns=5, changed_repository=True))
     @patch("scripts.dev_dispatcher.refresh_clone")
     @patch("scripts.dev_dispatcher.create_tracker")
-    def test_dispatches_one_task_and_persists_it_before_launch(self, mock_create_tracker, _, __, ___, ____) -> None:
+    def test_dispatches_one_task_and_records_the_claimed_attempt(self, mock_create_tracker, _, __, ___, ____, _____) -> None:
         mock_tracker = MagicMock()
         mock_tracker.new_items.return_value = [6, 7]
         mock_tracker.item_url.side_effect = lambda item_id: f"https://example.com/item/{item_id}"
@@ -154,17 +158,21 @@ class DevDispatcherTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             state_path = Path(directory) / "state.json"
             tasks = run_once(self.config, state_path, Path(directory) / "tasks", dry_run=False)
-            state = json.loads(state_path.read_text(encoding="utf-8"))
+            attempts = AttemptLedger(Path(directory) / "attempts.json").attempts()
 
         self.assertEqual([task["work_item_id"] for task in tasks], [6])
-        self.assertEqual(state["dispatched_work_items"], [6])
+        self.assertEqual([(attempt.work_item_id, attempt.state) for attempt in attempts], [(6, SUCCEEDED)])
+        self.assertEqual(attempts[0].source_revision, "0f1e2d3")
+        self.assertEqual(tasks[0]["attempt_id"], attempts[0].attempt_id)
+        self.assertEqual(tasks[0]["retry_count"], 0)
 
+    @patch("scripts.dev_dispatcher.current_revision", return_value="0f1e2d3")
     @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
     @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
     @patch("scripts.dev_dispatcher.launch_session", return_value=SessionOutcome(returncode=0, is_error=False, session_id="abc", num_turns=2, changed_repository=False))
     @patch("scripts.dev_dispatcher.refresh_clone")
     @patch("scripts.dev_dispatcher.create_tracker")
-    def test_session_without_work_is_logged_as_distinguishable(self, mock_create_tracker, _, __, ___, ____) -> None:
+    def test_session_without_work_is_logged_as_distinguishable(self, mock_create_tracker, _, __, ___, ____, _____) -> None:
         mock_tracker = MagicMock()
         mock_tracker.new_items.return_value = [97]
         mock_tracker.item_url.side_effect = lambda item_id: f"https://example.com/item/{item_id}"
@@ -271,12 +279,13 @@ class DevDispatcherTests(unittest.TestCase):
 
         self.assertEqual([event["event"] for event in events], ["poll_failed"] * 3)
 
+    @patch("scripts.dev_dispatcher.current_revision", return_value="0f1e2d3")
     @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
     @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
     @patch("scripts.dev_dispatcher.launch_session", return_value=SessionOutcome(returncode=1, is_error=True, session_id=None, num_turns=None, changed_repository=False, failure_class="session_error"))
     @patch("scripts.dev_dispatcher.refresh_clone")
     @patch("scripts.dev_dispatcher.create_tracker")
-    def test_failed_session_raises_after_persisting_dispatch(self, mock_create_tracker, _, __, ___, ____) -> None:
+    def test_failed_session_raises_after_closing_the_attempt(self, mock_create_tracker, _, __, ___, ____, _____) -> None:
         mock_tracker = MagicMock()
         mock_tracker.new_items.return_value = [6]
         mock_tracker.item_url.return_value = "https://example.com/item/6"
@@ -286,16 +295,18 @@ class DevDispatcherTests(unittest.TestCase):
             state_path = Path(directory) / "state.json"
             with self.assertRaisesRegex(Exception, "Dev Agent session failed"):
                 run_once(self.config, state_path, Path(directory) / "tasks", dry_run=False)
-            state = json.loads(state_path.read_text(encoding="utf-8"))
+            ledger = AttemptLedger(Path(directory) / "attempts.json")
 
-        self.assertEqual(state["dispatched_work_items"], [6])
+            self.assertEqual([attempt.state for attempt in ledger.attempts()], [FAILED])
+            self.assertEqual(ledger.claimed_work_items(), {6})
 
+    @patch("scripts.dev_dispatcher.current_revision", return_value="0f1e2d3")
     @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
     @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
     @patch("scripts.dev_dispatcher.launch_session", return_value=SessionOutcome(returncode=1, is_error=True, session_id=None, num_turns=1, changed_repository=False, failure_class="agent_quota_exhausted"))
     @patch("scripts.dev_dispatcher.refresh_clone")
     @patch("scripts.dev_dispatcher.create_tracker")
-    def test_blocked_runtime_releases_the_work_item_for_a_later_retry(self, mock_create_tracker, _, __, ___, ____) -> None:
+    def test_blocked_runtime_releases_the_work_item_for_a_later_retry(self, mock_create_tracker, _, __, ___, ____, _____) -> None:
         mock_tracker = MagicMock()
         mock_tracker.new_items.return_value = [183]
         mock_tracker.item_url.return_value = "https://example.com/item/183"
@@ -306,12 +317,47 @@ class DevDispatcherTests(unittest.TestCase):
             log_path = Path(directory) / "dispatcher.log"
             with self.assertRaisesRegex(Exception, "agent_quota_exhausted"):
                 run_once(self.config, state_path, Path(directory) / "tasks", dry_run=False, log_path=log_path)
-            state = json.loads(state_path.read_text(encoding="utf-8"))
+            ledger = AttemptLedger(Path(directory) / "attempts.json")
             events = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines()]
 
-        self.assertEqual(state["dispatched_work_items"], [])
-        self.assertEqual(events[0]["outcome"], "blocked")
-        self.assertEqual(events[0]["failure_class"], "agent_quota_exhausted")
+            self.assertEqual([attempt.state for attempt in ledger.attempts()], [RELEASED])
+            self.assertEqual(ledger.claimed_work_items(), set())
+
+        session = next(event for event in events if event["event"] == "session_completed")
+        self.assertEqual(session["outcome"], "blocked")
+        self.assertEqual(session["failure_class"], "agent_quota_exhausted")
+        self.assertEqual(session["retry_count"], 0)
+
+    @patch("scripts.dev_dispatcher.current_revision", return_value="0f1e2d3")
+    @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
+    @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
+    @patch("scripts.dev_dispatcher.launch_session")
+    @patch("scripts.dev_dispatcher.refresh_clone")
+    @patch("scripts.dev_dispatcher.create_tracker")
+    def test_a_work_item_under_a_live_lease_is_not_dispatched_again(self, mock_create_tracker, _, mock_launch, __, ___, ____) -> None:
+        mock_tracker = MagicMock()
+        mock_tracker.new_items.return_value = [183]
+        mock_tracker.item_url.return_value = "https://example.com/item/183"
+        mock_create_tracker.return_value = mock_tracker
+
+        with TemporaryDirectory() as directory:
+            log_path = Path(directory) / "dispatcher.log"
+            held = AttemptLedger(Path(directory) / "attempts.json").claim(183, "9a8b7c6")
+
+            tasks = run_once(self.config, Path(directory) / "state.json", Path(directory) / "tasks", dry_run=False, log_path=log_path)
+            attempts = AttemptLedger(Path(directory) / "attempts.json").attempts()
+
+        self.assertEqual(tasks, [])
+        mock_launch.assert_not_called()
+        self.assertEqual([attempt.attempt_id for attempt in attempts], [held.attempt_id])
+        self.assertEqual(attempts[0].state, RUNNING)
+
+    @patch("scripts.dev_dispatcher.subprocess.run")
+    def test_a_missing_source_revision_stops_the_dispatch(self, mock_run) -> None:
+        mock_run.return_value = MagicMock(returncode=128, stdout="")
+
+        with self.assertRaisesRegex(DispatcherError, "source revision"):
+            current_revision(self.config)
 
     @patch("scripts.dev_dispatcher.repository_changed", return_value=False)
     @patch("scripts.dev_dispatcher.create_installation_token")

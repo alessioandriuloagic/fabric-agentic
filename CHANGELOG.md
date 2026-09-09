@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Ogni dispatch del Dev Agent è ora un **tentativo registrato**: `fabric_agentic/attempt_ledger.py`
+  tiene in `attempts.json`, nel perimetro locale dell'agente, `attempt_id`, work item,
+  `source_revision`, stato, lease e `retry_count`. Il claim del work item è atomico — un lock file
+  `O_CREAT | O_EXCL`, atomico su Windows e POSIX — quindi due dispatcher concorrenti non prendono
+  mai lo stesso lavoro: il secondo registra `attempt_not_claimed` e non avvia nulla. Il lease scade
+  (default 900 s, `agent.lease_seconds`) e viene rinnovato mentre la sessione gira, così un
+  dispatcher ucciso a metà sessione non blocca il ticket: il tentativo diventa `expired` e il ciclo
+  successivo lo riprende con `retry_count` incrementato. Il ledger contiene solo identificativi,
+  stati e istanti; il task record consegnato alla sessione porta ora anche `attempt_id`,
+  `source_revision` e `retry_count`.
+
+### Changed
+
+- La lista piatta `dispatched_work_items` non è più il criterio di presa in carico: il ledger la
+  sostituisce. Viene ancora **letta** per i work item dispatchati prima della sua introduzione, così
+  l'aggiornamento non produce una seconda sessione sullo stesso ticket, e non viene più scritta.
+
 ### Fixed
 
 - Il Dev dispatcher distingue ora un runtime bloccato da un ticket difettoso. Una sessione fermata

@@ -29,7 +29,8 @@ variabile `FABRIC_AGENTIC_HOME` o con `--home`.
     repository/            clone dedicato
     state.json             stato del dispatcher
     tasks/                 handoff verso la sessione
-  dev-agent/     ...
+  dev-agent/               come sopra, più:
+    attempts.json          ledger dei tentativi: claim, lease e retry count
   review-agent/  ...
 ```
 
