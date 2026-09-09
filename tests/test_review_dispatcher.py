@@ -17,6 +17,7 @@ from scripts.review_dispatcher import (
     load_config,
 )
 
+
 class ReviewDispatcherTests(unittest.TestCase):
     def setUp(self) -> None:
         self.config = ReviewDispatcherConfig(

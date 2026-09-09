@@ -53,6 +53,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   interrompe più l'esecuzione della suite.
 
 - I notebook creati con definizione inline in Fabric non supportano updateDefinition.
+  Il rail CRM ora passa la definizione inline al momento della creazione e non tenta mai un update
+  successivo. Questo risolve i delta che fallivano con HTTP 404 al stage "definition".
 
 - Il Review Agent non aveva alcun permesso per leggere il diff di una PR: `launch_review_session`
   non impostava né `--permission-mode` né un allowlist esplicita, quindi ogni `git`/`gh` richiedeva
@@ -61,8 +63,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `gh pr view/diff`) e `--permission-mode dontAsk`, coerente con l'allowlist già in uso per il Dev
   Agent. Prima di questo fix il Review Agent, correttamente, si rifiutava di inventare un esito
   A1-F4 e segnalava il blocco invece di votare al buio.
-  Il rail CRM ora passa la definizione inline al momento della creazione e non tenta mai un update
-  successivo. Questo risolve i delta che fallivano con HTTP 404 al stage "definition".
 
 - Il rail CRM classifica i failure con uno stage preciso (workspace, lakehouse, notebook,
   submission, storage_token, notebook_run, evidence) così i retry diagnostici non esigono accesso ai
