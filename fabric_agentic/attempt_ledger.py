@@ -1,10 +1,15 @@
 """Durable ledger of dispatch attempts, with an atomic claim and an expiring lease.
 
-Two dispatchers must never run the same work item at the same time, and a dispatcher that
+Two dispatchers must never run the same unit of work at the same time, and a dispatcher that
 crashes must not keep it forever: the claim is atomic on the file system, and the lease
 expires so the next cycle recovers the work instead of leaving it stuck. Every attempt
-carries its own evidence — identifier, work item, source revision, state, lease and retry
-count — and nothing else: no token, no credential, no work item content.
+carries its own evidence — identifier, claim key, work item, source revision, state, lease and
+retry count — and nothing else: no token, no credential, no work item content.
+
+The unit of the claim is the `claim_key`, not the work item. New work claims the whole work
+item, so a concluded attempt is never relaunched blindly; a human reply or a review remark
+claims only that comment or that thread, so a second answer on the same ticket is still
+deliverable instead of being blocked forever by the first attempt.
 """
 
 import json
@@ -46,6 +51,7 @@ class Attempt:
 
     attempt_id: str
     work_item_id: int | str
+    claim_key: str
     source_revision: str
     state: str
     lease_owner: str
@@ -71,10 +77,15 @@ def _parse(moment: str) -> datetime:
 
 
 def _blocks(attempt: Attempt, now: datetime) -> bool:
-    """Report whether an attempt keeps its work item out of the queue."""
+    """Report whether an attempt keeps its claim key out of the queue."""
     if attempt.state in BLOCKING_STATES:
         return True
     return attempt.state == RUNNING and now < _parse(attempt.lease_expires_at)
+
+
+def _attempt_from_record(record: dict) -> Attempt:
+    """Read one attempt: a ledger written before the claim key existed claimed the whole work item."""
+    return Attempt(**{"claim_key": str(record["work_item_id"]), **record})
 
 
 class AttemptLedger:
@@ -90,29 +101,31 @@ class AttemptLedger:
         return tuple(self._read())
 
     def claimed_work_items(self) -> set[int | str]:
-        """Work items that must not be dispatched now, either held or already concluded."""
+        """Work items that must not be dispatched as new work, either held or already concluded."""
         now = _now()
         return {attempt.work_item_id for attempt in self._read() if _blocks(attempt, now)}
 
-    def claim(self, work_item_id: int | str, source_revision: str) -> Attempt | None:
-        """Take the work item under a fresh lease, or return None if someone else holds it."""
+    def claim(self, work_item_id: int | str, source_revision: str, claim_key: str | None = None) -> Attempt | None:
+        """Take the claim key under a fresh lease, or return None if someone else holds it."""
+        key = claim_key or str(work_item_id)
         with self._lock():
             attempts = self._read()
             now = _now()
-            history = [attempt for attempt in attempts if attempt.work_item_id == work_item_id]
+            history = [attempt for attempt in attempts if attempt.claim_key == key]
             if any(_blocks(attempt, now) for attempt in history):
                 return None
             # Whatever is still marked running has outlived its lease: the dispatcher that held it
             # crashed or was killed, and the attempt is closed as expired before the retry starts.
             recovered = [
                 replace(attempt, state=EXPIRED, updated_at=_stamp(now))
-                if attempt.work_item_id == work_item_id and attempt.state == RUNNING
+                if attempt.claim_key == key and attempt.state == RUNNING
                 else attempt
                 for attempt in attempts
             ]
             claimed = Attempt(
                 attempt_id=str(uuid.uuid4()),
                 work_item_id=work_item_id,
+                claim_key=key,
                 source_revision=source_revision or UNKNOWN_REVISION,
                 state=RUNNING,
                 lease_owner=self.owner,
@@ -184,7 +197,7 @@ class AttemptLedger:
             return []
         try:
             document = json.loads(self.path.read_text(encoding="utf-8-sig"))
-            return [Attempt(**record) for record in document["attempts"]]
+            return [_attempt_from_record(record) for record in document["attempts"]]
         except (OSError, TypeError, ValueError, KeyError) as error:
             raise AttemptLedgerError("the attempt ledger is invalid") from error
 

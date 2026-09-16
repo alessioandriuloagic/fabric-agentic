@@ -13,10 +13,11 @@ Il dispatcher è un processo deterministico, senza LLM, che interroga periodicam
 avvia una sessione **solo quando c'è effettivamente qualcosa da fare**.
 
 Il risultato della sessione viene verificato: un exit code non riuscito produce un errore esplicito
-(`Dev Agent session failed`) dopo la persistenza del dispatch. Il ciclo non viene quindi registrato
-come completato con successo e lo stato conserva l'ID già assegnato per evitare duplicazioni. Il
-log della sessione classifica inoltre l'esito come `productive`, `no_work` o `failed`, così una
-sessione terminata senza modificare la clone non è più indistinguibile da una riuscita produttiva.
+(`Dev Agent session failed`) dopo aver chiuso il tentativo come `failed` nel ledger. Il ciclo non
+viene quindi registrato come completato con successo, il tentativo resta come evidenza del
+fallimento e il cursore anti-loop **non** avanza. Il log della sessione classifica inoltre l'esito
+come `productive`, `no_work` o `failed`, così una sessione terminata senza modificare la clone non è
+più indistinguibile da una riuscita produttiva.
 
 Un fallimento del **runtime del modello** non è però un difetto del ticket. Se la sessione si ferma
 per quota esaurita o login scaduto, l'esito è `blocked` con `failure_class`
@@ -89,9 +90,35 @@ La classificazione viene scritta nell'evento `session_completed` insieme a exit 
 identificativo sessione, numero di turni, `changed_repository` e il tentativo che l'ha prodotta;
 non viene registrato l'output integrale di Claude.
 
+### Discovery, claim e consegna
+
+Il ciclo del Dev dispatcher ha **tre fasi distinte e separatamente verificabili**, nell'ordine.
+La separazione non è stilistica: è ciò che rende impossibile consumare un innesco che nessuna
+sessione ha visto.
+
+| Fase | Che cosa fa | Che cosa scrive | Evento di log |
+|---|---|---|---|
+| **Discovery** | Interroga il tracker e le PR aperte e **nomina** i candidati del ciclo | Nulla. È in sola lettura e non decide nulla | `discovery_completed` |
+| **Claim** | Prende il primo candidato sotto lease, **prima** che la sessione esista | Il tentativo nel ledger | `attempt_claimed` o `attempt_not_claimed` |
+| **Consegna** | Prepara il task record, avvia la sessione, ne classifica l'esito | L'esito del tentativo e — solo se riuscita — il cursore | `session_completed`, `attempt_closed`, `delivery_completed` |
+
+Tre regole che ne discendono, ciascuna coperta da un test:
+
+- **La sessione parte solo dopo un claim confermato.** Se `claim` restituisce `None` il ciclo
+  registra `attempt_not_claimed` e termina senza avviare nulla; nessuno stato locale viene scritto.
+- **Il cursore dei commenti e dei thread avanza solo dopo una consegna riuscita**, e solo per il
+  candidato effettivamente consegnato. Prima la discovery marcava come visti *tutti* i commenti e i
+  thread del ciclo, anche quelli che non venivano dispatchati e anche quando la sessione falliva:
+  una risposta umana poteva quindi risultare consumata senza che alcuna sessione l'avesse letta, e
+  non risvegliava più l'agente. I candidati non consegnati restano tali e vengono ripresi al ciclo
+  successivo.
+- **Ogni fallimento produce uno stato esplicito.** Sessione bloccata → tentativo `released` e
+  cursore fermo; sessione fallita → tentativo `failed` e cursore fermo; consegna riuscita →
+  tentativo `succeeded` e cursore avanzato.
+
 ### Attempt ledger, claim e lease
 
-Prima di avviare una sessione il Dev dispatcher **prende il work item**, e la presa è registrata.
+Prima di avviare una sessione il Dev dispatcher **prende il lavoro**, e la presa è registrata.
 Il ledger è `attempts.json`, accanto allo `state.json` nel perimetro locale dell'agente
 (`--ledger` ne cambia il percorso); l'implementazione condivisa è `fabric_agentic/attempt_ledger.py`.
 
@@ -99,16 +126,24 @@ Il ledger è `attempts.json`, accanto allo `state.json` nel perimetro locale del
 |---|---|
 | `attempt_id` | Identificativo del singolo tentativo, non del work item |
 | `work_item_id` | Il ticket a cui il tentativo si riferisce |
+| `claim_key` | L'unità che il claim copre: il work item per il trigger A, il singolo commento o il singolo thread per B e C |
 | `source_revision` | Commit della clone isolata da cui il tentativo è partito, letto dopo il refresh |
 | `state` | `running`, `succeeded`, `failed`, `released` o `expired` |
-| `lease_owner` e `lease_expires_at` | Chi tiene il work item e fino a quando |
-| `retry_count` | Quanti tentativi lo hanno preceduto sullo stesso work item |
+| `lease_owner` e `lease_expires_at` | Chi tiene il lavoro e fino a quando |
+| `retry_count` | Quanti tentativi lo hanno preceduto sulla stessa `claim_key` |
+
+**L'unità del claim è la `claim_key`, non il work item.** Il nuovo lavoro prende l'intero ticket,
+così un tentativo concluso non viene mai rilanciato alla cieca. Una risposta umana prende invece
+solo quel commento (`<id>:comment:<comment_id>`) e un rilievo di review solo quel thread
+(`<id>:review-thread:<thread_id>`): diversamente il primo tentativo concluso su un ticket ne
+bloccherebbe per sempre ogni risposta successiva, e i trigger B e C non sarebbero più consegnabili.
+Un ledger scritto prima dell'introduzione della chiave viene letto come claim sull'intero work item.
 
 Tre proprietà, e nessuna di esse dipende dalla disciplina del chiamante:
 
 - **Il claim è atomico.** La sequenza leggi-modifica-scrivi è serializzata da un lock file creato
   con `O_CREAT | O_EXCL`, atomico sia su Windows sia su POSIX. Due dispatcher che partono insieme
-  sullo stesso work item producono un solo tentativo: il secondo riceve `None` e il ciclo registra
+  sulla stessa `claim_key` producono un solo tentativo: il secondo riceve `None` e il ciclo registra
   `attempt_not_claimed` senza avviare nulla.
 - **Il lease scade.** Un dispatcher ucciso a metà sessione non blocca il ticket per sempre: alla
   scadenza il tentativo viene chiuso come `expired` e il successivo lo riprende con `retry_count`
@@ -117,10 +152,10 @@ Tre proprietà, e nessuna di esse dipende dalla disciplina del chiamante:
   della sessione più lunga possibile, e un crash terrebbe il ticket per tutto quel tempo. Il valore
   di default è 900 secondi, configurabile con `agent.lease_seconds`.
 
-Un tentativo `succeeded` o `failed` **non** rimette il work item in coda: il dispatcher non rilancia
-una sessione alla cieca. Lo rimettono in coda solo `released` — il runtime bloccato di cui sopra — e
-`expired`. Il ledger contiene identificativi, stati e istanti: nessun token, nessuna credenziale,
-nessun contenuto del work item.
+Un tentativo `succeeded` o `failed` **non** rimette la propria `claim_key` in coda: il dispatcher non
+rilancia una sessione alla cieca. La rimettono in coda solo `released` — il runtime bloccato di cui
+sopra — e `expired`. Il ledger contiene identificativi, stati e istanti: nessun token, nessuna
+credenziale, nessun contenuto del work item.
 
 Il work item preso in carico prima dell'introduzione del ledger resta elencato in
 `dispatched_work_items` nello `state.json`: quella lista viene ancora **letta** perché un
@@ -265,6 +300,10 @@ Tre condizioni, valutate a ogni ciclo:
   devono risvegliarlo, altrimenti si innesca un ciclo infinito.
 - Il trigger C richiede di distinguere i thread **risolti** da quelli aperti, altrimenti l'agente
   riprocessa all'infinito rilievi già gestiti.
+- Per entrambi il marcatore anti-loop è il cursore locale, e **avanza solo dopo una consegna
+  riuscita**: un commento o un thread visto in discovery ma non consegnato resta in coda. Il claim
+  è per singolo commento o singolo thread, non per work item, quindi una seconda risposta sullo
+  stesso ticket è ancora consegnabile.
 
 > Questi due ultimi punti sono le cause più probabili di loop. Vanno verificati esplicitamente
 > nei test dello Slice 0/1, non scoperti in esercizio.

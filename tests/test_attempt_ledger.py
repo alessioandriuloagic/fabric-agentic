@@ -108,6 +108,32 @@ class AttemptLedgerTests(unittest.TestCase):
             self.assertIsNone(ledger.claim(184, "0f1e2d3"))
             self.assertEqual(ledger.claimed_work_items(), {183, 184})
 
+    def test_a_reply_on_a_concluded_work_item_is_claimable_under_its_own_key(self) -> None:
+        with TemporaryDirectory() as directory:
+            ledger = AttemptLedger(Path(directory) / "attempts.json")
+            delivered = ledger.claim(184, "0f1e2d3")
+            ledger.close(delivered.attempt_id, SUCCEEDED)
+
+            reply = ledger.claim(184, "0f1e2d3", claim_key="184:comment:7")
+
+            self.assertIsNotNone(reply)
+            self.assertEqual(reply.work_item_id, 184)
+            self.assertEqual(reply.retry_count, 0)
+            # The reply is itself a unit of work: once taken, it is not taken twice.
+            self.assertIsNone(ledger.claim(184, "0f1e2d3", claim_key="184:comment:7"))
+            self.assertIsNotNone(ledger.claim(184, "0f1e2d3", claim_key="184:comment:8"))
+
+    def test_a_ledger_written_before_the_claim_key_claimed_the_whole_work_item(self) -> None:
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "attempts.json"
+            AttemptLedger(path).claim(183, "0f1e2d3")
+            document = json.loads(path.read_text(encoding="utf-8"))
+            del document["attempts"][0]["claim_key"]
+            path.write_text(json.dumps(document), encoding="utf-8")
+
+            self.assertEqual(AttemptLedger(path).attempts()[0].claim_key, "183")
+            self.assertIsNone(AttemptLedger(path).claim(183, "9a8b7c6"))
+
     def test_renewing_extends_the_lease_of_the_holder(self) -> None:
         with TemporaryDirectory() as directory:
             ledger = AttemptLedger(Path(directory) / "attempts.json", lease_seconds=60)
@@ -154,6 +180,7 @@ class AttemptLedgerTests(unittest.TestCase):
             {
                 "attempt_id",
                 "work_item_id",
+                "claim_key",
                 "source_revision",
                 "state",
                 "lease_owner",

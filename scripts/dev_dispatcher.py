@@ -219,16 +219,36 @@ def task_record(config: DispatcherConfig, tracker: WorkItemTracker, work_item_id
     return record
 
 
-def human_reply_tasks(config: DispatcherConfig, tracker: WorkItemTracker, seen_comment_ids: set[int | str]) -> tuple[list[dict], set[int | str]]:
+@dataclass(frozen=True)
+class DiscoveredTask:
+    """A candidate named by discovery, with the cursor entries its delivery would consume.
+
+    Discovery never consumes the trigger that produced it: a comment marked as seen by a session
+    that was not claimed, or that failed, would never wake the agent again.
+    """
+
+    record: dict
+    comment_ids: tuple[int | str, ...] = ()
+    review_thread_ids: tuple[str, ...] = ()
+
+    @property
+    def claim_key(self) -> str:
+        """The unit the claim covers: the work item for new work, the single trigger otherwise."""
+        if self.comment_ids:
+            return f"{self.record['work_item_id']}:comment:{self.comment_ids[0]}"
+        if self.review_thread_ids:
+            return f"{self.record['work_item_id']}:review-thread:{self.review_thread_ids[0]}"
+        return str(self.record["work_item_id"])
+
+
+def human_reply_tasks(config: DispatcherConfig, tracker: WorkItemTracker, seen_comment_ids: set[int | str]) -> list[DiscoveredTask]:
     tasks = []
-    observed = set(seen_comment_ids)
     for work_item_id in tracker.waiting_input_items():
         for comment in tracker.comments(work_item_id):
-            if comment.is_agent_comment or comment.id in observed:
+            if comment.is_agent_comment or comment.id in seen_comment_ids:
                 continue
-            observed.add(comment.id)
-            tasks.append(task_record(config, tracker, work_item_id, trigger="human_reply"))
-    return tasks, observed
+            tasks.append(DiscoveredTask(task_record(config, tracker, work_item_id, trigger="human_reply"), comment_ids=(comment.id,)))
+    return tasks
 
 
 def github_graphql(config: DispatcherConfig, query: str, variables: dict) -> dict:
@@ -249,21 +269,20 @@ def github_graphql(config: DispatcherConfig, query: str, variables: dict) -> dic
     return result["data"]
 
 
-def review_thread_tasks(config: DispatcherConfig, tracker: WorkItemTracker, payload: dict, seen_thread_ids: set[str]) -> tuple[list[dict], set[str]]:
+def review_thread_tasks(config: DispatcherConfig, tracker: WorkItemTracker, payload: dict, seen_thread_ids: set[str]) -> list[DiscoveredTask]:
     tasks = []
-    observed = set(seen_thread_ids)
     for pull_request in payload.get("repository", {}).get("pullRequests", {}).get("nodes", []):
         match = re.fullmatch(r"feature/wi-(\d+)-.+", pull_request.get("headRefName", ""))
         if not match:
             continue
         for thread in pull_request.get("reviewThreads", {}).get("nodes", []):
             thread_id = thread["id"]
-            if thread["isResolved"] or thread_id in observed:
+            if thread["isResolved"] or thread_id in seen_thread_ids:
                 continue
-            observed.add(thread_id)
             work_item_id = int(match.group(1))
-            tasks.append(task_record(config, tracker, work_item_id, trigger="review_thread", pull_request_url=pull_request["url"]))
-    return tasks, observed
+            record = task_record(config, tracker, work_item_id, trigger="review_thread", pull_request_url=pull_request["url"])
+            tasks.append(DiscoveredTask(record, review_thread_ids=(thread_id,)))
+    return tasks
 
 
 def refresh_clone(config: DispatcherConfig) -> None:
@@ -518,9 +537,36 @@ def close_attempt(ledger: AttemptLedger, attempt: Attempt, state: str, log_path:
             "attempt_closed",
             work_item_id=closed.work_item_id,
             attempt_id=closed.attempt_id,
+            claim_key=closed.claim_key,
             state=closed.state,
             retry_count=closed.retry_count,
         )
+
+
+def discover_tasks(config: DispatcherConfig, tracker: WorkItemTracker, ledger: AttemptLedger, state: dict) -> list[DiscoveredTask]:
+    """Name the candidates of this cycle. Discovery is read-only: it decides and consumes nothing."""
+    # The ledger owns the claim; the flat list only survives for work items dispatched before the
+    # ledger existed, so an upgrade does not send them to a second session. It is never written again.
+    dispatched = ledger.claimed_work_items() | set(state.get("dispatched_work_items", []))
+    new_work = [DiscoveredTask(task_record(config, tracker, work_item_id)) for work_item_id in tracker.new_items() if work_item_id not in dispatched]
+    human_replies = human_reply_tasks(config, tracker, set(state.get("seen_comment_ids", [])))
+    review_payload = github_graphql(config, REVIEW_THREADS_QUERY, {"owner": config.github_owner, "repository": config.github_repository})
+    review_threads = review_thread_tasks(config, tracker, review_payload, set(state.get("seen_review_thread_ids", [])))
+    return [*new_work, *human_replies, *review_threads]
+
+
+def advance_cursor(state_path: Path, state: dict, task: DiscoveredTask) -> dict:
+    """Consume the trigger of a delivered task, and only of that one.
+
+    Advancing the cursor for the whole cycle would discard the candidates this cycle never
+    dispatched, and advancing it before the session would discard a trigger no session ever saw.
+    """
+    if task.comment_ids:
+        state["seen_comment_ids"] = sorted({*state.get("seen_comment_ids", []), *task.comment_ids})
+    if task.review_thread_ids:
+        state["seen_review_thread_ids"] = sorted({*state.get("seen_review_thread_ids", []), *task.review_thread_ids})
+    save_state(state_path, state)
+    return state
 
 
 def run_once(config: DispatcherConfig, state_path: Path, task_directory: Path, dry_run: bool, log_path: Path | None = None, ledger_path: Path | None = None) -> list[dict]:
@@ -528,31 +574,28 @@ def run_once(config: DispatcherConfig, state_path: Path, task_directory: Path, d
     tracker = create_tracker(config, ado_token_provider)
     state = load_state(state_path)
     ledger = open_ledger(config, state_path, ledger_path)
-    # The ledger owns the claim; the flat list only survives for work items dispatched before the
-    # ledger existed, so an upgrade does not send them to a second session. It is never written again.
-    dispatched = ledger.claimed_work_items() | set(state.get("dispatched_work_items", []))
-    new_work = [task_record(config, tracker, work_item_id) for work_item_id in tracker.new_items() if work_item_id not in dispatched]
-    human_replies, seen_comments = human_reply_tasks(config, tracker, set(state.get("seen_comment_ids", [])))
-    review_payload = github_graphql(config, REVIEW_THREADS_QUERY, {"owner": config.github_owner, "repository": config.github_repository})
-    review_threads, seen_threads = review_thread_tasks(config, tracker, review_payload, set(state.get("seen_review_thread_ids", [])))
-    tasks = [*new_work, *human_replies, *review_threads]
-    if not tasks or dry_run:
-        if not dry_run:
-            state["seen_comment_ids"] = sorted(seen_comments)
-            state["seen_review_thread_ids"] = sorted(seen_threads)
-            save_state(state_path, state)
-        return tasks
 
-    task = tasks[0]
+    # Discovery.
+    candidates = discover_tasks(config, tracker, ledger, state)
+    if log_path is not None:
+        log_event(
+            log_path,
+            "discovery_completed",
+            candidate_count=len(candidates),
+            work_item_ids=[candidate.record["work_item_id"] for candidate in candidates],
+            triggers=[candidate.record["trigger"] for candidate in candidates],
+        )
+    if not candidates or dry_run:
+        return [candidate.record for candidate in candidates]
+
+    # Claim, before the session exists: a session without a confirmed claim is never started.
+    candidate = candidates[0]
     refresh_clone(config)
-    state["seen_comment_ids"] = sorted(seen_comments)
-    state["seen_review_thread_ids"] = sorted(seen_threads)
-    save_state(state_path, state)
-    attempt = ledger.claim(task["work_item_id"], current_revision(config))
+    attempt = ledger.claim(candidate.record["work_item_id"], current_revision(config), claim_key=candidate.claim_key)
     if attempt is None:
-        # Another dispatcher holds a live lease on this work item: this cycle has nothing to do.
+        # Another dispatcher holds a live lease on this claim key: this cycle has nothing to do.
         if log_path is not None:
-            log_event(log_path, "attempt_not_claimed", work_item_id=task["work_item_id"], trigger=task["trigger"])
+            log_event(log_path, "attempt_not_claimed", work_item_id=candidate.record["work_item_id"], claim_key=candidate.claim_key, trigger=candidate.record["trigger"])
         return []
     if log_path is not None:
         log_event(
@@ -560,14 +603,17 @@ def run_once(config: DispatcherConfig, state_path: Path, task_directory: Path, d
             "attempt_claimed",
             work_item_id=attempt.work_item_id,
             attempt_id=attempt.attempt_id,
+            claim_key=attempt.claim_key,
             source_revision=attempt.source_revision,
             retry_count=attempt.retry_count,
             lease_expires_at=attempt.lease_expires_at,
-            trigger=task["trigger"],
+            trigger=candidate.record["trigger"],
         )
+
+    # Delivery.
     task_directory.mkdir(parents=True, exist_ok=True)
-    context_path = stage_work_item_context(config, tracker, task["work_item_id"], task_directory)
-    task = task_record(config, tracker, task["work_item_id"], trigger=task["trigger"], pull_request_url=task.get("pull_request_url"), context_path=context_path, attempt=attempt)
+    context_path = stage_work_item_context(config, tracker, candidate.record["work_item_id"], task_directory)
+    task = task_record(config, tracker, candidate.record["work_item_id"], trigger=candidate.record["trigger"], pull_request_url=candidate.record.get("pull_request_url"), context_path=context_path, attempt=attempt)
     task_path = task_directory / f"{uuid.uuid4()}.json"
     task_path.write_text(json.dumps(task, indent=2) + "\n", encoding="utf-8")
     with lease_heartbeat(ledger, attempt.attempt_id, max(1.0, config.lease_seconds / 3)):
@@ -578,6 +624,7 @@ def run_once(config: DispatcherConfig, state_path: Path, task_directory: Path, d
             "session_completed",
             work_item_id=task["work_item_id"],
             attempt_id=attempt.attempt_id,
+            claim_key=attempt.claim_key,
             retry_count=attempt.retry_count,
             source_revision=attempt.source_revision,
             returncode=outcome.returncode,
@@ -596,6 +643,18 @@ def run_once(config: DispatcherConfig, state_path: Path, task_directory: Path, d
         close_attempt(ledger, attempt, FAILED, log_path)
         raise DispatcherError(f"Dev Agent session failed ({outcome.failure_class})")
     close_attempt(ledger, attempt, SUCCEEDED, log_path)
+    advance_cursor(state_path, state, candidate)
+    if log_path is not None:
+        log_event(
+            log_path,
+            "delivery_completed",
+            work_item_id=task["work_item_id"],
+            attempt_id=attempt.attempt_id,
+            claim_key=attempt.claim_key,
+            trigger=task["trigger"],
+            seen_comment_ids=list(candidate.comment_ids),
+            seen_review_thread_ids=list(candidate.review_thread_ids),
+        )
     return [task]
 
 
