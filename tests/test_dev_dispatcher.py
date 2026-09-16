@@ -7,7 +7,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import MagicMock, patch
 
-from scripts.dev_dispatcher import DispatcherConfig, DispatcherError, SessionOutcome, build_session_command, credential_broker_environment, current_revision, human_reply_tasks, launch_session, launch_smoke_session, load_state, review_thread_tasks, run_once, run_polling, run_smoke, smoke_comment, stage_work_item_context
+from scripts.dev_dispatcher import DiscoveredTask, DispatcherConfig, DispatcherError, SessionOutcome, build_session_command, credential_broker_environment, current_revision, human_reply_tasks, launch_session, launch_smoke_session, load_state, review_thread_tasks, run_once, run_polling, run_smoke, smoke_comment, stage_work_item_context
 from fabric_agentic.attempt_ledger import FAILED, RELEASED, RUNNING, SUCCEEDED, AttemptLedger
 from fabric_agentic.polling import PollingStopped
 from scripts.tracker import WorkItemComment
@@ -68,7 +68,7 @@ class DevDispatcherTests(unittest.TestCase):
         self.assertNotIn("Bash(git push *)", allowed_tools)
 
     @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
-    @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
+    @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=[])
     @patch("scripts.dev_dispatcher.create_tracker")
     def test_dry_run_returns_only_undispatched_new_work(self, mock_create_tracker, _, __) -> None:
         mock_tracker = MagicMock()
@@ -145,7 +145,7 @@ class DevDispatcherTests(unittest.TestCase):
 
     @patch("scripts.dev_dispatcher.current_revision", return_value="0f1e2d3")
     @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
-    @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
+    @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=[])
     @patch("scripts.dev_dispatcher.launch_session", return_value=SessionOutcome(returncode=0, is_error=False, session_id="abc", num_turns=5, changed_repository=True))
     @patch("scripts.dev_dispatcher.refresh_clone")
     @patch("scripts.dev_dispatcher.create_tracker")
@@ -168,7 +168,7 @@ class DevDispatcherTests(unittest.TestCase):
 
     @patch("scripts.dev_dispatcher.current_revision", return_value="0f1e2d3")
     @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
-    @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
+    @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=[])
     @patch("scripts.dev_dispatcher.launch_session", return_value=SessionOutcome(returncode=0, is_error=False, session_id="abc", num_turns=2, changed_repository=False))
     @patch("scripts.dev_dispatcher.refresh_clone")
     @patch("scripts.dev_dispatcher.create_tracker")
@@ -281,7 +281,7 @@ class DevDispatcherTests(unittest.TestCase):
 
     @patch("scripts.dev_dispatcher.current_revision", return_value="0f1e2d3")
     @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
-    @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
+    @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=[])
     @patch("scripts.dev_dispatcher.launch_session", return_value=SessionOutcome(returncode=1, is_error=True, session_id=None, num_turns=None, changed_repository=False, failure_class="session_error"))
     @patch("scripts.dev_dispatcher.refresh_clone")
     @patch("scripts.dev_dispatcher.create_tracker")
@@ -302,7 +302,7 @@ class DevDispatcherTests(unittest.TestCase):
 
     @patch("scripts.dev_dispatcher.current_revision", return_value="0f1e2d3")
     @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
-    @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
+    @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=[])
     @patch("scripts.dev_dispatcher.launch_session", return_value=SessionOutcome(returncode=1, is_error=True, session_id=None, num_turns=1, changed_repository=False, failure_class="agent_quota_exhausted"))
     @patch("scripts.dev_dispatcher.refresh_clone")
     @patch("scripts.dev_dispatcher.create_tracker")
@@ -330,7 +330,7 @@ class DevDispatcherTests(unittest.TestCase):
 
     @patch("scripts.dev_dispatcher.current_revision", return_value="0f1e2d3")
     @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
-    @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=([], set()))
+    @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=[])
     @patch("scripts.dev_dispatcher.launch_session")
     @patch("scripts.dev_dispatcher.refresh_clone")
     @patch("scripts.dev_dispatcher.create_tracker")
@@ -342,15 +342,106 @@ class DevDispatcherTests(unittest.TestCase):
 
         with TemporaryDirectory() as directory:
             log_path = Path(directory) / "dispatcher.log"
+            state_path = Path(directory) / "state.json"
             held = AttemptLedger(Path(directory) / "attempts.json").claim(183, "9a8b7c6")
 
-            tasks = run_once(self.config, Path(directory) / "state.json", Path(directory) / "tasks", dry_run=False, log_path=log_path)
+            tasks = run_once(self.config, state_path, Path(directory) / "tasks", dry_run=False, log_path=log_path)
             attempts = AttemptLedger(Path(directory) / "attempts.json").attempts()
+            # Discovery and a refused claim consume nothing: no session ran, so no cursor moved.
+            self.assertFalse(state_path.exists())
 
         self.assertEqual(tasks, [])
         mock_launch.assert_not_called()
         self.assertEqual([attempt.attempt_id for attempt in attempts], [held.attempt_id])
         self.assertEqual(attempts[0].state, RUNNING)
+
+    @patch("scripts.dev_dispatcher.current_revision", return_value="0f1e2d3")
+    @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
+    @patch("scripts.dev_dispatcher.human_reply_tasks", return_value=[])
+    @patch("scripts.dev_dispatcher.refresh_clone")
+    @patch("scripts.dev_dispatcher.create_tracker")
+    def test_the_claim_is_recorded_before_the_session_starts(self, mock_create_tracker, _, __, ___, ____) -> None:
+        mock_tracker = MagicMock()
+        mock_tracker.new_items.return_value = [184]
+        mock_tracker.item_url.return_value = "https://example.com/item/184"
+        mock_create_tracker.return_value = mock_tracker
+        held_while_running = []
+
+        with TemporaryDirectory() as directory:
+            ledger_path = Path(directory) / "attempts.json"
+
+            def read_the_ledger_from_inside_the_session(*_args, **_kwargs) -> SessionOutcome:
+                held_while_running.extend((attempt.work_item_id, attempt.claim_key, attempt.state) for attempt in AttemptLedger(ledger_path).attempts())
+                return SessionOutcome(returncode=0, is_error=False, session_id="abc", num_turns=3, changed_repository=True)
+
+            with patch("scripts.dev_dispatcher.launch_session", side_effect=read_the_ledger_from_inside_the_session):
+                run_once(self.config, Path(directory) / "state.json", Path(directory) / "tasks", dry_run=False)
+
+        self.assertEqual(held_while_running, [(184, "184", RUNNING)])
+
+    def test_the_claim_key_names_the_unit_of_work_not_only_the_ticket(self) -> None:
+        new_work = DiscoveredTask({"work_item_id": 184, "trigger": "new_work"})
+        reply = DiscoveredTask({"work_item_id": 184, "trigger": "human_reply"}, comment_ids=(7,))
+        remark = DiscoveredTask({"work_item_id": 184, "trigger": "review_thread"}, review_thread_ids=("PRRT_1",))
+
+        self.assertEqual(new_work.claim_key, "184")
+        self.assertEqual(reply.claim_key, "184:comment:7")
+        self.assertEqual(remark.claim_key, "184:review-thread:PRRT_1")
+
+    @patch("scripts.dev_dispatcher.current_revision", return_value="0f1e2d3")
+    @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
+    @patch("scripts.dev_dispatcher.launch_session", return_value=SessionOutcome(returncode=1, is_error=True, session_id=None, num_turns=None, changed_repository=False, failure_class="session_error"))
+    @patch("scripts.dev_dispatcher.refresh_clone")
+    @patch("scripts.dev_dispatcher.create_tracker")
+    def test_a_failed_delivery_leaves_the_human_reply_to_be_answered(self, mock_create_tracker, _, __, ___, ____) -> None:
+        mock_create_tracker.return_value = self.waiting_input_tracker([WorkItemComment(id=7, author="Owner", text="...", is_agent_comment=False)])
+
+        with TemporaryDirectory() as directory:
+            state_path = Path(directory) / "state.json"
+            state_path.write_text(json.dumps({"seen_comment_ids": [1]}), encoding="utf-8")
+
+            with self.assertRaisesRegex(DispatcherError, "Dev Agent session failed"):
+                run_once(self.config, state_path, Path(directory) / "tasks", dry_run=False)
+
+            state = load_state(state_path)
+
+        self.assertEqual(state["seen_comment_ids"], [1])
+
+    @patch("scripts.dev_dispatcher.current_revision", return_value="0f1e2d3")
+    @patch("scripts.dev_dispatcher.github_graphql", return_value={"repository": {"pullRequests": {"nodes": []}}})
+    @patch("scripts.dev_dispatcher.launch_session", return_value=SessionOutcome(returncode=0, is_error=False, session_id="abc", num_turns=4, changed_repository=True))
+    @patch("scripts.dev_dispatcher.refresh_clone")
+    @patch("scripts.dev_dispatcher.create_tracker")
+    def test_a_delivered_reply_consumes_its_own_comment_and_no_other(self, mock_create_tracker, _, __, ___, ____) -> None:
+        mock_create_tracker.return_value = self.waiting_input_tracker([
+            WorkItemComment(id=7, author="Owner", text="...", is_agent_comment=False),
+            WorkItemComment(id=8, author="Owner", text="...", is_agent_comment=False),
+        ])
+
+        with TemporaryDirectory() as directory:
+            state_path = Path(directory) / "state.json"
+            log_path = Path(directory) / "dispatcher.log"
+
+            run_once(self.config, state_path, Path(directory) / "tasks", dry_run=False, log_path=log_path)
+
+            state = load_state(state_path)
+            events = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines()]
+
+        # The second comment was discovered but never delivered: consuming it here would lose it.
+        self.assertEqual(state["seen_comment_ids"], [7])
+        delivery = next(event for event in events if event["event"] == "delivery_completed")
+        self.assertEqual(delivery["claim_key"], "184:comment:7")
+        self.assertEqual(delivery["seen_comment_ids"], [7])
+        self.assertEqual(next(event for event in events if event["event"] == "discovery_completed")["candidate_count"], 2)
+
+    def waiting_input_tracker(self, comments: list[WorkItemComment]) -> MagicMock:
+        tracker = MagicMock()
+        tracker.new_items.return_value = []
+        tracker.waiting_input_items.return_value = [184]
+        tracker.comments.return_value = comments
+        tracker.item_url.return_value = "https://example.com/item/184"
+        tracker.context.return_value = {"title": "T2", "body": "...", "comments": [], "attachments": []}
+        return tracker
 
     @patch("scripts.dev_dispatcher.subprocess.run")
     def test_a_missing_source_revision_stops_the_dispatch(self, mock_run) -> None:
@@ -390,10 +481,10 @@ class DevDispatcherTests(unittest.TestCase):
         ]
         mock_tracker.item_url.return_value = "https://example.com/item/6"
 
-        tasks, seen = human_reply_tasks(self.config, mock_tracker, {1})
+        tasks = human_reply_tasks(self.config, mock_tracker, {1})
 
-        self.assertEqual([task["trigger"] for task in tasks], ["human_reply"])
-        self.assertEqual(seen, {1, 2})
+        self.assertEqual([task.record["trigger"] for task in tasks], ["human_reply"])
+        self.assertEqual([task.comment_ids for task in tasks], [(2,)])
 
     def test_loads_windows_utf8_bom_state_file(self) -> None:
         with TemporaryDirectory() as directory:
@@ -419,10 +510,10 @@ class DevDispatcherTests(unittest.TestCase):
             }]}}
         }
 
-        tasks, seen = review_thread_tasks(self.config, mock_tracker, payload, {"seen"})
+        tasks = review_thread_tasks(self.config, mock_tracker, payload, {"seen"})
 
-        self.assertEqual([(task["work_item_id"], task["trigger"]) for task in tasks], [(6, "review_thread")])
-        self.assertEqual(seen, {"seen", "new"})
+        self.assertEqual([(task.record["work_item_id"], task.record["trigger"]) for task in tasks], [(6, "review_thread")])
+        self.assertEqual([task.review_thread_ids for task in tasks], [("new",)])
 
     @patch("scripts.dev_dispatcher.run_once", return_value=[])
     def test_polling_writes_safe_metadata_once_per_cycle(self, _) -> None:

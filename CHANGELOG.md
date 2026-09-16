@@ -22,11 +22,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Il ciclo del Dev dispatcher è ora diviso in tre fasi separatamente verificabili — **discovery,
+  claim e consegna** — con un evento di log per ciascuna (`discovery_completed`, `attempt_claimed`
+  o `attempt_not_claimed`, `delivery_completed`). La discovery è in sola lettura: nomina i candidati
+  del ciclo e non scrive alcuno stato locale. Il claim resta registrato **prima** che la sessione
+  esista, e senza claim confermato nessuna sessione parte.
+
+- L'unità del claim è ora la `claim_key`, non il work item: il nuovo lavoro prende l'intero ticket,
+  una risposta umana prende solo quel commento e un rilievo di review solo quel thread. Prima il
+  primo tentativo concluso su un ticket bloccava per sempre ogni risposta successiva, quindi i
+  trigger B e C non erano più consegnabili su un work item già dispatchato. Un ledger scritto prima
+  dell'introduzione della chiave viene letto come claim sull'intero work item.
+
 - La lista piatta `dispatched_work_items` non è più il criterio di presa in carico: il ledger la
   sostituisce. Viene ancora **letta** per i work item dispatchati prima della sua introduzione, così
   l'aggiornamento non produce una seconda sessione sullo stesso ticket, e non viene più scritta.
 
 ### Fixed
+
+- Il cursore anti-loop del Dev dispatcher (`seen_comment_ids`, `seen_review_thread_ids`) avanza ora
+  **solo dopo una consegna riuscita**, e solo per il candidato effettivamente consegnato. Prima
+  veniva persistito in fase di discovery, per l'intero ciclo e prima di avviare la sessione: una
+  risposta umana o un rilievo di review poteva quindi risultare consumato senza che alcuna sessione
+  l'avesse letto — perché il claim non era stato ottenuto, perché la sessione era fallita, o
+  semplicemente perché il ciclo dispatcha un solo task — e non risvegliava più l'agente. Ogni
+  fallimento lascia ora il proprio innesco in coda e uno stato esplicito nel ledger: `released` per
+  un runtime bloccato, `failed` per una sessione in errore.
 
 - Il Dev dispatcher distingue ora un runtime bloccato da un ticket difettoso. Una sessione fermata
   da quota esaurita o login scaduto è classificata `agent_quota_exhausted` o

@@ -65,10 +65,12 @@ sola. Sempre qualificata.
 | **GitHubIssuesTracker** | Adapter per GitHub Issues. Usa REST API + GraphQL. Identità di dispatch via GitHub App (federated OIDC). |
 | **Device-of-record tag** | Tag/label sul work item che qualifica quale agente detiene il lavoro. Default: `dev-agent` (Azure) e label `dev-agent` (GitHub). |
 | **Waiting-input tag** | Tag/label aggiunto quando il work item è in `Doing` e attende feedback umano (commento da non-agente). Permette al dispatcher di discriminare tra agente bloccato e agente attivo. |
-| **Attempt** | Un singolo tentativo di lavorare un work item. Ha `attempt_id`, work item, `source_revision`, stato, lease e `retry_count`. Un work item può avere più tentativi; il tentativo, non il work item, è l'unità di evidenza. |
+| **Attempt** | Un singolo tentativo di lavorare una `claim_key`. Ha `attempt_id`, work item, `claim_key`, `source_revision`, stato, lease e `retry_count`. Un work item può avere più tentativi; il tentativo, non il work item, è l'unità di evidenza. |
 | **Attempt ledger** | File `attempts.json` nel perimetro locale dell'agente (`fabric_agentic/attempt_ledger.py`) che registra ogni tentativo. Contiene solo identificativi, stati e istanti: mai token, credenziali o contenuto del work item. |
-| **Claim** | Presa in carico atomica di un work item da parte di un dispatcher, serializzata da un lock file. Due dispatcher concorrenti non possono ottenere lo stesso work item. |
+| **Claim** | Presa in carico atomica di un'unità di lavoro da parte di un dispatcher, serializzata da un lock file. Due dispatcher concorrenti non possono ottenere la stessa `claim_key`. |
+| **Claim key** | L'unità che il claim copre: il work item per il nuovo lavoro, il singolo commento o il singolo thread di review per i trigger di risposta. Impedisce che un tentativo concluso blocchi per sempre ogni risposta successiva sullo stesso ticket. |
 | **Lease** | Scadenza del claim. Un dispatcher che muore non blocca il ticket: alla scadenza il tentativo è `expired` e il ciclo successivo lo riprende. Viene rinnovato mentre la sessione gira; default 900 s (`agent.lease_seconds`). |
+| **Cursore anti-loop** | Marcatori locali `seen_comment_ids` e `seen_review_thread_ids` che impediscono di riprocessare un innesco già gestito. Avanzano **solo dopo una consegna riuscita**, e solo per il candidato consegnato. |
 | **Issue attachment repository path** | Percorso versionato `attachments/<issue-number>/` per trascrizioni e file che il Dev Agent deve leggere nella clone isolata. |
 
 ### Stato verifica backend (2026-08-25)
