@@ -54,7 +54,8 @@ Entrambi vengono clonati da **ciascuno** dei tre agenti, nei rispettivi ambienti
 ├── attachments/                    # allegati versionati per numero di issue
 ├── kaizen/                         # note di apprendimento, indicizzate da AGENTS.md
 │
-├── fabric/                         # artefatti Fabric versionati (git sync)
+├── fabric/                         # artefatti Fabric versionati (git sync) · una cartella per tipo di item
+│   ├── lakehouse/
 │   ├── notebook/
 │   └── pipeline/
 │

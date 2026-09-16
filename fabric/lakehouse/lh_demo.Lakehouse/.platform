@@ -1,0 +1,12 @@
+{
+  "version": "2.0",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "config": {
+    "logicalId": "c7a41e28-9d5b-4f36-a10c-2b8e6d4f7913"
+  },
+  "metadata": {
+    "type": "Lakehouse",
+    "displayName": "lh_demo",
+    "description": "Throwaway demo Lakehouse that holds the Delta table demo_alessio for work item #196."
+  }
+}

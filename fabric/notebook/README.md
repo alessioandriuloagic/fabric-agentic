@@ -36,8 +36,24 @@ a table whose schema differs from the declared one fails the run instead of bein
 implicitly. It loads no data and needs no credential: the notebook contains no secret and no
 connection identifier. The column contract is mirrored by `scripts/bronze_test_table.py`, which is
 what `tests/test_bronze_test_table.py` exercises, and that test fails if the two drift apart. Like
-the other notebooks it names no workspace: the default Lakehouse binding is applied at deployment
-time through `scripts/fabric_artifacts.notebook_definition`.
+the notebooks the CRM rail deploys it names no workspace: the default Lakehouse binding is applied
+at deployment time through `scripts/fabric_artifacts.notebook_definition`.
+
+`nb_demo_alessio.Notebook` is the throwaway verification requested by work item #196. It writes the
+Delta table `demo_alessio` in the Lakehouse `lh_demo` with a single declared column, `names`, of
+type string and nullable, and a single literal row, `alessio`. Unlike the other notebooks it does
+not rely on a default Lakehouse binding: an item materialized by `updateFromGit` arrives without
+one, so the notebook resolves the workspace with `notebookutils.runtime.context`, reaches
+`lh_demo` by name — creating it when the Git sync has not materialized it — and reads and writes
+through a fully qualified OneLake path. The row is rewritten on **every** run, which decision D1 on
+that work item approved as a deliberate exception to the "never overwrite silently" pattern of
+`nb_create_bronze_test`, because the table is a check of the chain and not a dataset; the schema is
+never rewritten, and a table whose columns differ from the declared ones fails the run. It loads no
+data from any source and needs no credential: the notebook contains no secret, no connection
+identifier and no workspace identifier. The column contract and the literal row are mirrored by
+`scripts/demo_alessio_table.py`, which is what `tests/test_demo_alessio_table.py` exercises, and
+that test fails if the two drift apart. The Lakehouse artifact is described in
+`fabric/lakehouse/README.md`.
 
 All notebooks in this folder are versioned in the Fabric Git source format
 (`notebook-content.py` plus `.platform`), which is the shape the rest of the repository already

@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Il work item #196 aggiunge la verifica usa-e-getta `lh_demo` + `nb_demo_alessio`. Il Lakehouse è
+  versionato in `fabric/lakehouse/lh_demo.Lakehouse/` — prima cartella di item non-notebook del
+  repository — e il notebook scrive la tabella Delta `demo_alessio` con l'unica colonna dichiarata
+  `names` (stringa, nullable) e l'unica riga letterale `alessio`. Il notebook **non** dipende dal
+  default Lakehouse: risolve il workspace con `notebookutils.runtime.context`, raggiunge `lh_demo`
+  per nome creandolo se il sync Git non l'ha materializzato, e legge e scrive per percorso OneLake
+  qualificato. La riga viene riscritta a **ogni** esecuzione — deroga approvata nel ticket (D1) al
+  pattern "mai un overwrite silenzioso", perché la tabella collauda la catena e non è un dataset —
+  mentre lo schema non viene mai riscritto: una tabella con colonne diverse da quelle dichiarate fa
+  fallire l'esecuzione. `scripts/demo_alessio_table.py` mirrora contratto di colonna e valore, e
+  `tests/test_demo_alessio_table.py` fallisce se notebook e runtime divergono. Il nuovo test **non**
+  è ancora nell'elenco esplicito di `validate-rail-contract.yml` e la cartella `fabric/lakehouse/**`
+  non è fra i `paths` di attivazione: la GitHub App del Dev Agent non ha il permesso `workflows` e
+  il push di quella modifica è stato rifiutato, quindi la registrazione resta da applicare con
+  un'identità che lo possiede. Nessun dato è documentato come sorgente: `docs/sources/` e
+  `CONTEXT.md` §7 restano invariati.
+
 - Ogni dispatch del Dev Agent è ora un **tentativo registrato**: `fabric_agentic/attempt_ledger.py`
   tiene in `attempts.json`, nel perimetro locale dell'agente, `attempt_id`, work item,
   `source_revision`, stato, lease e `retry_count`. Il claim del work item è atomico — un lock file
