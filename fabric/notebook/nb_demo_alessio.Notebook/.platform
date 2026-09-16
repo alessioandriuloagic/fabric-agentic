@@ -1,0 +1,12 @@
+{
+  "version": "2.0",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "config": {
+    "logicalId": "4e9c62f7-38ad-4b51-9c7e-5d0a1f6b8342"
+  },
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "nb_demo_alessio",
+    "description": "Writes the single declared row of the Delta table demo_alessio in lh_demo on every run."
+  }
+}
