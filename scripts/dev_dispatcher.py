@@ -4,7 +4,6 @@ Run as ``python -m scripts.dev_dispatcher`` so shared package imports resolve.
 """
 
 import argparse
-import base64
 import json
 import os
 import re
@@ -33,11 +32,13 @@ from fabric_agentic.attempt_ledger import (
     AttemptLedgerError,
     lease_heartbeat,
 )
-from fabric_agentic.config_paths import read_json_config
+from fabric_agentic.config_paths import expand_path, read_json_config
 from fabric_agentic.credential_broker import credential_broker_environment
 from fabric_agentic.github_app_auth import create_installation_token
+from fabric_agentic.instance_profile import InstanceProfileError, parse_tracker_auth
 from fabric_agentic.polling import PollingStopped, run_polling as run_bounded_polling
 from scripts.tracker import AzureDevOpsTracker, GitHubIssuesTracker, WorkItemTracker
+from scripts.tracker_auth import TrackerAuthError, azure_user_token, github_user_credentials
 
 
 class DispatcherError(Exception):
@@ -62,30 +63,42 @@ class DispatcherConfig:
     poll_seconds: int
     tracker_type: str = "azure_devops"  # "azure_devops" or "github_issues"
     lease_seconds: int = DEFAULT_LEASE_SECONDS
+    tracker_auth: dict | None = None
+    github_auth: dict | None = None
 
 
 def load_config(config_path: Path) -> DispatcherConfig:
     try:
         config = read_json_config(config_path)
+        github = config["github"]
+        azure = config.get("azure_devops", {})
+        tracker_type = config.get("dispatcher", {}).get("tracker_type", "azure_devops")
+        github_auth = parse_tracker_auth(github.get("authentication"), "github_issues")
+        tracker_auth = github_auth if tracker_type == "github_issues" else parse_tracker_auth(azure.get("authentication"), "azure_devops")
+        user_github = github_auth is not None and github_auth["mode"] == "github_user"
+        if tracker_type == "azure_devops" and not azure:
+            raise ValueError("Azure DevOps configuration is missing")
         return DispatcherConfig(
-            organization=config["azure_devops"]["organization"],
-            project=config["azure_devops"]["project"],
-            tenant_domain=config["azure_devops"]["tenant_domain"],
-            ado_app_id=config["azure_devops"]["app_id"],
-            certificate_thumbprint=config["azure_devops"]["certificate_thumbprint"],
-            dev_agent_display_name=config["azure_devops"]["dev_agent_display_name"],
+            organization=azure.get("organization", ""),
+            project=azure.get("project", ""),
+            tenant_domain=azure.get("tenant_domain", ""),
+            ado_app_id=azure.get("app_id", ""),
+            certificate_thumbprint=azure.get("certificate_thumbprint", ""),
+            dev_agent_display_name=azure.get("dev_agent_display_name", "[fabric-agentic-dev-agent]"),
             github_owner=config["github"]["owner"],
             github_repository=config["github"]["repository"],
-            github_app_id=int(config["github"]["app_id"]),
-            github_installation_id=int(config["github"]["installation_id"]),
-            github_private_key_path=Path(config["github"]["private_key_path"]),
+            github_app_id=0 if user_github else int(github["app_id"]),
+            github_installation_id=0 if user_github else int(github["installation_id"]),
+            github_private_key_path=Path() if user_github else Path(github["private_key_path"]),
             repository_path=Path(config["agent"]["repository_path"]),
             claude_command=config["agent"]["claude_command"],
             poll_seconds=int(config["agent"]["poll_seconds"]),
-            tracker_type=config.get("dispatcher", {}).get("tracker_type", "azure_devops"),
+            tracker_type=tracker_type,
             lease_seconds=int(config["agent"].get("lease_seconds", DEFAULT_LEASE_SECONDS)),
+            tracker_auth=tracker_auth,
+            github_auth=github_auth,
         )
-    except (KeyError, OSError, ValueError, TypeError) as error:
+    except (KeyError, OSError, ValueError, TypeError, InstanceProfileError) as error:
         raise DispatcherError("dispatcher configuration is invalid") from error
 
 
@@ -99,6 +112,8 @@ def create_tracker(config: DispatcherConfig, ado_token_provider: Callable[[], st
             github_installation_id=config.github_installation_id,
             github_private_key_path=config.github_private_key_path,
             agent_identity=config.dev_agent_display_name,
+            token_provider=(lambda: github_token(config)) if config.github_auth and config.github_auth["mode"] == "github_user" else None,
+            agent_account=config.github_auth["account"] if config.github_auth and config.github_auth["mode"] == "github_user" else None,
         )
     elif config.tracker_type == "azure_devops":
         return AzureDevOpsTracker(
@@ -106,6 +121,7 @@ def create_tracker(config: DispatcherConfig, ado_token_provider: Callable[[], st
             project=config.project,
             token_provider=ado_token_provider,
             dev_agent_display_name=config.dev_agent_display_name,
+            agent_account=config.tracker_auth["account"] if config.tracker_auth and config.tracker_auth["mode"] == "entra_user" else None,
         )
     else:
         raise DispatcherError(f"Unknown tracker type: {config.tracker_type}")
@@ -113,6 +129,9 @@ def create_tracker(config: DispatcherConfig, ado_token_provider: Callable[[], st
 
 def acquire_ado_token(config: DispatcherConfig) -> str:
     """Acquire Azure DevOps token via service principal certificate."""
+    if config.tracker_auth and config.tracker_auth["mode"] == "entra_user":
+        auth = config.tracker_auth
+        return azure_user_token(auth["account"], auth["tenant_id"], expand_path(auth["config_directory"]))
     ADO_SCOPE = "https://app.vssps.visualstudio.com"
     script = f"""
 $ErrorActionPreference = 'Stop'
@@ -232,7 +251,7 @@ def human_reply_tasks(config: DispatcherConfig, tracker: WorkItemTracker, seen_c
 
 
 def github_graphql(config: DispatcherConfig, query: str, variables: dict) -> dict:
-    token = create_installation_token(config.github_app_id, config.github_installation_id, config.github_private_key_path).token
+    token = github_token(config)
     request = Request(
         "https://api.github.com/graphql",
         data=json.dumps({"query": query, "variables": variables}).encode("utf-8"),
@@ -267,24 +286,25 @@ def review_thread_tasks(config: DispatcherConfig, tracker: WorkItemTracker, payl
 
 
 def refresh_clone(config: DispatcherConfig) -> None:
-    token = create_installation_token(
-        config.github_app_id,
-        config.github_installation_id,
-        config.github_private_key_path,
-    ).token
-    basic_auth = base64.b64encode(f"x-access-token:{token}".encode("utf-8")).decode("ascii")
-    environment = os.environ.copy()
-    environment["GIT_TERMINAL_PROMPT"] = "0"
+    token = github_token(config)
     commands = [
-        ["git", "-C", str(config.repository_path), "-c", f"http.extraHeader=Authorization: Basic {basic_auth}", "fetch", "origin", "main"],
+        ["git", "-C", str(config.repository_path), "fetch", "origin", "main"],
         ["git", "-C", str(config.repository_path), "checkout", "main"],
         ["git", "-C", str(config.repository_path), "merge", "--ff-only", "origin/main"],
     ]
-    token = None
-    for command in commands:
-        result = subprocess.run(command, capture_output=True, text=True, env=environment, check=False)
-        if result.returncode != 0:
-            raise DispatcherError(f"isolated repository refresh failed at 'git {command[3] if command[3] != '-c' else command[5]}'")
+    with credential_broker_environment(token) as environment:
+        for command in commands:
+            result = subprocess.run(command, capture_output=True, text=True, env=environment, check=False)
+            if result.returncode != 0:
+                raise DispatcherError(f"isolated repository refresh failed at 'git {command[3]}'")
+
+
+def github_token(config: DispatcherConfig) -> str:
+    if config.github_auth and config.github_auth["mode"] == "github_user":
+        return github_user_credentials(
+            config.github_auth["account"], expand_path(config.github_auth["config_directory"])
+        )[0]
+    return create_installation_token(config.github_app_id, config.github_installation_id, config.github_private_key_path).token
 
 
 def current_revision(config: DispatcherConfig) -> str:
@@ -392,11 +412,7 @@ def repository_changed(config: DispatcherConfig) -> bool:
 
 
 def launch_session(config: DispatcherConfig, task_path: Path) -> SessionOutcome:
-    token = create_installation_token(
-        config.github_app_id,
-        config.github_installation_id,
-        config.github_private_key_path,
-    ).token
+    token = github_token(config)
     with credential_broker_environment(token) as environment:
         result = subprocess.run(
             build_session_command(config, task_path),
@@ -678,7 +694,7 @@ def main() -> int:
         log_event(args.log, "polling_stopped", reason=str(error))
         print(json.dumps({"error": str(error)}))
         return 1
-    except (DispatcherError, AttemptLedgerError) as error:
+    except (DispatcherError, AttemptLedgerError, TrackerAuthError) as error:
         print(json.dumps({"error": str(error)}))
         return 1
     return 0

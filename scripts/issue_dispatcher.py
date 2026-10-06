@@ -17,7 +17,9 @@ from fabric_agentic.config_paths import expand_path, read_json_config
 from fabric_agentic.polling import PollingStopped, run_polling
 from fabric_agentic.credential_broker import credential_broker_environment
 from fabric_agentic.github_app_auth import GITHUB_API, create_installation_token
+from fabric_agentic.instance_profile import InstanceProfileError, parse_tracker_auth
 from scripts.issue_package_publish import IDENTITY_MARKER, app_bot_login
+from scripts.tracker_auth import TrackerAuthError, github_user_credentials
 
 
 PUBLISHER_MODULE = "scripts.issue_package_publish"
@@ -45,6 +47,7 @@ class IssueDispatcherConfig:
     repository_path: Path
     claude_command: str
     poll_seconds: int = 30
+    tracker_auth: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -60,19 +63,22 @@ def load_config(config_path: Path) -> IssueDispatcherConfig:
         config = read_json_config(config_path)
         github = config["github"]
         agent = config["agent"]
-        app_id = int(github["app_id"])
-        installation_id = int(github["installation_id"])
+        authentication = parse_tracker_auth(github.get("authentication"), "github_issues")
+        user_auth = authentication is not None and authentication["mode"] == "github_user"
+        app_id = 0 if user_auth else int(github["app_id"])
+        installation_id = 0 if user_auth else int(github["installation_id"])
         return IssueDispatcherConfig(
             github_owner=github["owner"],
             github_repository=github["repository"],
             github_app_id=app_id,
             github_installation_id=installation_id,
-            github_private_key_path=expand_path(github["private_key_path"]),
+            github_private_key_path=Path() if user_auth else expand_path(github["private_key_path"]),
             repository_path=expand_path(agent["repository_path"]),
             claude_command=agent["claude_command"],
             poll_seconds=int(agent.get("poll_seconds", 30)),
+            tracker_auth=authentication,
         )
-    except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as error:
+    except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError, InstanceProfileError) as error:
         raise IssueDispatcherError("issue dispatcher configuration is invalid") from error
 
 
@@ -195,11 +201,7 @@ def run_git(config: IssueDispatcherConfig, arguments: list[str], environment: di
 
 
 def prepare_issue_clone(config: IssueDispatcherConfig) -> None:
-    token = create_installation_token(
-        config.github_app_id,
-        config.github_installation_id,
-        config.github_private_key_path,
-    ).token
+    token = github_token(config)
     with credential_broker_environment(token) as environment:
         run_git(config, ["fetch", "--prune", "origin", "main"], environment)
         run_git(config, ["checkout", "main"], environment)
@@ -207,6 +209,11 @@ def prepare_issue_clone(config: IssueDispatcherConfig) -> None:
 
 
 def discover_once(config: IssueDispatcherConfig) -> list[dict]:
+    if config.tracker_auth and config.tracker_auth["mode"] == "github_user":
+        token, login = github_user_credentials(
+            config.tracker_auth["account"], expand_path(config.tracker_auth["config_directory"])
+        )
+        return [task_record(config, candidate) for candidate in intake_candidates(config, token, login)]
     if config.github_app_id <= 0 or config.github_installation_id <= 0:
         raise IssueDispatcherError("the Issue Agent identity is not provisioned")
     token = create_installation_token(
@@ -218,8 +225,16 @@ def discover_once(config: IssueDispatcherConfig) -> list[dict]:
     return [task_record(config, candidate) for candidate in intake_candidates(config, token, login)]
 
 
+def github_token(config: IssueDispatcherConfig) -> str:
+    if config.tracker_auth and config.tracker_auth["mode"] == "github_user":
+        return github_user_credentials(
+            config.tracker_auth["account"], expand_path(config.tracker_auth["config_directory"])
+        )[0]
+    return create_installation_token(config.github_app_id, config.github_installation_id, config.github_private_key_path).token
+
+
 def publisher_command(config: IssueDispatcherConfig, task: dict, package_path: Path) -> list[str]:
-    return [
+    command = [
         sys.executable,
         "-m",
         PUBLISHER_MODULE,
@@ -227,6 +242,11 @@ def publisher_command(config: IssueDispatcherConfig, task: dict, package_path: P
         "--owner", config.github_owner,
         "--repository", config.github_repository,
         "--issue", str(task["issue"]),
+    ]
+    if config.tracker_auth and config.tracker_auth["mode"] == "github_user":
+        return command + ["--user-account", config.tracker_auth["account"],
+                          "--user-config-directory", str(expand_path(config.tracker_auth["config_directory"]))]
+    return command + [
         "--app-id", str(config.github_app_id),
         "--installation-id", str(config.github_installation_id),
         "--key-path", str(config.github_private_key_path),
@@ -345,7 +365,7 @@ def main() -> int:
         tasks = run_once(config, args.state, args.tasks, args.dry_run)
         if args.dry_run:
             print(json.dumps({"tasks": tasks}))
-    except (IssueDispatcherError, PollingStopped) as error:
+    except (IssueDispatcherError, PollingStopped, TrackerAuthError) as error:
         print(json.dumps({"error": str(error)}))
         return 1
     return 0

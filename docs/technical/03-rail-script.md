@@ -298,6 +298,11 @@ L'esito distingue tre casi per una reazione diversa dell'agente:
 | **Idempotenza** | Sì: se non ci sono differenze, non fa nulla |
 | **Fallimento tipico** | Conflitti, collegamento assente, item in stato non sincronizzabile |
 
+**Deroga #196**: per il test throwaway `demo_alessio` l'owner accetta che il Lakehouse venga
+creato automaticamente anche fuori dal normale flusso Git/rail. Se questa creazione produce uno
+stato `workspaceChange`/`divergent`, l'esito va registrato come rischio accettato del test e non
+come cambio permanente del contratto `sync_workspace`.
+
 ### Implementazione iniziale
 
 Il workflow `.github/workflows/pipe_agent_sync_workspace.yml` e il runner

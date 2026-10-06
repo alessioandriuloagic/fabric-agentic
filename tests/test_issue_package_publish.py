@@ -49,10 +49,11 @@ class FakeResponse:
 class FakeGitHub:
     """Serves the endpoints the publisher touches and records every request it receives."""
 
-    def __init__(self, comments: list | None = None, failing_path: str | None = None) -> None:
+    def __init__(self, comments: list | None = None, failing_path: str | None = None, login: str = BOT_LOGIN) -> None:
         self.requests: list[tuple[str, str]] = []
         self.comments = list(comments or [])
         self.failing_path = failing_path
+        self.login = login
 
     def __call__(self, request):
         path = request.full_url.split("api.github.com", 1)[1].split("?", 1)[0]
@@ -67,7 +68,7 @@ class FakeGitHub:
             if request.method == "GET":
                 return FakeResponse(self.comments)
             body = json.loads(request.data.decode("utf-8"))
-            self.comments.append({"id": 7788, "body": body["body"], "user": {"login": BOT_LOGIN}})
+            self.comments.append({"id": 7788, "body": body["body"], "user": {"login": self.login}})
             return FakeResponse(self.comments[-1])
         raise AssertionError(f"unexpected request {request.method} {path}")
 
@@ -79,6 +80,21 @@ class FakeGitHub:
 
 
 class IssuePackagePublishTests(unittest.TestCase):
+    def test_user_publication_needs_no_app_and_keeps_role_marker(self) -> None:
+        github = FakeGitHub(login="colleague")
+        with TemporaryDirectory() as directory:
+            package = Path(directory) / "package.txt"
+            package.write_text(package_text(), encoding="utf-8")
+            with patch("scripts.issue_package_publish.github_user_credentials", return_value=("user-token", "colleague")):
+                result = publish_package(package, "o", "r", 140, opener=github,
+                                         user_account="colleague", user_config_directory=Path(directory))
+                second = publish_package(package, "o", "r", 140, opener=github,
+                                         user_account="colleague", user_config_directory=Path(directory))
+        self.assertEqual(result["status"], "published")
+        self.assertTrue(github.published_body().startswith("[fabric-agentic-issue-agent]"))
+        self.assertNotIn(("GET", "/app"), github.requests)
+        self.assertEqual(second["status"], "already_published")
+
     def publish(self, text: str, github: FakeGitHub) -> dict:
         with TemporaryDirectory() as directory:
             package_path = Path(directory) / "work-package.txt"

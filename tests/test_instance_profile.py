@@ -50,6 +50,48 @@ def profile_document(**overrides) -> dict:
 
 class InstanceProfileTests(unittest.TestCase):
 
+    def test_tracker_and_inference_identities_are_independent_of_fabric(self) -> None:
+        document = profile_document()
+        document["tracker"]["authentication"] = {
+            role: {"mode": "github_user", "account": "colleague", "config_directory": "~/.client-tracker"}
+            for role in ("issue", "dev", "review")
+        }
+        document["inference"] = {
+            role: {"command": "claude", "identity_ref": f"enterprise-seat://agic/{role}"}
+            for role in ("issue", "dev", "review")
+        }
+        profile = parse_profile(document)
+        self.assertIsNone(profile.execution)
+        self.assertEqual(profile.tracker["authentication"]["review"]["mode"], "github_user")
+        self.assertEqual(profile.inference["dev"]["identity_ref"], "enterprise-seat://agic/dev")
+        from fabric_agentic.render import build_plan
+        plan = build_plan(profile)
+        self.assertEqual(plan["tracker"]["authentication"]["dev"]["mode"], "github_user")
+        self.assertEqual(plan["inference"]["review"]["command"], "claude")
+        self.assertNotIn("account", plan["tracker"]["authentication"]["dev"])
+
+    def test_profile_rejects_auth_mode_for_another_tracker(self) -> None:
+        document = profile_document()
+        document["tracker"]["authentication"] = {"dev": {"mode": "entra_sp"}}
+        with self.assertRaises(InstanceProfileError):
+            parse_profile(document)
+
+    def test_accepts_assisted_execution_without_secret_references(self) -> None:
+        execution = {
+            "mode": "delegated_assisted",
+            "tenant_id": "11111111-1111-4111-8111-111111111111",
+            "workspace_id": "22222222-2222-4222-8222-222222222222",
+            "account": "operator@example.com",
+        }
+        profile = parse_profile(profile_document(execution=execution, credentials=[]))
+        self.assertEqual(profile.execution.tenant_id, execution["tenant_id"])
+        self.assertEqual(profile.credentials, ())
+
+    def test_assisted_execution_rejects_passwords_without_echoing_them(self) -> None:
+        with self.assertRaises(InstanceProfileError) as failure:
+            parse_profile(profile_document(execution={"password": "private-password"}))
+        self.assertNotIn("private-password", str(failure.exception))
+
     def test_exported_schema_uses_the_same_contract_constants(self) -> None:
         schema = profile_schema()
 

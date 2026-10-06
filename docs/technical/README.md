@@ -25,6 +25,7 @@ si descrive come sono implementate.
 | [12 — Console e avvio](12-console-e-avvio.md) | Layout canonico degli agenti, verifica di prontezza e console locale in sola lettura |
 | [13 — Issue Agent: guida operativa](13-issue-agent-guida-operativa.md) | Intake GitHub, dispatcher, pacchetto, approvazione e passaggio al Dev Agent |
 | [14 — Inventario della catena CRM `accounts`](14-inventario-catena-crm-accounts.md) | Stato verificato anello per anello, discrepanze corrette e aperte, criteri ancora bloccati |
+| [15 - Identita' e autenticazione](15-identita-e-autenticazione.md) | Tracker/Fabric/AI separati, login assistito, configurazioni, migrazione, prove e limiti |
 
 ## Convenzione sulle affermazioni di piattaforma
 

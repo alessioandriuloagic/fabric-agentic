@@ -2,10 +2,10 @@
 
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from fabric_agentic.instance_profile import SLUG
+from fabric_agentic.instance_profile import InstanceProfileError, SLUG, parse_execution
 
 
 DEFAULT_PROJECT_SLUG = "cliente_demo"
@@ -142,6 +142,7 @@ def init(
     project_slug: str | None = None,
     display_name: str | None = None,
     force: bool = False,
+    execution: dict | None = None,
 ) -> InitResult:
     """Write a starter instance profile and checklist. Idempotent: existing files are left alone."""
 
@@ -149,8 +150,35 @@ def init(
     name = display_name or slug
 
     # Validate before touching the filesystem: init never leaves a half-written starter.
-    instance_document = render_instance_profile(slug, name)
-    checklist_document = render_checklist(slug, name)
+    if execution is None:
+        instance_document = render_instance_profile(slug, name)
+        checklist_document = render_checklist(slug, name)
+    else:
+        try:
+            user_execution = parse_execution(execution)
+        except InstanceProfileError as error:
+            raise InitError("assisted setup requires tenant_id, workspace_id and account") from error
+        document = build_profile_document(slug, name)
+        document["execution"] = asdict(user_execution)
+        document["credentials"] = []
+        document["sources"] = []
+        instance_document = json.dumps(document, indent=2, ensure_ascii=False) + "\n"
+        checklist_document = f"""# Assisted bootstrap - {name}
+
+- [ ] Install Azure CLI and use an authorized nominal or service user account.
+- [ ] Verify tenant, account and the existing non-production workspace in instance.json.
+- [ ] Confirm the client's consent, MFA and Conditional Access requirements.
+- [ ] Run `python -m fabric_agentic session login --config {INSTANCE_FILE_NAME}`.
+- [ ] Run `python -m fabric_agentic session status --config {INSTANCE_FILE_NAME}`.
+- [ ] Configure tracker and sources separately before starting a delivery agent.
+- [ ] Stop the agent dispatchers when the operator finishes working.
+- [ ] Run `python -m fabric_agentic session logout --config {INSTANCE_FILE_NAME}`.
+
+This increment verifies read access only: it does not create workspaces, deploy or run jobs.
+Tokens stay in the local Azure CLI cache; never copy that cache to a repository or another user.
+The cache is not a sandbox against processes running as the same OS user.
+Git and AI runtime authentication remain separate prerequisites.
+"""
 
     directory.mkdir(parents=True, exist_ok=True)
     written: list[Path] = []

@@ -8,8 +8,8 @@
 
 | Campo | Valore |
 |---|---|
-| Versione | 0.9 |
-| Ultimo aggiornamento | 2026-08-27 |
+| Versione | 1.0 |
+| Ultimo aggiornamento | 2026-10-06 |
 | Documenti collegati | `docs/prd/PRD-agentic-cicd-fabric.md`, `docs/adr/` |
 
 ---
@@ -93,6 +93,16 @@ sola. Sempre qualificata.
 ---
 
 ## 2. Glossario di dominio dati
+
+> Identita' per sistema (ADR-0019): tracker, accesso Fabric e runtime AI sono configurati
+> indipendentemente. Sul tracker AGIC restano GitHub Apps/SP Entra per ruolo; sul cliente e'
+> ammesso login nominale/servizio assistito. GitHub Apps non sono SP Entra. I tre dispatcher e
+> publisher GitHub supportano il percorso utente; Azure Boards nominale e' supportato per il
+> tracker Dev, non per Issue/Review o PR Azure Repos. Autore + marcatore distinguono i ruoli,
+> non separano i permessi. Auto-review nominale: COMMENT, mai voto sulla propria PR.
+> Login/MFA sono umani, nessun bypass CA o promessa unattended. `inference` documenta riferimenti
+> a seat/runtime, non ne prova login/licenza. Config e limiti:
+> [guida identita'](docs/technical/15-identita-e-autenticazione.md).
 
 | Termine | Definizione |
 |---|---|
@@ -322,7 +332,7 @@ allowlist: un profilo può dichiarare un identificatore nuovo con capacità espl
 | Baseline KPI dispatcher | Due cicli idle il 2026-08-21: 0 task, 0 sessioni Claude e $0/0 token LLM; durate 9.985 s e 14.406 s. S1-05 registra KPI-7 a zero, KPI-6 con 0 difetti post-merge osservati e i gap di strumentazione in `docs/technical/10-retrospettiva-s1-04.md` |
 | Identita' rail | L'OIDC del rail usa un service principal di deploy distinto dal Dev Agent; ha i soli privilegi necessari per feature workspace e capacity, mentre il Dev Agent puo' solo accodare il workflow e leggere l'artefatto |
 | Runtime dei tre agenti — **BLOCCANTE per cliente/collega** | Issue, Dev e Review invocano oggi lo stesso `claude` (Claude Code) sotto l'account **personale** dell'operatore (`configuration/*.json`, campo `claude_command`). Non è provisioning multiplo: è un'unica identità di inferenza condivisa da tutti e tre. Prima di usare il flusso su un cliente o di farlo eseguire a un collega, questa identità deve diventare aziendale — vedi prerequisiti in `docs/functional/06-onboarding-nuovo-cliente.md` §3.1 e la voce Q-13 del PRD. Il PRD prevedeva inoltre un vendor diverso per il Review Agent (indipendenza del giudizio): oggi non è implementato, gira sullo stesso account Claude Code del Dev Agent |
-| Identità | Un service principal per agente; nessun secret creato. Il workflow OIDC di test usa la `ExecutionCredential` configurata nell'environment GitHub `dev` |
+| Identità | Default applicativo AGIC con identita' tracker distinte; alternativa nominale/servizio assistita per tracker cliente e Fabric (ADR-0019). Il workflow OIDC esistente resta invariato; i rail Dev Fabric nominali restano da collegare |
 | Dati | Esclusivamente sintetici o open data. **Nessun dato di cliente entra nel perimetro** |
 
 ---

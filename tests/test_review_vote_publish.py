@@ -50,10 +50,12 @@ class FakeResponse:
 class FakeGitHub:
     """Serves the endpoints the publisher touches and records every request it receives."""
 
-    def __init__(self, reviews: list | None = None, failing_path: str | None = None) -> None:
+    def __init__(self, reviews: list | None = None, failing_path: str | None = None, author: str | None = None, login: str = BOT_LOGIN) -> None:
         self.requests: list[tuple[str, str]] = []
         self.reviews = list(reviews or [])
         self.failing_path = failing_path
+        self.author = author
+        self.login = login
 
     def __call__(self, request):
         path = request.full_url.split("api.github.com", 1)[1].split("?", 1)[0]
@@ -74,12 +76,12 @@ class FakeGitHub:
                     "commit_id": body["commit_id"],
                     "body": body["body"],
                     "state": body["event"],
-                    "user": {"login": BOT_LOGIN},
+                    "user": {"login": self.login},
                 }
             )
             return FakeResponse(self.reviews[-1])
         if re.fullmatch(r"/repos/[^/]+/[^/]+/pulls/\d+", path):
-            return FakeResponse({"head": {"sha": HEAD_SHA}})
+            return FakeResponse({"head": {"sha": HEAD_SHA}, "user": {"login": self.author}})
         raise AssertionError(f"unexpected request {request.method} {path}")
 
     def submissions(self) -> list[tuple[str, str]]:
@@ -109,6 +111,25 @@ class FakeGit:
 
 
 class ReviewVotePublishTests(unittest.TestCase):
+    def test_nominal_self_review_is_comment_only_and_identifies_role(self) -> None:
+        github = FakeGitHub(author="colleague", login="colleague", reviews=[{
+            "commit_id": HEAD_SHA, "user": {"login": "colleague"}, "body": "human review",
+        }])
+        with TemporaryDirectory() as directory:
+            outcome = Path(directory) / "outcome.txt"
+            outcome.write_text(outcome_text(), encoding="utf-8")
+            with patch("scripts.review_vote_publish.github_user_credentials", return_value=("user-token", "colleague")):
+                result = publish_review_vote(outcome, "o", "r", 97, opener=github, git=FakeGit(),
+                                             user_account="colleague", user_config_directory=Path(directory))
+                second = publish_review_vote(outcome, "o", "r", 97, opener=github, git=FakeGit(),
+                                             user_account="colleague", user_config_directory=Path(directory))
+        self.assertEqual(result["event"], "COMMENT")
+        self.assertEqual(result["status"], "published")
+        self.assertFalse(result["independent_identity"])
+        self.assertTrue(github.submitted_bodies()[0]["body"].startswith("[fabric-agentic-review-agent]"))
+        self.assertNotIn(("GET", "/app"), github.requests)
+        self.assertEqual(second["status"], "already_published")
+
     def publish(self, text: str, github: FakeGitHub, git: FakeGit | None = None) -> dict:
         with TemporaryDirectory() as directory:
             outcome_path = Path(directory) / "review-outcome.txt"

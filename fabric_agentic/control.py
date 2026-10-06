@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from fabric_agentic.config_paths import expand_path
+from fabric_agentic.instance_profile import InstanceProfileError, parse_tracker_auth
 
 
 AGENTS = ("issue", "dev", "review")
@@ -106,7 +107,11 @@ def _read_config(config_path: Path) -> dict | None:
 def _check_configuration(agent: str, config_path: Path, config: dict | None) -> Check:
     if config is None:
         return Check("configurazione", False, f"manca o non è JSON valido: {config_path.name}")
-    missing = [section for section in REQUIRED_SECTIONS[agent] if not config.get(section)]
+    required = REQUIRED_SECTIONS[agent]
+    auth = (config.get("github") or {}).get("authentication")
+    if isinstance(auth, dict) and auth.get("mode") == "github_user" and ((config.get("dispatcher") or {}).get("tracker_type") == "github_issues" or agent != "dev"):
+        required = tuple(section for section in required if section != "azure_devops")
+    missing = [section for section in required if not config.get(section)]
     if missing:
         return Check("configurazione", False, f"manca la sezione '{missing[0]}'")
     return Check("configurazione", True, config_path.name)
@@ -114,6 +119,13 @@ def _check_configuration(agent: str, config_path: Path, config: dict | None) -> 
 
 def _check_identity(config: dict | None) -> Check:
     github = (config or {}).get("github") or {}
+    try:
+        authentication = parse_tracker_auth(github.get("authentication"), "github_issues")
+    except InstanceProfileError:
+        return Check("identità", False, "autenticazione tracker non valida")
+    if authentication and authentication["mode"] == "github_user":
+        context = expand_path(authentication["config_directory"])
+        return Check("identità", context.is_dir(), "contesto utente dichiarato; login non verificato")
     try:
         app_id = int(github.get("app_id", 0))
         installation_id = int(github.get("installation_id", 0))
@@ -125,6 +137,9 @@ def _check_identity(config: dict | None) -> Check:
 
 
 def _check_private_key(directory: Path, config: dict | None) -> Check:
+    auth = (((config or {}).get("github") or {}).get("authentication") or {})
+    if isinstance(auth, dict) and auth.get("mode") == "github_user":
+        return Check("chiave privata", True, "non richiesta per autenticazione utente")
     declared = ((config or {}).get("github") or {}).get("private_key_path")
     key_path = expand_path(str(declared)) if declared else directory / KEY_NAME
     if not key_path.is_file():

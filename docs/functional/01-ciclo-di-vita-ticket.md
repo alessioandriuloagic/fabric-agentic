@@ -172,5 +172,7 @@ Elenco volutamente esplicito, perché sono le domande che riceverai in demo:
 - Gli agenti **non** si parlano direttamente: ogni scambio passa da un commento tracciabile.
 - Il Dev Agent **non** apre PR su codice che non ha eseguito.
 - Il Review Agent **non** corregge il codice che sta revisionando.
-- Nessun agente gira con un'identità umana: ognuno ha il proprio service principal.
+- Nel percorso applicativo le identita' tracker sono distinte per agente. ADR-0019 ammette
+    utenze nominali/servizio nel percorso assistito: i marcatori distinguono i ruoli, non i
+    permessi; sulla propria PR il reviewer nominale pubblica COMMENT, non un voto indipendente.
 - Il sistema **non** consuma token quando non c'è lavoro.

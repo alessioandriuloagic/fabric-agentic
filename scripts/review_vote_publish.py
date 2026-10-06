@@ -6,6 +6,7 @@ import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
+from scripts.tracker_auth import TrackerAuthError, github_user_credentials
 from typing import Callable
 from urllib.request import Request, urlopen
 
@@ -33,6 +34,7 @@ CHECKLIST_ITEMS = (
 )
 
 VOTE_EVENTS = {"APPROVATO": "APPROVE", "NON APPROVATO": "REQUEST_CHANGES"}
+IDENTITY_MARKER = "[fabric-agentic-review-agent]"
 
 # The session separates a result from its reason with "-" or "—"; both are accepted, nothing else.
 ITEM_PREFIX = re.compile(r"^[A-Z]\d+\b")
@@ -200,6 +202,7 @@ def has_published_review(
     login: str,
     token: str,
     opener: Opener = urlopen,
+    require_marker: bool = False,
 ) -> bool:
     payload = call_api(
         "GET", f"/repos/{owner}/{repository}/pulls/{pull_request}/reviews?per_page=100", token, opener
@@ -208,6 +211,7 @@ def has_published_review(
     return any(
         review.get("commit_id") == head_sha
         and (review.get("user") or {}).get("login") == login
+        and (not require_marker or (review.get("body") or "").startswith(IDENTITY_MARKER))
         for review in reviews
     )
 
@@ -235,19 +239,37 @@ def publish_review_vote(
     owner: str,
     repository: str,
     pull_request: int,
-    app_id: str,
-    installation_id: str,
-    key_path: Path,
+    app_id: str = "",
+    installation_id: str = "",
+    key_path: Path = Path(),
     opener: Opener = urlopen,
     git: GitRunner = run_git,
+    user_account: str | None = None,
+    user_config_directory: Path | None = None,
 ) -> dict:
     check_publishing_copy(git)
     outcome = parse_outcome(read_outcome(outcome_path))
 
     # Nothing is minted before the copy and the outcome are valid: there are no partial votes.
-    login = app_bot_login(app_id, key_path, opener)
-    token = create_installation_token(app_id, installation_id, key_path, opener).token
-    head_sha = pull_request_head_sha(owner, repository, pull_request, token, opener)
+    requested_event = outcome.event
+    if user_account is not None:
+        if user_config_directory is None:
+            raise ReviewVoteError("user tracker context is missing")
+        token, login = github_user_credentials(user_account, user_config_directory)
+        metadata = call_api("GET", f"/repos/{owner}/{repository}/pulls/{pull_request}", token, opener)
+        author = (metadata.get("user") or {}).get("login") if isinstance(metadata, dict) else None
+        head_sha = (metadata.get("head") or {}).get("sha") if isinstance(metadata, dict) else None
+        if not isinstance(author, str) or not author or not isinstance(head_sha, str) or not head_sha:
+            raise ReviewVoteError("pull request identity or revision is unavailable")
+        event = "COMMENT" if author.casefold() == login.casefold() else outcome.event
+        note = "Delegated user review; not an independent identity control."
+        if event == "COMMENT":
+            note += " Self-review: no approval or change-request vote was submitted."
+        outcome = ReviewOutcome(f"{IDENTITY_MARKER}\n{note}\n\n{outcome.body}", event, outcome.findings)
+    else:
+        login = app_bot_login(app_id, key_path, opener)
+        token = create_installation_token(app_id, installation_id, key_path, opener).token
+        head_sha = pull_request_head_sha(owner, repository, pull_request, token, opener)
 
     result = {
         "pull_request": pull_request,
@@ -255,7 +277,9 @@ def publish_review_vote(
         "event": outcome.event,
         "rilievi": outcome.findings,
     }
-    if has_published_review(owner, repository, pull_request, head_sha, login, token, opener):
+    if user_account is not None:
+        result.update({"requested_event": requested_event, "independent_identity": False})
+    if has_published_review(owner, repository, pull_request, head_sha, login, token, opener, require_marker=user_account is not None):
         return {**result, "status": "already_published"}
     submit_review(owner, repository, pull_request, head_sha, outcome, token, opener)
     return {**result, "status": "published"}
@@ -269,10 +293,19 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--owner", required=True)
     parser.add_argument("--repository", required=True)
     parser.add_argument("--pull-request", type=int, required=True)
-    parser.add_argument("--app-id", required=True)
-    parser.add_argument("--installation-id", required=True)
-    parser.add_argument("--key-path", type=Path, required=True)
-    return parser.parse_args()
+    identity = parser.add_mutually_exclusive_group(required=True)
+    identity.add_argument("--app-id")
+    identity.add_argument("--user-account")
+    parser.add_argument("--installation-id")
+    parser.add_argument("--key-path", type=Path)
+    parser.add_argument("--user-config-directory", type=Path)
+    args = parser.parse_args()
+    if args.user_account:
+        if args.user_config_directory is None or args.installation_id or args.key_path:
+            parser.error("user authentication requires only --user-account and --user-config-directory")
+    elif not args.installation_id or args.key_path is None or args.user_config_directory:
+        parser.error("App authentication requires --app-id, --installation-id and --key-path")
+    return args
 
 
 def main(opener: Opener = urlopen, git: GitRunner = run_git) -> int:
@@ -288,8 +321,10 @@ def main(opener: Opener = urlopen, git: GitRunner = run_git) -> int:
             key_path=args.key_path,
             opener=opener,
             git=git,
+            user_account=args.user_account,
+            user_config_directory=args.user_config_directory,
         )
-    except (ReviewVoteError, GitHubAppAuthError) as error:
+    except (ReviewVoteError, GitHubAppAuthError, TrackerAuthError) as error:
         print(json.dumps({"error": str(error)}))
         return 1
     print(json.dumps(result))

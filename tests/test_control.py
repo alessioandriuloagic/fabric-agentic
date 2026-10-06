@@ -39,6 +39,25 @@ def write_agent(home: Path, agent: str, **overrides) -> Path:
 
 
 class ControlTests(unittest.TestCase):
+    def test_nominal_github_does_not_require_app_or_pem(self) -> None:
+        with TemporaryDirectory() as directory:
+            home = Path(directory)
+            context = home / "tracker-context"
+            context.mkdir()
+            agent_directory = write_agent(home, "dev", github={
+                "owner": "customer", "repository": "project", "authentication": {
+                    "mode": "github_user", "account": "colleague", "config_directory": str(context),
+                },
+            })
+            config_path = agent_directory / "dispatcher-config.json"
+            document = json.loads(config_path.read_text(encoding="utf-8"))
+            document.pop("azure_devops")
+            config_path.write_text(json.dumps(document), encoding="utf-8")
+            (agent_directory / "github-app-private-key.pem").unlink()
+            status = describe_agent("dev", home)
+            self.assertTrue(status.ready)
+            self.assertIn("login non verificato", " ".join(check.detail for check in status.checks))
+
     def test_reports_a_fully_provisioned_agent(self) -> None:
         with TemporaryDirectory() as directory:
             home = Path(directory)

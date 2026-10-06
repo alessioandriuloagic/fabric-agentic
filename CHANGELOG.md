@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Identita' configurabili per sistema (ADR-0019): scelta tracker per ruolo distinta da Fabric e
+  dai riferimenti al runtime AI. I tre dispatcher GitHub supportano login utente autorizzato senza
+  App/PEM; il Dev supporta anche token Azure Boards nominali con tenant e cache separati.
+  Publisher nominali con marcatori e idempotenza; l'auto-review pubblica COMMENT, non un voto.
+  Doctor non richiede PEM nel percorso nominale e non dichiara login verificati. Il refresh Dev
+  non passa piu' token in argv Git; il wrapper blocca export e comandi GitHub arbitrari.
+  Guida, migrazione, evidenze Fabric e limiti documentati in `docs/technical/15-identita-e-autenticazione.md`.
+
+- Primo incremento dell'accesso utente assistito senza SP cliente: `init` accetta tenant,
+  workspace esistente e account e genera un profilo `execution.delegated_assisted` senza
+  riferimenti a credenziali tecniche. `session login/status/logout` usa un contesto Azure CLI
+  separato per tenant, workspace e account; il preflight verifica identita' utente e accesso
+  read-only al workspace, rifiuta SP/account/tenant errati e non espone token o body API.
+  Login e MFA restano interattivi; nessun bypass di Conditional Access o servizio unattended.
+  Il render mostra la destinazione assistita. Deploy/carichi del Dev Agent senza SP e isolamento
+  del runtime LLM restano da implementare; i workflow OIDC esistenti non cambiano.
+
 - Ogni dispatch del Dev Agent è ora un **tentativo registrato**: `fabric_agentic/attempt_ledger.py`
   tiene in `attempts.json`, nel perimetro locale dell'agente, `attempt_id`, work item,
   `source_revision`, stato, lease e `retry_count`. Il claim del work item è atomico — un lock file
@@ -21,6 +38,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `source_revision` e `retry_count`.
 
 ### Changed
+
+- Documentata la deroga esplicita per il test throwaway #196: il Lakehouse demo può essere creato
+  automaticamente con qualunque meccanismo disponibile, accettando il rischio noto di
+  `workspaceChange`/`divergent` al successivo `sync_workspace`, senza trasformare l'eccezione in un
+  nuovo canale standard di governance.
 
 - La lista piatta `dispatched_work_items` non è più il criterio di presa in carico: il ledger la
   sostituisce. Viene ancora **letta** per i work item dispatchati prima della sua introduzione, così

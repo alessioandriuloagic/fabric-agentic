@@ -6,6 +6,11 @@
 | Data | 2026-08-27 |
 | Contesto | Work item #96, #97 |
 
+> Integrazione 2026-10-06: [ADR-0019](ADR-0019-identita-per-sistema-e-login-assistito.md)
+> conserva la GitHub App come default AGIC e ammette autenticazione nominale per tracker cliente.
+> In auto-review il publisher nominale invia COMMENT, senza dichiarare un'identita' indipendente.
+> Le motivazioni e i limiti del percorso App sottostante restano validi.
+
 ## Contesto
 
 Il Review Agent produceva l'esito A1-F4 corretto, ma il voto non entrava mai nel record di GitHub:

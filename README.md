@@ -6,8 +6,9 @@ partenza compatto: per ogni sezione trovi il file che approfondisce.
 
 ## Cosa fa, in una frase
 
-Tre agenti (**Issue**, **Dev**, **Review**), ciascuno con la propria identità applicativa, attivati
-da un dispatcher **deterministico e senza LLM** che li sveglia solo quando c'è lavoro. Il modello
+Tre agenti (**Issue**, **Dev**, **Review**), con identita' tracker applicative distinte come default
+AGIC o utenze autorizzate nel percorso assistito cliente, attivati da un dispatcher
+**deterministico e senza LLM** che li sveglia solo quando c'è lavoro. Il modello
 non fa polling: lo fa uno script. A sistema fermo il costo è zero.
 
 ```mermaid
@@ -63,6 +64,43 @@ eseguibili e i suggerimenti del form ([ADR-0018](docs/adr/ADR-0018-profili-conne
 
 ## Portare il flusso su un cliente o un collega
 
+### Accesso utente assistito senza SP cliente
+
+Primo incremento disponibile: onboarding, login/MFA e verifica **in sola lettura** di un
+workspace esistente. Richiede Azure CLI e un'utenza nominale o di servizio autorizzata dal
+cliente; non richiede un SP di esecuzione, un client secret o una sottoscrizione Azure.
+Consenso applicativo, permessi Fabric e policy del tenant restano prerequisiti del cliente.
+
+```powershell
+python -m fabric_agentic init --directory profiles/cliente --project-slug cliente --tenant-id "<tenant-id>" --workspace-id "<workspace-id>" --account "<utenza-cliente>"
+python -m fabric_agentic session login --config profiles/cliente/instance.json
+python -m fabric_agentic session status --config profiles/cliente/instance.json
+python -m fabric_agentic session logout --config profiles/cliente/instance.json
+```
+
+`init` genera profilo e checklist senza placeholder di credenziali o sorgenti CRM. Non
+sovrascrive un profilo esistente senza `--force`. `login` apre l'autenticazione interattiva
+Azure CLI, segue MFA/Conditional Access e poi verifica account, tenant e lettura del workspace.
+`status` non apre login: se serve autenticarsi restituisce `blocked/login_required` e exit code 1.
+Il risultato `read_verified` prova la lettura, **non** i permessi di scrittura o esecuzione.
+
+La cache Azure CLI vive per default fuori dal repository, sotto
+`~/.fabric-agentic/user-sessions/<tenant>/<workspace>/<hash-account>/`; non copiarla o versionarla.
+`--home` deve indicare una directory privata dell'operatore, fuori dal repository. Questa separazione
+non e' una sandbox contro processi eseguiti dallo stesso utente OS. Non dare al runtime LLM
+accesso alla cache o una shell libera sul suo contesto autenticato.
+
+Terminato il lavoro, fermare i dispatcher e fare logout. Nessun servizio viene installato:
+non e' un percorso unattended. L'identita' per Git e la licenza del runtime AI restano separate.
+Il collegamento dei rail di deploy/carico al Dev Agent senza SP e la loro separazione dal
+runtime LLM **non sono ancora implementati**; il percorso CI/CD OIDC esistente non viene cambiato.
+L'utenza Fabric non sostituisce automaticamente le credenziali delle sorgenti dati.
+
+Riferimenti Microsoft: [login Azure CLI/MFA](https://learn.microsoft.com/en-us/cli/azure/authenticate-azure-cli-interactively)
+e [lettura workspace e scope delegati](https://learn.microsoft.com/en-us/rest/api/fabric/core/workspaces/get-workspace).
+
+### Bootstrap CI/CD esistente
+
 ```
 python -m fabric_agentic init     --directory profiles/<cliente> --project-slug <cliente>
 python -m fabric_agentic validate --config profiles/<cliente>/instance.json
@@ -83,6 +121,14 @@ l'artifact su [GitHub Pages](https://alessioandriuloagic.github.io/fabric-agenti
 su `main`.
 
 ## Stato e limiti noti
+
+Il profilo distingue identita' tracker per ruolo, `execution` Fabric e riferimenti `inference`.
+I default applicativi AGIC restano; GitHub supporta ora anche utenze autorizzate per i tre
+dispatcher e publisher, Azure Boards nominale per il tracker Dev. Configurazione, login,
+auto-review senza voto, migrazione e prove sono nella
+[guida identita'](docs/technical/15-identita-e-autenticazione.md), decisione
+[ADR-0019](docs/adr/ADR-0019-identita-per-sistema-e-login-assistito.md).
+I nuovi percorsi tracker sono testati offline, non ancora collaudati live su un cliente.
 
 | | Stato |
 |---|---|

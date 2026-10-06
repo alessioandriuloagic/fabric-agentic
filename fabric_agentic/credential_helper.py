@@ -27,7 +27,9 @@ def main() -> int:
         return 0
     if mode == "gh":
         real_gh = sys.argv[2]
-        if len(sys.argv) >= 4 and sys.argv[3:5] == ["pr", "merge"]:
+        allowed = {("pr", "view"), ("pr", "diff"), ("pr", "create"),
+                   ("issue", "view"), ("issue", "comment"), ("issue", "edit"), ("repo", "view")}
+        if tuple(sys.argv[3:5]) not in allowed:
             return 1
         environment = os.environ.copy()
         environment["GH_TOKEN"] = request_token("gh")

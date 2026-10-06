@@ -132,6 +132,15 @@ notebook.** La raccomandazione R1.2 della review smette di essere una buona prat
 conseguenza necessaria del modello: **[V]** concurrency i job da pipeline sono accodati, quelli da
 API del notebook sono rifiutati sotto throttling.
 
+**6-bis. Eccezione esplicita per il test throwaway #196.** Per il ticket GitHub #196 l'owner ha
+accettato che il Lakehouse demo venga creato automaticamente con qualunque meccanismo tecnicamente
+disponibile, incluse API dirette o round-trip manuale/API, senza intervento umano di creazione.
+Questa è una deroga puntuale al principio "Git come sorgente unica" e non abilita un nuovo canale
+standard: il rischio noto è che un item creato fuori dal flusso Git possa produrre
+`workspaceChange` e quindi stato `divergent` al successivo `sync_workspace`. Il rischio è accettato
+solo perché il workspace è effimero, il contenuto è sintetico e il test serve a validare la catena
+agentica, non la governance di promozione.
+
 **7. Le pipeline dei rail sono piccole e dedicate.** Non si riusa la pipeline di deploy monolitica
 dell'asset: una pipeline per rail, con dipendenze in cache. È una scelta di latenza, e la latenza
 qui è un KPI (KPI-2, lead time < 30 minuti).

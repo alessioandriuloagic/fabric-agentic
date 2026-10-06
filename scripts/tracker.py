@@ -89,11 +89,13 @@ class AzureDevOpsTracker(WorkItemTracker):
         project: str,
         token_provider: Callable[[], str],
         dev_agent_display_name: str = "[fabric-agentic-dev-agent]",
+        agent_account: str | None = None,
     ):
         self.organization = organization
         self.project = project
         self.token_provider = token_provider
         self.dev_agent_display_name = dev_agent_display_name
+        self.agent_account = agent_account
 
     def _request(self, method: str, path: str, body: dict | list | None = None) -> dict:
         token = self.token_provider()
@@ -127,17 +129,25 @@ class AzureDevOpsTracker(WorkItemTracker):
         result = self._request("GET", f"/_apis/wit/workItems/{item_id}/comments?order=asc&api-version=7.1-preview.4")
         comments = []
         for comment in result.get("comments", []):
+            author = comment.get("createdBy", {})
+            text = comment.get("content", "")
+            is_agent = author.get("displayName", "") == self.dev_agent_display_name
+            if self.agent_account is not None:
+                is_agent = (str(author.get("uniqueName", "")).casefold() == self.agent_account.casefold()
+                            and text.startswith(self.dev_agent_display_name))
             comments.append(
                 WorkItemComment(
                     id=int(comment["commentId"]),
                     author=comment.get("createdBy", {}).get("displayName", ""),
                     text=comment.get("content", ""),
-                    is_agent_comment=comment.get("createdBy", {}).get("displayName", "") == self.dev_agent_display_name,
+                    is_agent_comment=is_agent,
                 )
             )
         return comments
 
     def add_comment(self, item_id: int | str, text: str) -> None:
+        if self.agent_account is not None and not text.startswith(self.dev_agent_display_name):
+            text = f"{self.dev_agent_display_name} {text}"
         self._request("POST", f"/_apis/wit/workItems/{item_id}/comments?api-version=7.1-preview.4", {"text": text})
 
     def set_state(self, item_id: int | str, state: str) -> None:
@@ -154,10 +164,12 @@ class GitHubIssuesTracker(WorkItemTracker):
         self,
         owner: str,
         repository: str,
-        github_app_id: int,
-        github_installation_id: int,
-        github_private_key_path: Path,
+        github_app_id: int = 0,
+        github_installation_id: int = 0,
+        github_private_key_path: Path = Path(),
         agent_identity: str = "[fabric-agentic-dev-agent]",
+        token_provider: Callable[[], str] | None = None,
+        agent_account: str | None = None,
     ):
         self.owner = owner
         self.repository = repository
@@ -165,8 +177,12 @@ class GitHubIssuesTracker(WorkItemTracker):
         self.github_installation_id = github_installation_id
         self.github_private_key_path = github_private_key_path
         self.agent_identity = agent_identity
+        self.token_provider = token_provider
+        self.agent_account = agent_account
 
     def _token(self) -> str:
+        if self.token_provider is not None:
+            return self.token_provider()
         return create_installation_token(
             self.github_app_id,
             self.github_installation_id,
@@ -191,7 +207,7 @@ class GitHubIssuesTracker(WorkItemTracker):
         except Exception as error:
             raise TrackerError(f"GitHub GraphQL request failed") from error
         if result.get("errors"):
-            raise TrackerError(f"GitHub GraphQL error: {result['errors']}")
+            raise TrackerError("GitHub GraphQL request failed")
         return result["data"]
 
     def _rest(self, method: str, path: str, body: dict | None = None) -> dict:
@@ -260,6 +276,10 @@ class GitHubIssuesTracker(WorkItemTracker):
         comments = []
         for comment in result if isinstance(result, list) else []:
             is_agent = self.agent_identity in comment.get("body", "")
+            if self.agent_account is not None:
+                markers = (self.agent_identity, "[fabric-agentic-issue-agent]", "[fabric-agentic-review-agent]")
+                is_agent = (comment.get("user", {}).get("login", "").casefold() == self.agent_account.casefold()
+                            and comment.get("body", "").startswith(markers))
             comments.append(
                 WorkItemComment(
                     id=comment["id"],
@@ -286,6 +306,8 @@ class GitHubIssuesTracker(WorkItemTracker):
 
     def add_comment(self, item_id: int | str, text: str) -> None:
         """Add a comment to an issue."""
+        if self.agent_account is not None and not text.startswith(self.agent_identity):
+            text = f"{self.agent_identity} {text}"
         issue_number = int(item_id)
         self._rest("POST", f"/repos/{self.owner}/{self.repository}/issues/{issue_number}/comments", {"body": text})
 

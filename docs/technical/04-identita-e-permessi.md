@@ -4,7 +4,12 @@
 > **i permessi determinano quello possibile**.
 
 Decisioni applicate: [ADR-0007](../adr/ADR-0007-pipeline-cicd-come-rail.md) e
-[ADR-0008](../adr/ADR-0008-permessi-fabric-dev-agent.md).
+[ADR-0008](../adr/ADR-0008-permessi-fabric-dev-agent.md), integrate da
+[ADR-0019](../adr/ADR-0019-identita-per-sistema-e-login-assistito.md).
+
+Il percorso nominale/servizio assistito e' descritto nella
+[guida identita'](15-identita-e-autenticazione.md). Le matrici e gli esiti storici SP/OIDC sotto
+non dimostrano gli stessi limiti di permesso per un token utente; le modalita' restano distinte.
 
 ---
 
@@ -27,8 +32,8 @@ Ne discendono due regole operative:
 
 | Agente | Identità |
 |---|---|
-| Dev Agent | Service principal dedicato |
-| Review Agent | Service principal dedicato, **distinto** |
+| Dev Agent | Identita' tracker dedicata nel modo applicativo; utenza autorizzata nel modo assistito |
+| Review Agent | Identita' tracker applicativa distinta; alternativa nominale con limiti ADR-0019 |
 | Deploy pipeline | Service principal dedicato, distinto dagli agenti; esegue i rail con OIDC GitHub |
 | Dispatcher | Nessuna propria: usa quella dell'agente che serve |
 | `ExecutionCredential` | Credenziale tecnica **del cliente**, disponibile solo alle pipeline CI/CD |
@@ -37,8 +42,8 @@ Ne discendono due regole operative:
 
 | Regola | Motivo |
 |---|---|
-| Un service principal **per agente**, mai condiviso | Se condiviso, l'audit log non distingue chi ha fatto cosa e i permessi si sommano al massimo comune |
-| Nessun agente gira con un'identità umana | L'attribuzione delle azioni deve restare inequivocabile |
+| Nel modo applicativo una identita' per ruolo | GitHub App su GitHub, SP Entra su Azure DevOps; audit e permessi distinti |
+| Nel modo assistito e' ammessa utenza nominale/servizio | Autore + marcatore distinguono le azioni, ma non garantiscono indipendenza o separazione dei permessi |
 | Credenziali solo nel secret store | Mai in file di configurazione, mai nel repo |
 | Le identità sono raccolte in un **gruppo di sicurezza dedicato** | Gli switch di tenant si applicano al gruppo, non al mondo |
 | La `ExecutionCredential` non è un'identità dell'agente | L'agente può accodare una pipeline ma non leggere, esportare o impersonare il segreto cliente |
@@ -66,7 +71,7 @@ voto registrabile e attribuibile.
 
 | Aspetto | Regola |
 |---|---|
-| Chi vota | L'identità applicativa del Review Agent, mai l'owner umano e mai l'identità del Dev Agent |
+| Chi vota | Default: App Review distinta; modo nominale: utenza autorizzata, COMMENT se coincide con l'autore PR, nessuna garanzia di identita' indipendente |
 | Chi pubblica | Il publisher deterministico `scripts/review_vote_publish.py`, non il modello |
 | Cosa riceve il modello | Nulla di credenziale: produce l'esito A1-F4 e termina |
 | Dove vive la key | File PEM fuori dal repository, con ACL ristretta, come per il Dev Agent |

@@ -9,6 +9,15 @@ from scripts.tracker import AzureDevOpsTracker, GitHubIssuesTracker, TrackerErro
 
 
 class AzureDevOpsTrackerTests(unittest.TestCase):
+    def test_nominal_comments_distinguish_human_answers_and_agent_role(self) -> None:
+        tracker = AzureDevOpsTracker("customer", "project", lambda: "user-token", agent_account="colleague@example.com")
+        comments = {"comments": [
+            {"commentId": 1, "createdBy": {"uniqueName": "colleague@example.com"}, "content": "human answer"},
+            {"commentId": 2, "createdBy": {"uniqueName": "colleague@example.com"}, "content": "[fabric-agentic-dev-agent] done"},
+        ]}
+        with patch.object(tracker, "_request", return_value=comments):
+            self.assertEqual([comment.is_agent_comment for comment in tracker.comments(12)], [False, True])
+
     def setUp(self) -> None:
         self.mock_token = "mock-token-redacted"
         self.token_provider = MagicMock(return_value=self.mock_token)
@@ -97,6 +106,34 @@ class AzureDevOpsTrackerTests(unittest.TestCase):
 
 
 class GitHubIssuesTrackerTests(unittest.TestCase):
+    def test_nominal_comments_require_matching_author_and_role_marker(self) -> None:
+        tracker = GitHubIssuesTracker("customer", "project", token_provider=lambda: "user-token", agent_account="colleague")
+        comments = [
+            {"id": 1, "user": {"login": "colleague"}, "body": "human answer"},
+            {"id": 2, "user": {"login": "other"}, "body": "[fabric-agentic-dev-agent] fake"},
+            {"id": 3, "user": {"login": "colleague"}, "body": "[fabric-agentic-dev-agent] done"},
+        ]
+        with patch.object(tracker, "_rest", return_value=comments):
+            self.assertEqual([comment.is_agent_comment for comment in tracker.comments(12)], [False, False, True])
+
+    def test_nominal_published_comment_always_carries_dev_marker(self) -> None:
+        tracker = GitHubIssuesTracker("customer", "project", token_provider=lambda: "user-token", agent_account="colleague")
+        with patch.object(tracker, "_rest") as publish:
+            tracker.add_comment(12, "waiting for input")
+        self.assertEqual(publish.call_args.args[2]["body"], "[fabric-agentic-dev-agent] waiting for input")
+
+    @patch("scripts.tracker.create_installation_token")
+    @patch("scripts.tracker.urlopen")
+    def test_user_provider_reads_issues_without_app_credentials(self, mock_urlopen, app_token) -> None:
+        response = MagicMock()
+        response.__enter__.return_value.read.return_value = json.dumps({
+            "data": {"repository": {"issues": {"nodes": [{"number": 12}]}}}
+        }).encode("utf-8")
+        mock_urlopen.return_value = response
+        tracker = GitHubIssuesTracker("customer", "project", token_provider=lambda: "user-token")
+        self.assertEqual(tracker.new_items(), [12])
+        app_token.assert_not_called()
+
     def setUp(self) -> None:
         self.tracker = GitHubIssuesTracker(
             owner="test-owner",

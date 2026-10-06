@@ -17,7 +17,7 @@ FEATURE_PLACEHOLDER = 1
 
 
 def build_plan(profile: InstanceProfile) -> dict:
-    return {
+    plan = {
         "schema_version": profile.schema_version,
         "project": {"slug": profile.project_slug, "display_name": profile.display_name},
         "tracker": {"type": profile.tracker_type},
@@ -34,6 +34,20 @@ def build_plan(profile: InstanceProfile) -> dict:
             for credential in profile.credentials
         ],
     }
+    if "authentication" in profile.tracker:
+        plan["tracker"]["authentication"] = {
+            role: {"mode": identity["mode"]}
+            for role, identity in profile.tracker["authentication"].items()
+        }
+    if profile.inference is not None:
+        plan["inference"] = profile.inference
+    if profile.execution is not None:
+        plan["execution"] = {
+            "mode": profile.execution.mode,
+            "tenant_id": profile.execution.tenant_id,
+            "workspace_id": profile.execution.workspace_id,
+        }
+    return plan
 
 
 def render(profile: InstanceProfile, output_directory: Path) -> tuple[Path, ...]:
@@ -64,6 +78,24 @@ def render_summary(plan: dict) -> str:
         "|---|---|",
     ]
     lines += [f"| `{entry['environment']}` | `{entry['name']}` |" for entry in plan["workspaces"]]
+
+    if "authentication" in plan["tracker"]:
+        lines += ["", "## Tracker identities", "", "Declared modes, not verified authorizations."]
+        lines += [f"- {role}: `{identity['mode']}`" for role, identity in plan["tracker"]["authentication"].items()]
+    if "inference" in plan:
+        lines += ["", "## AI runtime identities", "", "References only; runtime login and licensing are external."]
+        lines += [f"- {role}: `{identity['command']}`, `{identity['identity_ref']}`"
+                  for role, identity in plan["inference"].items()]
+
+    if "execution" in plan:
+        execution = plan["execution"]
+        lines += [
+            "", "## Assisted access", "",
+            f"- Mode: `{execution['mode']}`",
+            f"- Tenant: `{execution['tenant_id']}`",
+            f"- Existing workspace: `{execution['workspace_id']}`",
+            "- Read-only preflight; this plan does not enable deployment or job execution.",
+        ]
 
     for source in plan["sources"]:
         capabilities = source["capabilities"]

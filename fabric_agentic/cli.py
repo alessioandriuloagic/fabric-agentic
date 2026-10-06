@@ -1,6 +1,7 @@
 """Command line entry point: validate a profile, render it, and check what is provisioned."""
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -10,6 +11,7 @@ from fabric_agentic.console import serve
 from fabric_agentic.control import AgentStatus, agent_home, describe_all
 from fabric_agentic.instance_profile import InstanceProfile, InstanceProfileError, load_profile
 from fabric_agentic.render import render
+from fabric_agentic.user_session import UserSession, UserSessionError
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -36,6 +38,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     init_command.add_argument("--project-slug", help="per default derivato dal nome della cartella")
     init_command.add_argument("--display-name", help="per default uguale allo slug")
     init_command.add_argument("--force", action="store_true", help="sovrascrive i file già presenti")
+    init_command.add_argument("--tenant-id", help="tenant cliente per il percorso utente assistito")
+    init_command.add_argument("--workspace-id", help="workspace esistente per il preflight assistito")
+    init_command.add_argument("--account", help="utenza nominale o di servizio autorizzata")
+
+    session = commands.add_parser("session", help="login utente assistito e verifica Fabric senza SP")
+    session.add_argument("action", choices=("login", "status", "logout"))
+    session.add_argument("--config", type=Path, required=True)
 
     return parser.parse_args(argv)
 
@@ -87,7 +96,14 @@ def main(argv: list[str] | None = None) -> int:
         return _render(args.config, args.output)
 
     if args.command == "init":
-        return _init(args.directory, args.project_slug, args.display_name, args.force)
+        execution = None
+        if any(value is not None for value in (args.tenant_id, args.workspace_id, args.account)):
+            execution = {"mode": "delegated_assisted", "tenant_id": args.tenant_id,
+                         "workspace_id": args.workspace_id, "account": args.account}
+        return _init(args.directory, args.project_slug, args.display_name, args.force, execution)
+
+    if args.command == "session":
+        return _session(home, args.config, args.action)
 
     return _doctor(home, args.config)
 
@@ -113,9 +129,12 @@ def _render(config_path: Path, output_directory: Path) -> int:
     return 0
 
 
-def _init(directory: Path, project_slug: str | None, display_name: str | None, force: bool) -> int:
+def _init(
+    directory: Path, project_slug: str | None, display_name: str | None, force: bool,
+    execution: dict | None = None,
+) -> int:
     try:
-        result = init_starter(directory, project_slug, display_name, force)
+        result = init_starter(directory, project_slug, display_name, force, execution)
     except InitError as error:
         print(f"init non riuscito: {error}")
         return 1
@@ -132,6 +151,33 @@ def _doctor(home: Path, config_path: Path | None) -> int:
 
     profile_ready = _validate(config_path) == 0 if config_path is not None else True
     return 0 if profile_ready and all(status.ready for status in statuses) else 1
+
+
+def _session(home: Path, config_path: Path, action: str) -> int:
+    try:
+        execution = load_profile(config_path).execution
+        if execution is None:
+            raise UserSessionError("execution_not_configured")
+        session = UserSession(execution.tenant_id, execution.workspace_id, execution.account, home)
+        if action == "logout":
+            report = session.logout()
+            report["outcome"] = "logged_out"
+        else:
+            if action == "login":
+                session.login()
+            report = session.preflight()
+            report["outcome"] = "success"
+    except InstanceProfileError:
+        print(json.dumps({"outcome": "blocked", "code": "invalid_profile"}))
+        return 1
+    except UserSessionError as error:
+        report = {"outcome": "blocked", "code": str(error)}
+        if str(error) == "login_required":
+            report["next_action"] = "session login --config <profile>"
+        print(json.dumps(report))
+        return 1
+    print(json.dumps(report))
+    return 0
 
 
 if __name__ == "__main__":

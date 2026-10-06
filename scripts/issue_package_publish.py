@@ -6,6 +6,7 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from scripts.tracker_auth import TrackerAuthError, github_user_credentials
 from typing import Callable
 from urllib.request import Request, urlopen
 
@@ -153,6 +154,7 @@ def has_published_package(
     comments = payload if isinstance(payload, list) else []
     return any(
         (comment.get("user") or {}).get("login") == login
+        and (comment.get("body") or "").startswith(IDENTITY_MARKER)
         and f"package {package.fingerprint}" in (comment.get("body") or "")
         for comment in comments
     )
@@ -163,16 +165,23 @@ def publish_package(
     owner: str,
     repository: str,
     issue: int,
-    app_id: str,
-    installation_id: str,
-    key_path: Path,
+    app_id: str = "",
+    installation_id: str = "",
+    key_path: Path = Path(),
     opener: Opener = urlopen,
+    user_account: str | None = None,
+    user_config_directory: Path | None = None,
 ) -> dict:
     package = parse_package(read_package(package_path))
 
     # Nothing is minted before the package is valid: there are no partial publications.
-    login = app_bot_login(app_id, key_path, opener)
-    token = create_installation_token(app_id, installation_id, key_path, opener).token
+    if user_account is not None:
+        if user_config_directory is None:
+            raise IssuePackageError("user tracker context is missing")
+        token, login = github_user_credentials(user_account, user_config_directory)
+    else:
+        login = app_bot_login(app_id, key_path, opener)
+        token = create_installation_token(app_id, installation_id, key_path, opener).token
 
     result = {"issue": issue, "mode": package.mode, "fingerprint": package.fingerprint}
     if has_published_package(owner, repository, issue, package, login, token, opener):
@@ -195,10 +204,19 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--owner", required=True)
     parser.add_argument("--repository", required=True)
     parser.add_argument("--issue", type=int, required=True)
-    parser.add_argument("--app-id", required=True)
-    parser.add_argument("--installation-id", required=True)
-    parser.add_argument("--key-path", type=Path, required=True)
-    return parser.parse_args()
+    identity = parser.add_mutually_exclusive_group(required=True)
+    identity.add_argument("--app-id")
+    identity.add_argument("--user-account")
+    parser.add_argument("--installation-id")
+    parser.add_argument("--key-path", type=Path)
+    parser.add_argument("--user-config-directory", type=Path)
+    args = parser.parse_args()
+    if args.user_account:
+        if args.user_config_directory is None or args.installation_id or args.key_path:
+            parser.error("user authentication requires only --user-account and --user-config-directory")
+    elif not args.installation_id or args.key_path is None or args.user_config_directory:
+        parser.error("App authentication requires --app-id, --installation-id and --key-path")
+    return args
 
 
 def main(opener: Opener = urlopen) -> int:
@@ -213,8 +231,10 @@ def main(opener: Opener = urlopen) -> int:
             installation_id=args.installation_id,
             key_path=args.key_path,
             opener=opener,
+            user_account=args.user_account,
+            user_config_directory=args.user_config_directory,
         )
-    except IssuePackageError as error:
+    except (IssuePackageError, TrackerAuthError) as error:
         print(json.dumps({"error": str(error)}))
         return 1
     print(json.dumps(result))

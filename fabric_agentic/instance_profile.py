@@ -2,6 +2,7 @@
 
 import json
 import re
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -16,6 +17,8 @@ from fabric_agentic.connectors import (
 SUPPORTED_SCHEMA_VERSIONS = ("1.0",)
 SUPPORTED_TRACKERS = ("github_issues", "azure_devops")
 LOAD_MODES = ("full", "incremental")
+AGENT_ROLES = ("issue", "dev", "review")
+TRACKER_AUTH_MODES = {"github_issues": ("github_app", "github_user"), "azure_devops": ("entra_sp", "entra_user")}
 
 SLUG = re.compile(r"^[a-z][a-z0-9_]*$")
 SECRET_FIELDS = ("value", "secret", "password", "token", "client_secret")
@@ -42,7 +45,21 @@ def profile_schema() -> dict:
             "tracker": {
                 "type": "object",
                 "required": ["type"],
-                "properties": {"type": {"enum": list(SUPPORTED_TRACKERS)}},
+                "properties": {
+                    "type": {"enum": list(SUPPORTED_TRACKERS)},
+                    "authentication": {
+                        "type": "object", "minProperties": 1,
+                        "propertyNames": {"enum": list(AGENT_ROLES)},
+                        "additionalProperties": {"$ref": "#/$defs/tracker_auth"},
+                    },
+                },
+                "allOf": [
+                    {"if": {"properties": {"type": {"const": tracker}}},
+                     "then": {"properties": {"authentication": {"additionalProperties": {
+                         "properties": {"mode": {"enum": list(modes)}},
+                     }}}}}
+                    for tracker, modes in TRACKER_AUTH_MODES.items()
+                ],
             },
             "environments": {
                 "type": "array",
@@ -51,8 +68,43 @@ def profile_schema() -> dict:
             },
             "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}},
             "credentials": {"type": "array", "items": {"$ref": "#/$defs/credential"}},
+            "execution": {"$ref": "#/$defs/execution"},
+            "inference": {
+                "type": "object", "minProperties": 1,
+                "propertyNames": {"enum": list(AGENT_ROLES)},
+                "additionalProperties": {
+                    "type": "object", "additionalProperties": False,
+                    "required": ["command", "identity_ref"],
+                    "properties": {"command": {"type": "string", "minLength": 1},
+                                   "identity_ref": {"type": "string", "minLength": 1}},
+                },
+            },
         },
         "$defs": {
+            "tracker_auth": {"oneOf": [
+                {"type": "object", "additionalProperties": False,
+                 "required": ["mode"], "properties": {"mode": {"const": mode}}}
+                for mode in ("github_app", "entra_sp")
+            ] + [
+                {"type": "object", "additionalProperties": False,
+                 "required": ["mode", "account", "config_directory"] + (["tenant_id"] if mode == "entra_user" else []),
+                 "properties": {"mode": {"const": mode},
+                                "account": {"type": "string", "minLength": 1},
+                                "config_directory": {"type": "string", "minLength": 1},
+                                **({"tenant_id": {"type": "string", "format": "uuid"}} if mode == "entra_user" else {})}}
+                for mode in ("github_user", "entra_user")
+            ]},
+            "execution": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["mode", "tenant_id", "workspace_id", "account"],
+                "properties": {
+                    "mode": {"const": "delegated_assisted"},
+                    "tenant_id": {"type": "string", "format": "uuid"},
+                    "workspace_id": {"type": "string", "format": "uuid"},
+                    "account": {"type": "string", "minLength": 1},
+                },
+            },
             "source": {
                 "type": "object",
                 "required": ["name", "connector", "connection_ref", "datasets"],
@@ -142,6 +194,14 @@ class CredentialRef:
 
 
 @dataclass(frozen=True)
+class UserExecution:
+    mode: str
+    tenant_id: str
+    workspace_id: str
+    account: str
+
+
+@dataclass(frozen=True)
 class InstanceProfile:
     schema_version: str
     project_slug: str
@@ -151,6 +211,8 @@ class InstanceProfile:
     environments: tuple[str, ...]
     sources: tuple[Source, ...]
     credentials: tuple[CredentialRef, ...]
+    execution: UserExecution | None = None
+    inference: dict | None = None
 
 
 def load_profile(profile_path: Path) -> InstanceProfile:
@@ -177,6 +239,16 @@ def parse_profile(document: dict) -> InstanceProfile:
     tracker = document.get("tracker") or {}
     if tracker.get("type") not in SUPPORTED_TRACKERS:
         raise InstanceProfileError(f"unsupported tracker '{tracker.get('type')}'")
+    tracker = dict(tracker)
+    if "authentication" in tracker:
+        identities = tracker["authentication"]
+        if not isinstance(identities, dict) or not identities or set(identities) - set(AGENT_ROLES):
+            raise InstanceProfileError("tracker authentication requires known agent roles")
+        tracker["authentication"] = {}
+        for role, identity in identities.items():
+            if identity is None:
+                raise InstanceProfileError("tracker role authentication must be explicit")
+            tracker["authentication"][role] = parse_tracker_auth(identity, tracker["type"])
 
     environments = document.get("environments") or []
     if not isinstance(environments, list) or not environments:
@@ -191,7 +263,66 @@ def parse_profile(document: dict) -> InstanceProfile:
         environments=tuple(str(environment) for environment in environments),
         sources=parse_sources(document.get("sources") or []),
         credentials=parse_credentials(document.get("credentials") or []),
+        execution=parse_execution(document["execution"]) if "execution" in document else None,
+        inference=parse_inference(document["inference"]) if "inference" in document else None,
     )
+
+
+def parse_inference(document: dict) -> dict:
+    if not isinstance(document, dict) or not document or set(document) - set(AGENT_ROLES):
+        raise InstanceProfileError("inference requires known agent roles")
+    parsed = {}
+    for role, identity in document.items():
+        if not isinstance(identity, dict) or set(identity) != {"command", "identity_ref"}:
+            raise InstanceProfileError("inference requires only command and identity_ref")
+        if any(not isinstance(value, str) or not value.strip() or "\n" in value or "\r" in value for value in identity.values()):
+            raise InstanceProfileError("inference requires nonempty runtime references")
+        parsed[role] = {name: value.strip() for name, value in identity.items()}
+    return parsed
+
+
+def parse_execution(document: dict) -> UserExecution:
+    required = {"mode", "tenant_id", "workspace_id", "account"}
+    if not isinstance(document, dict) or set(document) != required:
+        raise InstanceProfileError("execution must contain only mode, tenant_id, workspace_id and account")
+    if document["mode"] != "delegated_assisted":
+        raise InstanceProfileError("execution requires delegated_assisted mode")
+    try:
+        tenant_id = str(uuid.UUID(document["tenant_id"]))
+        workspace_id = str(uuid.UUID(document["workspace_id"]))
+    except (ValueError, TypeError, AttributeError) as error:
+        raise InstanceProfileError("execution requires valid tenant and workspace UUIDs") from error
+    account = document["account"]
+    if not isinstance(account, str) or not account.strip() or account.startswith("-"):
+        raise InstanceProfileError("execution requires an account name")
+    return UserExecution(document["mode"], tenant_id, workspace_id, account.strip())
+
+
+def parse_tracker_auth(document: dict | None, tracker_type: str) -> dict | None:
+    if document is None:
+        return None
+    if not isinstance(document, dict) or document.get("mode") not in TRACKER_AUTH_MODES.get(tracker_type, ()):
+        raise InstanceProfileError("tracker authentication mode is incompatible with the tracker")
+    mode = document["mode"]
+    required = {"mode"}
+    if mode in ("github_user", "entra_user"):
+        required.update(("account", "config_directory"))
+    if mode == "entra_user":
+        required.add("tenant_id")
+    if set(document) != required:
+        raise InstanceProfileError("tracker authentication contains missing or unsupported fields")
+    parsed = dict(document)
+    for name in required - {"mode"}:
+        value = parsed[name]
+        if not isinstance(value, str) or not value.strip() or value.startswith("-") or "\n" in value or "\r" in value:
+            raise InstanceProfileError("tracker authentication requires valid context references")
+        parsed[name] = value.strip()
+    if mode == "entra_user":
+        try:
+            parsed["tenant_id"] = str(uuid.UUID(parsed["tenant_id"]))
+        except ValueError as error:
+            raise InstanceProfileError("tracker authentication requires a tenant UUID") from error
+    return parsed
 
 
 def parse_sources(sources: list) -> tuple[Source, ...]:

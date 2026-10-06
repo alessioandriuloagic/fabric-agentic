@@ -18,7 +18,9 @@ from fabric_agentic.config_paths import expand_path, read_json_config
 from fabric_agentic.polling import PollingStopped, run_polling
 from fabric_agentic.credential_broker import credential_broker_environment
 from fabric_agentic.github_app_auth import GITHUB_API, create_installation_token
-from scripts.review_vote_publish import app_bot_login
+from fabric_agentic.instance_profile import InstanceProfileError, parse_tracker_auth
+from scripts.review_vote_publish import IDENTITY_MARKER, app_bot_login
+from scripts.tracker_auth import TrackerAuthError, github_user_credentials
 
 
 PUBLISHER_MODULE = "scripts.review_vote_publish"
@@ -53,6 +55,7 @@ class ReviewDispatcherConfig:
     repository_path: Path
     claude_command: str
     poll_seconds: int = 30
+    tracker_auth: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -68,17 +71,20 @@ def load_config(config_path: Path) -> ReviewDispatcherConfig:
         config = read_json_config(config_path)
         github = config["github"]
         agent = config["agent"]
+        authentication = parse_tracker_auth(github.get("authentication"), "github_issues")
+        user_auth = authentication is not None and authentication["mode"] == "github_user"
         return ReviewDispatcherConfig(
             github_owner=github["owner"],
             github_repository=github["repository"],
-            github_app_id=int(github["app_id"]),
-            github_installation_id=int(github["installation_id"]),
-            github_private_key_path=expand_path(github["private_key_path"]),
+            github_app_id=0 if user_auth else int(github["app_id"]),
+            github_installation_id=0 if user_auth else int(github["installation_id"]),
+            github_private_key_path=Path() if user_auth else expand_path(github["private_key_path"]),
             repository_path=expand_path(agent["repository_path"]),
             claude_command=agent["claude_command"],
             poll_seconds=int(agent.get("poll_seconds", 30)),
+            tracker_auth=authentication,
         )
-    except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as error:
+    except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError, InstanceProfileError) as error:
         raise ReviewDispatcherError("review dispatcher configuration is invalid") from error
 
 
@@ -131,6 +137,8 @@ def review_candidates(config: ReviewDispatcherConfig, token: str, review_login: 
         reviewed_head = any(
             review.get("commit_id") == head_sha
             and (review.get("user") or {}).get("login") == review_login
+              and (not config.tracker_auth or config.tracker_auth["mode"] != "github_user"
+                  or (review.get("body") or "").startswith(IDENTITY_MARKER))
             for review in reviews
         )
         if not reviewed_head:
@@ -185,11 +193,7 @@ def run_git(config: ReviewDispatcherConfig, arguments: list[str], environment: d
 def prepare_review_clone(config: ReviewDispatcherConfig, pull_request: int) -> str:
     """Fetch the pull request head without leaving main, so the publisher copy stays aligned."""
     head_ref = f"refs/remotes/origin/pr/{pull_request}"
-    token = create_installation_token(
-        config.github_app_id,
-        config.github_installation_id,
-        config.github_private_key_path,
-    ).token
+    token = github_token(config)
     with credential_broker_environment(token) as environment:
         run_git(config, ["fetch", "--prune", "origin", "main"], environment)
         run_git(config, ["checkout", "main"], environment)
@@ -199,7 +203,7 @@ def prepare_review_clone(config: ReviewDispatcherConfig, pull_request: int) -> s
 
 
 def publisher_command(config: ReviewDispatcherConfig, task: dict, outcome_path: Path) -> list[str]:
-    return [
+    command = [
         sys.executable,
         "-m",
         PUBLISHER_MODULE,
@@ -207,6 +211,11 @@ def publisher_command(config: ReviewDispatcherConfig, task: dict, outcome_path: 
         "--owner", config.github_owner,
         "--repository", config.github_repository,
         "--pull-request", str(task["pull_request"]),
+    ]
+    if config.tracker_auth and config.tracker_auth["mode"] == "github_user":
+        return command + ["--user-account", config.tracker_auth["account"],
+                          "--user-config-directory", str(expand_path(config.tracker_auth["config_directory"]))]
+    return command + [
         "--app-id", str(config.github_app_id),
         "--installation-id", str(config.github_installation_id),
         "--key-path", str(config.github_private_key_path),
@@ -234,6 +243,11 @@ def save_state(state_path: Path, state: dict[str, dict[str, str]]) -> None:
 
 
 def discover_once(config: ReviewDispatcherConfig) -> list[dict]:
+    if config.tracker_auth and config.tracker_auth["mode"] == "github_user":
+        token, login = github_user_credentials(
+            config.tracker_auth["account"], expand_path(config.tracker_auth["config_directory"])
+        )
+        return [task_record(config, candidate) for candidate in review_candidates(config, token, login)]
     token = create_installation_token(
         config.github_app_id,
         config.github_installation_id,
@@ -242,6 +256,14 @@ def discover_once(config: ReviewDispatcherConfig) -> list[dict]:
     login = app_bot_login(str(config.github_app_id), config.github_private_key_path)
     candidates = review_candidates(config, token, login)
     return [task_record(config, candidate) for candidate in candidates]
+
+
+def github_token(config: ReviewDispatcherConfig) -> str:
+    if config.tracker_auth and config.tracker_auth["mode"] == "github_user":
+        return github_user_credentials(
+            config.tracker_auth["account"], expand_path(config.tracker_auth["config_directory"])
+        )[0]
+    return create_installation_token(config.github_app_id, config.github_installation_id, config.github_private_key_path).token
 
 
 def launch_review_session(config: ReviewDispatcherConfig, task_path: Path) -> str:
@@ -369,7 +391,7 @@ def main() -> int:
         tasks = run_once(config, args.state, args.tasks, args.dry_run)
         if args.dry_run:
             print(json.dumps({"tasks": tasks}))
-    except (ReviewDispatcherError, PollingStopped) as error:
+    except (ReviewDispatcherError, PollingStopped, TrackerAuthError) as error:
         print(json.dumps({"error": str(error)}))
         return 1
     return 0

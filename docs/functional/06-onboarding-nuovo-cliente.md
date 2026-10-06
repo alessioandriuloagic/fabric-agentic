@@ -57,6 +57,20 @@ Solo il **Livello 1** richiede presenza umana. Ed è l'unico che si paga una vol
 
 ## 3. Livello 1 — Bootstrap del progetto
 
+### Percorso assistito senza SP cliente (ADR-0019)
+
+L'owner ha approvato login/MFA del collega e operativita' durante il suo lavoro. Non richiedere
+SP cliente come prerequisito del nuovo preflight: usare `init --tenant-id --workspace-id --account`
+e `session login/status/logout`. Il tracker e' scelto separatamente: Apps/SP AGIC ove disponibili,
+utenza autorizzata sul tracker cliente. Seat AI e login Git non derivano dal login Fabric.
+Configurazioni, migrazione, prova workspace e limiti nella
+[guida identita'](../technical/15-identita-e-autenticazione.md).
+
+L'incremento Fabric assistito verifica lettura, non collega ancora i rail Dev di deploy/carico.
+La checklist CI/CD applicativa sotto resta valida per quel percorso; non va spuntata come
+completata per il solo successo del login utente. Issue/Review operativi Azure Boards restano
+da implementare. Le istruzioni di permesso non diventano un isolamento del runtime LLM.
+
 ### 3.1 Cosa serve prima di iniziare
 
 | Prerequisito | Note |
